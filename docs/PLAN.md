@@ -88,7 +88,7 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 
 - Runs alongside the game: low idle CPU, memory and GPU, no polling when nothing changed. Heavy work (extraction, optimizer search) runs only on user trigger, off the UI thread at low priority.
 - Snappy: opens fast and shows the last build from cached data immediately; recompute never blocks the UI. Cold start and recompute time are checked on the developer's PC with Wilds running before a feature ships.
-- A **performance budget** (cold start, idle RAM and CPU, recompute time) is to be drafted together with Thomas; the Phase 1 UI comparison measures against it.
+- The **performance budget** (cold start, idle RAM and CPU, recompute time) is in [performance-budget.md](performance-budget.md), an initial pass reviewed over time; the Phase 1 UI comparison measures against it.
 - Read-only on the game. Never write to the save, the install or the Steam folders. Never inject into, hook or read the memory of the running game.
 - No secrets or personal data in git: saves, decrypted dumps (they hold hunter IDs) and extracted Capcom data stay out of the repo and the Nexus package. Contributors provide their own local saves.
 
