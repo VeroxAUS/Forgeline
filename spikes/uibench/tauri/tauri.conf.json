@@ -1,0 +1,12 @@
+{
+  "productName": "uibench-tauri",
+  "version": "0.0.0",
+  "identifier": "dev.forgeline.uibench",
+  "build": { "frontendDist": "./dist" },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [{ "title": "uibench", "width": 640, "height": 480 }],
+    "security": { "csp": null }
+  },
+  "bundle": { "active": false, "icon": ["icons/icon.ico"] }
+}

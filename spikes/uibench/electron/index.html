@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><title>uibench</title>
+<style>body{background:#1e1e1e;color:#ddd;font:13px sans-serif;margin:0}
+button{margin:8px}table{border-collapse:collapse;width:100%}td{padding:2px 8px}tr:nth-child(even){background:#262626}
+#t{height:420px;overflow:auto}</style></head><body>
+<button id="b">Run background job</button><span id="s">idle</span><div id="t"><table id="tb"></table></div>
+<script>
+const tb=document.getElementById('tb');
+for(let i=0;i<300;i++){const r=tb.insertRow();[`Item ${i}`,i*7%100,i*13%250,'Rare 8',`Slot ${i%4}`].forEach(v=>r.insertCell().textContent=v);}
+document.getElementById('b').onclick=async()=>{const s=document.getElementById('s');s.textContent='job running';await window.api.runJob();s.textContent='idle';};
+requestAnimationFrame(()=>requestAnimationFrame(()=>window.api.ready()));
+</script></body></html>
