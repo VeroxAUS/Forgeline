@@ -253,3 +253,44 @@ Question: can a scheduled cloud session read new comments (Posts tab) and bug re
 
 ### Open
 - Does GraphQL v2 expose comments or bugs? Does Nexus send authors an email for new comments or bug reports?
+
+## Step 4: save structure, ID matching and talismans (2026-10-28)
+
+Question: where do the owned gear, items and talismans sit in the save, and do the save's fixed IDs match the game data files?
+
+**Result: partial.** The save's structure is mapped (**verified** on a copy of Thomas's save from 2026-10-20, on his PC). ID matching is only shown **by range and by internal consistency**, not by name: names live in text files that nothing has read yet. Talismans: one candidate location found, **not confirmed**. Code: throwaway `spikes/savecheck` on branch `spike/step4-savecheck` (never merged; ran against the real save copy; the live save folder is refused by the code). Output below is structure and counts only; no hunter data was printed or saved to git.
+
+### Slots and equipment box (verified)
+- The save root (`app.savedata.cUserSaveData`) holds `_Data`, an array of **3** character slots (`cUserSaveParam`, 118 fields each). Field names resolve from exe strings (all but 7 of the slot's fields).
+- Only slot 0 has data. Slots 1 and 2 carry a sentinel (a float field equal to -1.0) and empty content. A one-byte field is 1 in slot 0 and 0 in the others, so it is a **candidate** for the "active" marker; with only one used slot it cannot be told apart from "has data". **Open:** how the game marks the active slot when two slots are used; the app should fall back to "the slot that has data, else the most recently written".
+- Active slot's equipment box: `_Equip._EquipBox` is an array of **2,400** `cEquipWork` entries; **59** are in use in this save. Other arrays: item box `_Item._BoxItem` 900 entries (221 in use), pouch 25, `_ArtianPartsBox` 1,000, `_EquipMySet` 140, `_OtEquipBox` 500 (palico gear).
+- Entry layout (`cEquipWork`, field meanings inferred from values, not verified): one byte category (141 means empty), a 32-bit id, a 32-bit second field, 4 and 3 small 16-bit slot arrays (decoration and augment slots, -1 means empty), and a few more small numbers.
+
+### ID checks (partial)
+| Category | What was compared | Result | Strength |
+|----------|-------------------|--------|----------|
+| Armor | Save armor ids per slot (2, 3, 4, 21, 25, 33, 34) against the set bits of the save's own "armor created" flags | exact match for helmet (4 of 4), body (5 of 5), female helmet (3 of 3) | Internal consistency only: the box id is the bit index. |
+| Armor | Same ids against `ArmorSeriesData.user.3` ids (1 to 194) | 7 of 7 inside the range | Weak (range check). |
+| Weapons | Light bowgun ids in the box (0 to 13) against the light bowgun data file | 14 of 14 present in a column of the data rows | Weak: a small dense id range. |
+| Items | Item box ids (221 distinct, highest 805) against the item data file | 221 of 221 present in the id column (809 row-aligned values, 784 distinct, highest 838) | Weak: the column covers about 93% of the id space, so a random id would match most of the time. |
+| Decorations | | **not located** in the save | A decoration is probably an item-box entry or one of the equipment slot ids; not checked. |
+| By name | | **not done** | Needs the text (name) files from the packs. |
+
+Match rate against the 99% criterion therefore cannot be called: every id checked exists in the data, but the check cannot catch a wrong mapping. To close it: read the name text files, then compare names for the ids in the box (about 80 ids on this save). The save-id to data-id question stays **open**, with the working hypothesis "save id = the id column of the matching data row" (true for every category tested, no counter-example).
+
+### Bitsets (verified)
+Weapon created/checked flags exist per weapon type (14 types, 128 bits each), armor created/checked flags per gender and slot (256 bits), `_ItemFoundFlag` and `_ItemCheckedFlag` (2,016 bits; 264 set here). The weapon type order in the save is: Long sword, Short sword, Twin sword, Tachi, Hammer, Whistle, Lance, Gun lance, Slash axe, Charge axe, Rod, Bow, Heavy bowgun, Light bowgun (field names from the exe). In the box, category 13 lines up with the light bowgun (13 entries, ids 0 to 12 plus 13 three times with different second values). Created bits for the light bowgun are 0, 1, 2, 16, 17.
+
+### Talismans (candidate, not confirmed)
+- Charm data is in the game files (`Charm.user.3`: 167 rows, 48 bytes each, plus `AmuletData` 187 rows and random talisman tables, see step 5).
+- In the save, the equipment box has a category 21 entry (one, id 57) and a category 37 pair (ids 0 and 10) that are neither weapons nor armor. Category 21 id 57 is inside the charm id range, so it is a **candidate** owned charm; its skills are not decoded. Random (mystery) talismans, if they exist in this game, would need their skill rolls stored per entry; the entries here carry no field that looks like that, so **how a random talisman is stored is open**. The fallback in the plan stays valid (user enters talismans by hand) until a save with several talismans is checked.
+
+### Not done / open
+- Names (needed for the name-based ID check).
+- Which field marks the active slot when more than one slot is used.
+- Decoration ownership; talisman decoding; whether this older save (2026-10-20) represents the current one.
+- Kills and story flags to unlocked monsters (`_EnemyReport` has 300 `cBossReportParam`; not examined), mission completion.
+- Unresolved field names stay as hashes: 7 of 118 slot fields and all 12 `cEquipWork` fields (so the entry layout above is inferred from values alone).
+
+### Decision this supports
+The reader can already list gear, items and crafted flags by id from the save. The final ID mapping needs a text-file reader (names) and a data-row decoder; both belong to Phase 3.
