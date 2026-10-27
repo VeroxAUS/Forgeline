@@ -260,11 +260,12 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 | Event | Date and time |
 |-------|---------------|
 | Phase approved by Thomas | 2026-10-27 13:05 UTC |
-| Step 1 (licence review) PR merged | |
-| Step 2 (clean-room study) PR merged | |
-| Step 3 PR merged | 2026-10-27 (Thomas passed 13:40 UTC; save half only, data-file sample moved to step 5) |
+| Step 1 (licence review) PR #2 merged | 2026-10-27 13:08 UTC (docs only; merged after cloud check, no separate pass from Thomas) |
+| Step 2 (clean-room study) PR #3 merged | 2026-10-27 13:09 UTC (docs only; merged after cloud check, no separate pass from Thomas) |
+| Step 2 addendum: key-setup re-study PR #7 merged | 2026-10-27 13:32 UTC (added after step 3 found a gap in the decryption notes; docs only, cloud check) |
+| Step 3 PR #6 merged | 2026-10-27 13:42 UTC (Thomas passed 13:40 UTC; save half only, data-file sample moved to step 5) |
 | Step 4 (ID matching, talismans) PR merged | |
-| Step 5 (extraction test) PR merged | |
+| Step 5 (extraction test) PR #8 merged | 2026-10-27 14:00 UTC (Thomas passed 13:58 UTC; partial: located but not decoded, route B schemas needed in Phase 3; motion values not found) |
 | Step 6 (UI comparison) PR merged | |
 | Step 7 (close-out) PR merged | |
 | Phase finished | |
