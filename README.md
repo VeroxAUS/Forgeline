@@ -103,3 +103,5 @@ Semantic versioning. 1.0.0 is the full release, a major addition bumps the minor
 ## Disclaimer
 
 This is an unofficial fan project. It is not affiliated with or endorsed by Capcom or Valve. Monster Hunter Wilds is a trademark of Capcom.
+
+This project is written with AI assistance (Claude), directed and reviewed by the maintainer. Game data and results are verified against the game, never filled in by AI.
