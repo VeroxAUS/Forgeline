@@ -128,3 +128,6 @@ All answered 2026-10-27, in the order they were asked.
 
 ### Motion values approach (2026-10-27)
 - **How do we get motion values and base power (open question 11)?** The maintainer approved all four routes: compare builds by effective raw meanwhile (Phase 4); a deep game-file search early in Phase 3 covering every weapon's motion values and attack and ammo base power; training-dummy measurement in Phase 5; credited, licence-checked community data labelled unverified as a fallback. The maintainer pointed out that motion values matter for all 14 weapons, so the "bowgun ammo matters more" argument does not narrow the search. Written into `docs/PLAN.md` (Phases 3, 4 and 5). Question 11 itself stays open in `open-questions.md` until the values are found.
+
+### Hours estimates in plans (2026-10-27)
+- **Should plans include an hours estimate?** Yes, the maintainer said so ("Yeah probably"). Every plan's estimates section now gives rough wall-clock hours per step and in total next to threads and test rounds (`docs/plans/TEMPLATE.md`, rule 11). The Phase 2 plan estimates about 13 h (range 10 to 18 h), calibrated on Phase 1's 2 h 06 min for 7 steps.

@@ -2,7 +2,7 @@
 
 Target version: 0.N.0 · Status: draft / approved / in progress / done
 
-Each phase plan is written just before its phase, using what earlier phases found. The maintainer reviews and approves it before any work starts. Estimates are in threads and test rounds, not hours; real durations go in the time log (section 10).
+Each phase plan is written just before its phase, using what earlier phases found. The maintainer reviews and approves it before any work starts. Estimates are in threads and test rounds, with rough wall-clock hours per step and in total beside them; real durations go in the time log (section 10).
 
 ## How to read this plan
 A short box at the top, filled in last:
@@ -104,3 +104,4 @@ Elapsed from approval to finish: <hours>. Compare with the estimates in section 
 7. The final step is a close-out that includes the `README.md` update and banner label (section 4), and the done checklist lists each item.
 8. Check the rendered page against this list before publishing the PR and the Artifact. Republish the same Artifact link when the plan changes.
 9. Publish plan pages only via `tools/plan-page` (see its README), never with a hand-built page, so every republish looks identical.
+11. The estimates section gives rough wall-clock hours per step and in total (allowing for parallel stages), alongside threads and test rounds, with a plausible range, the earlier phase it is calibrated on, and the least certain step.

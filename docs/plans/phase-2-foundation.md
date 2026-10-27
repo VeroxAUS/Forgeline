@@ -353,19 +353,27 @@ The last step of every phase is the close-out. Besides updating `PLAN.md`, it up
 
 | # | Stage | Step | Thread | Cloud or PC | Output (PR / doc) | Estimate (threads, test rounds) | Depends on |
 |---|-------|------|--------|-------------|-------------------|---------------------------------|------------|
-| 1 | 1 | Workspace, CI (format, clippy, tests, RAM check on Linux and Windows), hygiene test, `CHANGELOG.md`, `.gitignore`, MPL notice, `ram-log.md` | Foundation thread | Cloud | PR: workspace and CI | 1 thread, 1 cloud round | none |
-| 2 | 2 | Discovery: Steam, library, install, build ID, Steam ID, save files; data directory; `forgeline-check discover` | Discovery thread | Cloud code, PC check | PR: `forgeline-core`, `forgeline-check` | 1 thread, 1 cloud round, 1 PC round | 1 |
-| 3 | 2 | Fixture save builder and first fixtures | Fixture thread (separate from the reader thread) | Cloud | PR: `tools/fixture-builder`, `fixtures/` | 1 thread, 1 cloud round | 1 |
-| 4 | 3 | Save reader: decrypt, inflate, walk, typed summary, active slot; `forgeline-check save` | Reader thread (reads `research.md` only) | Cloud code, PC check | PR: `forgeline-save` | 1 to 2 threads, 1 cloud round, 1 PC round | 1, 3 |
-| 5 | 2 | Pack reader and exe scan (route A), needed-files list, ree-pak-rs credit; `forgeline-check pak` | Pack thread | Cloud code, PC check | PR: `forgeline-pak`, notices | 1 to 2 threads, 1 cloud round, 1 to 2 PC rounds | 1 |
-| 6 | 3 | Update flow: stage, validate (structural gate), swap, keep last good; `--update` mode; `forgeline-check update` | Update thread | Cloud code, PC check | PR: `forgeline-update` | 1 thread, 1 cloud round, 1 PC round | 2, 5 |
-| 7 | 4 | Engine: save-folder watcher, background recompute at low priority, view cache, `Snapshot` | Engine thread | Cloud code, PC check | PR: `forgeline-engine` | 1 thread, 1 cloud round, 1 PC round | 2, 4 |
-| 8 | 5 | The bare egui window from the debug data viewer, update button and notices | Window thread | Cloud code, PC check | PR: `forgeline-app` | 1 to 2 threads, 1 cloud round, 1 PC round | 6, 7 |
-| 9 | 6 | Measure with Wilds running: benchmark harness, cold start to last view, recompute time, idle RAM, CPU and GPU, game frame times; fill `ram-log.md`; confirm the active-slot field | Benchmark thread | PC | PR: `tools/bench`, `research.md` section | 1 thread, 1 to 2 PC rounds | 8 |
-| 10 | 7 | Re-review `performance-budget.md` against the Phase 1 and step 9 numbers | Docs thread | Cloud | PR: budget changes | 1 thread, 1 cloud round | 9 |
-| 11 | 8 | Close-out: `PLAN.md`, `README.md` (text, badges, roadmap, banner phase label, first screenshot), `CHANGELOG.md` 0.2.0, version bump, plan time log | Docs thread | Cloud | PR: docs and version | 1 thread, 1 cloud round | 1 to 10 |
+| 1 | 1 | Workspace, CI (format, clippy, tests, RAM check on Linux and Windows), hygiene test, `CHANGELOG.md`, `.gitignore`, MPL notice, `ram-log.md` | Foundation thread | Cloud | PR: workspace and CI | 1 thread, 1 cloud round; about 1 h | none |
+| 2 | 2 | Discovery: Steam, library, install, build ID, Steam ID, save files; data directory; `forgeline-check discover` | Discovery thread | Cloud code, PC check | PR: `forgeline-core`, `forgeline-check` | 1 thread, 1 cloud round, 1 PC round; about 1.5 h | 1 |
+| 3 | 2 | Fixture save builder and first fixtures | Fixture thread (separate from the reader thread) | Cloud | PR: `tools/fixture-builder`, `fixtures/` | 1 thread, 1 cloud round; about 1 h | 1 |
+| 4 | 3 | Save reader: decrypt, inflate, walk, typed summary, active slot; `forgeline-check save` | Reader thread (reads `research.md` only) | Cloud code, PC check | PR: `forgeline-save` | 1 to 2 threads, 1 cloud round, 1 PC round; about 2 h | 1, 3 |
+| 5 | 2 | Pack reader and exe scan (route A), needed-files list, ree-pak-rs credit; `forgeline-check pak` | Pack thread | Cloud code, PC check | PR: `forgeline-pak`, notices | 1 to 2 threads, 1 cloud round, 1 to 2 PC rounds; about 3 h | 1 |
+| 6 | 3 | Update flow: stage, validate (structural gate), swap, keep last good; `--update` mode; `forgeline-check update` | Update thread | Cloud code, PC check | PR: `forgeline-update` | 1 thread, 1 cloud round, 1 PC round; about 2 h | 2, 5 |
+| 7 | 4 | Engine: save-folder watcher, background recompute at low priority, view cache, `Snapshot` | Engine thread | Cloud code, PC check | PR: `forgeline-engine` | 1 thread, 1 cloud round, 1 PC round; about 1.5 h | 2, 4 |
+| 8 | 5 | The bare egui window from the debug data viewer, update button and notices | Window thread | Cloud code, PC check | PR: `forgeline-app` | 1 to 2 threads, 1 cloud round, 1 PC round; about 2 h | 6, 7 |
+| 9 | 6 | Measure with Wilds running: benchmark harness, cold start to last view, recompute time, idle RAM, CPU and GPU, game frame times; fill `ram-log.md`; confirm the active-slot field | Benchmark thread | PC | PR: `tools/bench`, `research.md` section | 1 thread, 1 to 2 PC rounds; about 2 h | 8 |
+| 10 | 7 | Re-review `performance-budget.md` against the Phase 1 and step 9 numbers | Docs thread | Cloud | PR: budget changes | 1 thread, 1 cloud round; about 0.5 h | 9 |
+| 11 | 8 | Close-out: `PLAN.md`, `README.md` (text, badges, roadmap, banner phase label, first screenshot), `CHANGELOG.md` 0.2.0, version bump, plan time log | Docs thread | Cloud | PR: docs and version | 1 thread, 1 cloud round; about 0.75 h | 1 to 10 |
 
 Total estimate: 11 to 14 threads and 14 to 16 test rounds, 8 to 9 of them on the PC. At most 3 threads run at once. Estimates are guesses and will be compared with the time log.
+
+Hours (rough wall-clock from thread start to merge, each including its test round and the wait for the maintainer to pass it):
+
+- **Per step:** the figures in the table above, 17 h added up (1 + 1.5 + 1 + 2 + 3 + 2 + 1.5 + 2 + 2 + 0.5 + 0.75 = 17.25).
+- **Total with parallel stages:** about 13 h from approval to the last merge. Stage 1 is 1 h, stage 2 is 3 h (steps 2, 3 and 5 overlap, step 5 is the longest), stage 3 is 2 h, stage 4 is 1.5 h, stage 5 is 2 h, stage 6 is 2 h, stage 7 is 0.5 h and stage 8 is 0.75 h.
+- **Plausible range:** 10 to 18 h. It assumes the maintainer passes each test round within about 15 minutes; a slower reply adds to the total.
+- **Calibration:** Phase 1 took 2 h 06 min for 7 steps (about 18 min a step), but those were docs and throwaway spikes with several threads in parallel. Phase 2 steps are real code with tests, CI and PC rounds, so each is estimated at 3 to 6 times a Phase 1 step.
+- **Least certain:** step 5 (3 h) and step 9 (2 h, a second round if RAM is over a limit).
 
 Where the estimate is most likely wrong:
 - Step 5 is the largest unknown: the restricted exe rebuild must run in seconds, and the pack table handling for the two newest patches uses the chunk table. If it needs more than 2 threads, stop and report to the maintainer (Opus on high may then be worth suggesting).
@@ -556,6 +564,7 @@ Steps 1, 3, 10 and 11 are cloud-only and checked in the cloud.
 | Date | Reviewer | Edit or decision |
 |------|----------|------------------|
 | 2026-10-27 | The maintainer | Asked for the Phase 1 retro items to be folded in (steps 1, 9, 10, RAM rule, CI), and for releases, tags and branch deletions to be listed up front. |
+| 2026-10-27 | The maintainer | Asked for an hours estimate in every plan. Added per step and in total (about 13 h, range 10 to 18 h), calibrated on Phase 1's 2 h 06 min. |
 | 2026-10-27 | The maintainer | The README banner still said Phase 1: this PR sets it to Phase 2, and the close-out step and the template now check the README text, badges, roadmap and banner every phase. |
 | 2026-10-27 | The maintainer | Motion values: all four routes approved (effective raw meanwhile, deep game-file search early in Phase 3 for all 14 weapons, training-dummy measurement in Phase 5, credited community data labelled unverified as a fallback). Recorded in `PLAN.md` and `closed-questions.md`. |
 
