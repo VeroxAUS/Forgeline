@@ -1,6 +1,6 @@
 # Forgeline: MH Wilds Build Planner, project plan and handover
 
-Written from the design conversation with the maintainer on 2026-10-27 and updated with every decision made that day. **Phase 1 (spikes) is closed (version 0.1.0); no product code exists yet.** Phase 2 is next. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
+Written from the design conversation with the maintainer on 2026-10-27 and updated with every decision made that day. **Phase 1 (spikes) is closed (version 0.1.0); no product code exists yet.** Phase 2 (foundation) is planned in [plans/phase-2-foundation.md](plans/phase-2-foundation.md), awaiting the maintainer's approval. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
 
 ## 1. Goal
 
@@ -104,9 +104,9 @@ Each phase has a detailed plan in `docs/plans/phase-N-name.md`, written just bef
    - Extraction test on the developer's install: skills, weapons, armor, decorations, charms, Artian tables, hitzones, drops, motion values. Then decide what stays hand-written.
    - UI comparison: pure-Rust UI versus Tauri versus Electron, measured with Wilds running.
 2. **Foundation:** finds the save and game install automatically, our save reader, a file watcher, the extractor and the update button. Fixture saves for tests, a debug data viewer shown in a bare window (grown each phase), changelog and versioning.
-3. **Data and progression:** data model for every weapon, low and high rank; unlock logic (kills and story flags to unlocked monsters).
-4. **Light bowgun optimizer:** damage formula, must-haves, presets, per-monster mode, alternative builds, uptime inputs and robustness check. Includes the comfort-skill research round.
-5. **Calibration:** comfort weights from reference builds, plus training-room checks (single shot, one skill at a time, affinity over 100 or more hits, ammo types) and finding out what the training dummy displays. Tests compare **ratios** because the dummy's hitzones are unknown.
+3. **Data and progression:** data model for every weapon, low and high rank; unlock logic (kills and story flags to unlocked monsters). **Early step: a deep game-file search for motion values and attack and ammo base power for all 14 weapons** (not just bowgun ammo), using the Phase 2 pack reader and route B schemas for the action data under `Player/ActionData/Wp*` and related files. Anything not found is recorded as not in the files (question 11).
+4. **Light bowgun optimizer:** until motion values are found, builds are compared by **effective raw** (attack with affinity), which is labelled as such and does not need motion values; it cannot judge trade-offs that depend on specific attacks (for example raw against element). Damage formula, must-haves, presets, per-monster mode, alternative builds, uptime inputs and robustness check. Includes the comfort-skill research round.
+5. **Calibration:** comfort weights from reference builds, plus training-room checks (single shot, one skill at a time, affinity over 100 or more hits, ammo types) and finding out what the training dummy displays. Tests compare **ratios** because the dummy's hitzones are unknown. **Motion values are measured here for all 14 weapons** by hitting the dummy with known gear and working them back out of the damage formula, to verify anything found in the game files. If neither the files nor the dummy give a weapon's values, credited, licence-checked community data is used as a fallback, shown to the user as unverified.
 6. **Interface and shopping list:** polish of the bare window, dark theme, equipment-style display with hover details, shopping list.
 7. **Farming routes, decorations and melding.**
 8. **Artian and Gogma Artian planner.**
@@ -134,6 +134,8 @@ Details and evidence are in [research.md](research.md); the plan and its time lo
 - Open for Phase 3 and 4: by-name ID matching, talisman decoding, unlocked-monster mapping, motion values and ammo base power (question 11).
 
 After that: the other weapons one at a time (each optimized and labelled tuned or generic before 1.0.0), then Nexus packaging.
+
+**Motion values (open question 11), approved by the maintainer 2026-10-27:** four routes, all kept. (1) Compare builds by effective raw meanwhile (Phase 4). (2) Deep game-file search early in Phase 3 for every weapon's motion values and base power. (3) Training-dummy measurement in Phase 5. (4) Credited, licence-checked community data labelled unverified as the fallback. Motion values matter for all 14 weapons, not only the bowguns and bow.
 
 ### TODO tools
 Built when needed, each needing the maintainer's yes at the time: save diff (compare two save copies to map fields to unlocks), fixture save builder, data diff (compare two extractions, feeds the validation gate), build explainer (why the optimizer picked a build), benchmark harness (start-up, RAM, recompute time).
