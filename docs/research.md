@@ -152,3 +152,18 @@ They re-encrypt by reversing every step above. We are read-only on the game, so 
 - Block sizes, header length and the flag value above should be checked against a real save, since their code handles several games and I only followed the Wilds path.
 - CityHash64 version: they use a Rust crate; the checksum must match the game's variant. If our crate gives a different value on a known-good block, try the other CityHash revisions (v1.0 or v1.1, or Google FarmHash `Hash64`) before suspecting the key.
 - Licence of the type data asset and of the code they may derive from: still open (see licence entry).
+
+## Step 3: type-data spike, route A (2026-10-28)
+
+Question: can the game `.exe` on disk give us the names behind the save's hashes (route A)?
+
+Method: our own throwaway Rust tool (`spikes/typedump`, branch `spike/step3-typedump`, never merged) read `MonsterHunterWilds.exe` from the Steam library found through `libraryfolders.vdf` (read-only, one pass, about 2 s), took every printable-ASCII string of 3 to 200 characters and hashed it with murmur3 (seed `0xFFFFFFFF`, as in step 2). The install is modded (`dinput8.dll`, `reframework`, `pak_mods`, Fluffy Mod Manager marker); the `.exe` is the one on disk and was not launched. Results stay in `E:\mhbis\out` (not in git). Code ran against the real exe and a copy of the real save.
+
+Results:
+- **Verified:** 2,252,128 distinct strings; the hashes of `_Data`, `_BasicData`, `_BoxItem`, `_PouchItem` and `_ItemFoundFlag` (field names from step 2) all appear in the exe's strings. So field names can be recovered by hashing exe strings (about 67,700 strings start with `_` and a capital).
+- **Verified:** full dotted class names (for example `app.MissionIDList.ID`) are **not** stored as plain strings. Only namespace pieces (198 `app.` strings, e.g. `app.savedata`) and about 17,500 short class-like names (`cXxx`) exist. Class hashes would have to be rebuilt by combining namespace and short name and hashing; that is untested because the next point blocks it.
+- **Blocked:** the save copy could not be decrypted from the step 2 notes. With flags `0x18` and layout confirmed (encrypted area is exactly two blocks of 6 x 0x4000 bytes plus two 0x210 headers, if block sizes use the generator output rather than the raw state), no key derivation I tried produced the expected deflate wrapper (about 1.5 million combinations of generator start, how the Steam ID is mixed in, skipped outputs, key/IV byte lanes and AES mode OFB/CTR/CFB). So no save hash was available to match, and the step 3 pass criterion (parse a save into named classes) is **not yet met**.
+
+Status of route A: **partial** (names for fields recoverable, class names unconfirmed, no save parse). Not a fail of the exe approach itself; the blocker is step 2's crypto notes.
+
+Needs from the coordinator: a clean-room study thread to re-read MHWeditor's key setup (how the Steam ID enters the generator and how the key and IV bytes are drawn) and write the answer in own words, or a licensed alternative. Then step 3 can finish (class-name reconstruction plus parse) in about one more thread.
