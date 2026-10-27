@@ -10,34 +10,36 @@ Each phase plan is written just before its phase, using what earlier phases foun
 
 - **Stage 1:** step 1 (workspace, CI, hygiene checks, changelog). Everything else waits for it.
 - **Stage 2 (parallel):** step 2 (find the save and the game), step 3 (fixture save builder), step 5 (pack reader and exe scan).
-- **Stage 3 (parallel):** step 4 (save reader, needs 3), step 6 (update flow with staging and validation, needs 2 and 5).
-- **Stage 4:** step 7 (engine: file watcher, background recompute, cache; needs 2 and 4).
-- **Stage 5:** step 8 (the bare egui window built from the debug data viewer; needs 6 and 7).
-- **Stage 6:** step 9 (measure on the maintainer's PC with Wilds running; needs 8).
-- **Stage 7:** step 10 (re-review the performance budget against real numbers; needs 9).
-- **Stage 8:** step 11 (close-out; needs 1 to 10).
+- **Stage 3 (parallel):** step 4 (save reader, needs 3), step 6 (update flow with staging and validation, needs 2 and 5), step 7 (UX design: brief, mock-ups and style guide; cloud only, needs nothing from the PC).
+- **Stage 4:** step 8 (engine: file watcher, background recompute, cache; needs 2 and 4).
+- **Stage 5:** step 9 (the bare egui window built from the debug data viewer, following the style guide; needs 6, 7 and 8).
+- **Stage 6:** step 10 (UI footprint check: four sample views compared on the maintainer's PC; also ports the benchmark harness; needs 9, and uses the widget list from step 7).
+- **Stage 7:** step 11 (measure the real app on the maintainer's PC with Wilds running; needs 9 and 10).
+- **Stage 8:** step 12 (re-review the performance budget against real numbers; needs 11).
+- **Stage 9:** step 13 (close-out; needs 1 to 12).
 
 **Decisions needed from the maintainer** (details in section 7):
 
 - Tools: approved 2026-10-27 (fixture save builder, `forgeline-check`, `tools/bench`).
 - Approved 2026-10-27: the RAM rule for every PR (section 3.4), including its caps of 140 MB private bytes and 80 MB working set.
 - Approved 2026-10-27: the update flow runs as a short-lived child process of the app, not as a thread (section 3.1).
+- Approved 2026-10-27: a UX design step 7 (brief, mock-ups, style guide), and a look check next to the performance check in every window test round.
 - Approved 2026-10-27: a short hand-written list of the game file paths we need is kept in the repo (section 3.3).
-- Deferred: the proposed performance budget changes (section 3.4). The current budget stands as written until they are discussed at the step 10 budget re-review, or earlier only if the measurements suggest the budget is impossible to meet.
+- Deferred: the proposed performance budget changes (section 3.4). The current budget stands as written until they are discussed at the step 12 budget re-review, or earlier only if the measurements suggest the budget is impossible to meet.
 
 **Maintainer's own actions, listed up front (trial arrangement, sessions cannot push tags or delete branches):**
 
 - At close-out: create the `v0.2.0` tag and a GitHub pre-release.
 - After each step PR merges: delete its branch if the automatic delete did not (a cloud session gets a 403).
 - Keep `spikes-archive` as it is; it is the only branch that stays besides `main`.
-- During step 9: run the benchmark as administrator with Wilds at the Scarlet Forest base camp spot.
+- During steps 10 and 11: run the benchmark as administrator with Wilds at the Scarlet Forest base camp spot.
 
 **Phase 1 retro items folded in:**
 
-- Step 9 closes the Phase 1 step 6 gaps: "last build on screen" time and save-change recompute time, with Wilds running.
-- Electron (only 2 valid no-Wilds runs) and Slint (never tested) are **not** re-run. Reasons are in section 2.
-- A RAM check on every PR (step 1 for CI, step 9 for the PC reading).
-- The budget is re-reviewed against the real Phase 1 numbers (step 10).
+- Steps 10 and 11 close the Phase 1 step 6 gaps: "last build on screen" time and save-change recompute time, with Wilds running.
+- Electron (only 2 valid no-Wilds runs) is **not** re-run; the reason is in section 2. Slint (never tested) is now measured in step 10, together with a plain Win32 window and two egui renderers, to see how much of the 127 MB is the graphics stack.
+- A RAM check on every PR (step 1 for CI, step 11 for the PC reading).
+- The budget is re-reviewed against the real Phase 1 numbers (step 12).
 - GitHub Actions for the app crates (format, clippy, tests) from the first PR (step 1).
 
 ## 1. Goal and done
@@ -52,6 +54,8 @@ Done means:
 - [ ] The update button stages a new extraction of the needed game files, validates it against the last good data, and swaps it in only if it passes. A failed update keeps the last good data and says so on screen.
 - [ ] A game patch (new build ID) shows a visible "data may be out of date" notice.
 - [ ] CI (format, clippy, tests, hygiene checks) is green on Linux and Windows for every PR.
+- [ ] `docs/ux/brief.md`, `docs/ux/style-guide.md` and the clickable mock-ups exist, and the maintainer has reacted to them; every window from this phase on follows them.
+- [ ] The UI footprint check has numbers and screenshots for each variant, and the maintainer has judged memory and looks and decided which UI library to keep.
 - [ ] Cold start to the last view, idle RAM, idle CPU and recompute time are measured on the maintainer's PC with Wilds running and written down against the budget.
 - [ ] No save, dump or extracted Capcom data is in git, in a test fixture or in a PR.
 - [ ] The performance budget is re-reviewed and the maintainer has decided each proposed change.
@@ -71,11 +75,10 @@ Done means:
 - **Clean-room rule still applies.** The save reader (step 4) and fixture builder (step 3) are written from `research.md` only. Nobody opens MHWeditor.
 - **Why Electron and Slint are not re-run:**
   - Electron's two valid no-Wilds runs only affect a row that was not decisive. With Wilds running it had all 3 runs, and its private bytes (206 MB) are over the 150 MB hard limit by a wide margin, so another run cannot change the verdict.
-  - Slint is only worth testing if egui fails the RAM check in this phase. The trigger is written into the risks (section 7): private bytes above 140 MB with real data in step 9.
-  - Slint's licence terms are still open (open question 6), which would also have to be settled before use.
+  - Slint was not tested in Phase 1. The maintainer approved a UI footprint check (step 10) that measures it, with egui on two renderers and a plain Win32 window, on the same small sample view. Slint's licence terms are still open (open question 6), so step 10 reads them first and uses only its royalty-free or MIT-compatible terms, never the GPL option; if those terms cannot be confirmed, Slint is skipped and the report says so.
 - **Open questions that touch this phase but are not answered here:**
   - Save-ID to data-ID matching by name (question 1), talisman decoding (2) and unlocked-monster mapping (3) are Phase 3. The window shows raw IDs and counts only.
-  - Which character slot is active: the notes disagree. [PLAN.md](../PLAN.md) section 3 says one slot has `Active` = 1, but open question 3 lists the active slot as still open. Step 4 reads the `Active` field and step 9 confirms it on the maintainer's save; if it does not hold, the window shows all slots and says the active one is unknown.
+  - Which character slot is active: the notes disagree. [PLAN.md](../PLAN.md) section 3 says one slot has `Active` = 1, but open question 3 lists the active slot as still open. Step 4 reads the `Active` field and step 11 confirms it on the maintainer's save; if it does not hold, the window shows all slots and says the active one is unknown.
   - Update confidence above 95% (question 9). Step 6 builds the structural half of the gate; the scoring half needs the optimizer.
   - Motion values (question 11): this phase only makes sure the pack reader can serve the deep search in Phase 3 (see [PLAN.md](../PLAN.md) section 6, Phases 3 and 5).
 
@@ -96,6 +99,7 @@ A Cargo workspace of small crates. The UI is a thin shell; nothing heavy lives i
 | `tools/forgeline-check` | developer command-line report (counts and names only) | 2 |
 | `tools/fixture-builder` | builds small synthetic fixture saves | 3 |
 | `tools/bench` | benchmark harness, ported from the Phase 1 sampler | 9 |
+| `tools/ui-footprint` | four small sample apps for the UI footprint check (own workspace, never shipped) | 9 |
 
 What runs where:
 
@@ -112,12 +116,14 @@ Step by step:
 - **Step 4:** needs step 3's fixtures and step 1. It takes the type-name table as input; step 5 produces that table, and until then tests use a small fixture table.
 - **Step 5:** no special ordering after step 1. Its output (the type-name table and the pack reader) is used by steps 4 on the real files and by step 6.
 - **Step 6:** needs step 2 (where the game is) and step 5 (how to read it).
-- **Step 7:** needs step 2 and step 4.
-- **Step 8:** needs step 6 (update status) and step 7 (the `Snapshot`).
-- **Step 9:** needs the working window from step 8.
-- **Step 10:** needs step 9's numbers.
-- **Step 11:** last; needs steps 1 to 10.
-
+- **Step 7:** no special ordering after step 1. It runs beside the backend steps and needs nothing from the PC. It finishes before or alongside step 10 so its widget list (tables, tooltips, comparisons, stat tiles) tells the UI footprint check what the sample view must contain, and before step 9 so the window follows the style guide.
+- **Step 8:** needs step 2 and step 4.
+- **Step 9:** needs step 6 (update status), step 7 (style guide) and step 8 (the `Snapshot`).
+- **Step 10:** needs the working window from step 9 and ports the benchmark harness, which step 11 reuses.
+- **Step 10 detail:** four variants render the same small dark sample view (a table of invented gear, a few stat numbers and a button). Nothing in the product depends on the result until the maintainer decides; if another UI library is chosen, porting `view.rs` is a separate follow-up step (about 2 h, not counted in the totals below).
+- **Step 11:** needs step 9 and the harness from step 10. It runs after step 10 so that a change of UI library, if the maintainer chooses one, is measured rather than the old window.
+- **Step 12:** needs step 11's numbers.
+- **Step 13:** last; needs steps 1 to 12.
 PC safety (all steps): the app never writes to the save, the game install or the Steam folders. It opens the save file with read-and-share access (other programs, including the game, may keep writing), reads the whole file (about 200 KB) into memory, checks size and modified time were unchanged across the read, and retries on a mismatch. All parsing is on that in-memory copy, never on a handle to the live file. It never injects, hooks or reads the game's memory.
 
 ### 3.2 Per-file design
@@ -128,13 +134,13 @@ Files are listed by step. Every source file starts with the MPL-2.0 Exhibit A no
 - **Purpose:** workspace definition, pinned toolchain, and ignore rules for saves, dumps, packs and extracted data.
 - **Inputs and outputs:** in, nothing. Out, a workspace that builds on Linux (all crates except the window) and Windows (everything).
 - **Depends on:** nothing.
-- **Notes:** release profile tuned for size and start-up (`opt-level = "s"` or `3` decided by measurement in step 9, `lto`, `panic = "abort"`, `strip`). Version `0.2.0-dev` until close-out.
+- **Notes:** release profile tuned for size and start-up (`opt-level = "s"` or `3` decided by measurement in step 11, `lto`, `panic = "abort"`, `strip`). Version `0.2.0-dev` until close-out.
 
 #### `.github/workflows/ci.yml` (step 1)
 - **Purpose:** format check, clippy with warnings denied, tests, and the RAM check, on every PR.
 - **Inputs and outputs:** in, the PR. Out, a pass or fail per job. Jobs run on `ubuntu-latest` and `windows-latest`.
 - **Depends on:** the workspace and `crates/forgeline-core/tests/repo_hygiene.rs`.
-- **Notes:** the RAM job builds the release binary on Windows and runs `forgeline --headless-check <fixture>`, which loads the fixture data, builds a `Snapshot` and prints peak private bytes (no window, because hosted runners have no GPU). It fails the job above the limit in section 3.4. This checks the data and engine side only; the GL window cost is read on the PC (step 9).
+- **Notes:** the RAM job builds the release binary on Windows and runs `forgeline --headless-check <fixture>`, which loads the fixture data, builds a `Snapshot` and prints peak private bytes (no window, because hosted runners have no GPU). It fails the job above the limit in section 3.4. This checks the data and engine side only; the GL window cost is read on the PC (step 11).
 
 #### `crates/forgeline-core/tests/repo_hygiene.rs` (step 1)
 - **Purpose:** keep personal data and Capcom data out of git, and keep source files uniform.
@@ -142,7 +148,7 @@ Files are listed by step. Every source file starts with the MPL-2.0 Exhibit A no
 - **Depends on:** nothing.
 - **Notes:** fails on tracked files matching save, pak, dump or extracted-data patterns (`*.bin` outside the fixtures folder, `*.pak`, `*.user.3`, `*.msg.*`, `*dump*`), on a source file without the MPL-2.0 notice, and on any commit in the PR range whose author or committer email is not the VeroxAUS noreply, Claude's noreply or GitHub's. Fixtures are allowed only under `fixtures/` and only when listed in `fixtures/README.md` as synthetic.
 
-#### `CHANGELOG.md` (steps 1, 11)
+#### `CHANGELOG.md` (steps 1, 13)
 - **Purpose:** the changelog, from this phase on.
 - **Inputs and outputs:** in, one line per merged step. Out, an `Unreleased` section that becomes `0.2.0` at close-out.
 - **Depends on:** nothing.
@@ -244,43 +250,67 @@ Files are listed by step. Every source file starts with the MPL-2.0 Exhibit A no
 - **Depends on:** nothing.
 - **Notes:** the same manifest is used for the patch warning: current build ID versus the manifest's.
 
-#### `crates/forgeline-engine/src/lib.rs` (step 7)
+#### `docs/ux/brief.md` (step 7)
+- **Purpose:** the UX brief: who the user is, the key moments, and what must be visible at a glance.
+- **Inputs and outputs:** in, `PLAN.md` section 2 (what was asked for) and the maintainer's reactions. Out, a short document with the user, 4 to 6 key moments (for example "just finished a hunt, what now?", "second monitor during a quest", "game just patched"), the screen list, and the glance rules.
+- **Depends on:** nothing.
+- **Notes:** says whether an in-game overlay matters (deferred, per the plan). No game data; sample content is invented.
+
+#### `docs/ux/mockups/` and the published pages (step 7)
+- **Purpose:** clickable mock-ups of the 3 or 4 main screens for the maintainer to react to.
+- **Inputs and outputs:** in, the brief. Out, hand-written HTML pages in the dark theme (best build, why this build with alternatives and assumptions, shopping list, data and update status), kept in the repo and published as Artifact pages.
+- **Depends on:** `docs/ux/brief.md`.
+- **Notes:** invented sample gear names and numbers, clearly labelled as samples; no Capcom names, art or data, no hunter data. Mock-ups show the look and flow, not performance.
+
+#### `docs/ux/style-guide.md` (step 7)
+- **Purpose:** colours, type and layout rules every later window follows.
+- **Inputs and outputs:** in, the mock-ups and the maintainer's reactions. Out, colour tokens, font sizes for second-monitor reading, spacing and layout rules, the widget list for step 10 and the rule that Phase 6 polish builds on this guide.
+- **Depends on:** the mock-ups.
+- **Notes:** contrast checked for dark only (the app is dark-theme only); text sizes given in points at 100% scaling and at a typical second-monitor distance.
+
+#### `crates/forgeline-engine/src/lib.rs` (step 8)
 - **Purpose:** owns the worker thread and the `Snapshot`.
 - **Inputs and outputs:** `Engine::start(datadir, notify: impl Fn()) -> Engine`; `engine.snapshot() -> Arc<Snapshot>`. `Snapshot` holds discovery results, save summary or the reason it is missing, data status (current manifest, patch warning, last update outcome) and a version counter.
 - **Depends on:** `forgeline-core`, `forgeline-save`, `watch.rs`, `cache.rs`.
 - **Notes:** the thread runs at the lowest priority. Parse failures keep the previous good summary and set a visible error, never silent wrong data.
 
-#### `crates/forgeline-engine/src/watch.rs` (step 7)
+#### `crates/forgeline-engine/src/watch.rs` (step 8)
 - **Purpose:** watch the save folder with the operating system's change notifications (no timer).
 - **Inputs and outputs:** a callback on "`data001Slot.bin` changed".
 - **Depends on:** the `notify` crate (licence checked in step 1 and recorded).
 - **Notes:** waits about 500 ms of quiet after the last event so a half-written file is not read; the size and modified-time check in section 3.1 is the second guard. Watches the one folder, not recursively. If the folder does not exist yet it watches the parent for its creation.
 
-#### `crates/forgeline-engine/src/cache.rs` (step 7)
+#### `crates/forgeline-engine/src/cache.rs` (step 8)
 - **Purpose:** the view cache, so the window shows the last view at once.
 - **Inputs and outputs:** `load() -> Option<Snapshot>`, `store(&Snapshot)`. One small JSON file.
 - **Depends on:** `forgeline-core`.
 - **Notes:** holds the derived summary only (counts, slot table, build ID), never the raw save, and no hunter name or ID. Stamped with the save's size and modified time and the schema version; a mismatch means "show it, mark it as refreshing, recompute". A corrupt cache is ignored and rebuilt.
 
-#### `crates/forgeline-app/src/main.rs` (step 8)
+#### `crates/forgeline-app/src/main.rs` (step 9)
 - **Purpose:** program entry: window, the `--update` child mode, the `--headless-check` mode used by CI.
 - **Inputs and outputs:** command-line flags (`--data-dir`, `--update`, `--headless-check <fixture>`); otherwise opens the window.
 - **Depends on:** `forgeline-engine`, `forgeline-update`, `view.rs`.
 - **Notes:** dark theme set once at start. No network code is linked in.
 
-#### `crates/forgeline-app/src/view.rs` (step 8)
+#### `crates/forgeline-app/src/view.rs` (step 9)
 - **Purpose:** the debug data viewer, drawn from a `Snapshot`.
 - **Inputs and outputs:** `fn show(ui, &Snapshot, &mut ViewState)`.
 - **Depends on:** `forgeline-engine`.
 - **Notes:** panels: where things were found (Steam ID folder, library, install, build ID, mod markers); save (slot table with the active slot marked, counts); game data (extraction time, build ID, status, patch notice, last update result with findings); an Update button with progress. Text is large and high-contrast for a second monitor. It never lays out more than it shows (tables are virtualised), and it never repaints without a reason.
 
-#### `tools/bench/src/main.rs` (step 9)
+#### `tools/ui-footprint/` (step 10)
+- **Purpose:** compare what each UI choice costs and how it looks, on the same small dark sample view, before the app grows around the current choice.
+- **Inputs and outputs:** four small apps in their own Cargo workspace. Each shows a table of invented gear, a few stat numbers and a button, in the dark theme. Out, per variant: private bytes, working set, cold start to first frame and idle CPU and GPU (through `tools/bench`), plus a screenshot saved on the PC.
+- **Depends on:** `tools/bench` (ported in this step).
+- **Notes:** variants are (a) egui with the wgpu renderer, (b) egui with the glow (OpenGL) renderer and unneeded features off, (c) Slint under its royalty-free or MIT-compatible terms only (never the GPL option; the licence is read first and recorded in `THIRD-PARTY-NOTICES.md`, and the variant is skipped and reported if those terms cannot be confirmed), (d) a plain native Win32 window through the `windows` crate. (a) and (b) look identical because the renderer does not change how egui looks; (c) and (d) look different. Phase 1 measured the glow backend, so (b) is the Phase 1 baseline re-measured with features off and (a) is new. No network code, no Capcom data, no real save data. Not part of the shipped app.
+
+#### `tools/bench/src/main.rs` (steps 10, 11)
 - **Purpose:** repeatable numbers: cold start to the last view, idle RAM (working set and private bytes), idle CPU over 60 s, recompute time after a save change, and the game's frame times.
 - **Inputs and outputs:** in, the app path, a data directory and a scenario. Out, a results file in `E:\mhbis\bench` with median of 3 runs.
 - **Depends on:** the app's trace output (below).
-- **Notes:** ported from the archived Phase 1 `spikes/sampler`, now our own product-side tool. The Windows frame-time module needs administrator rights and never touches the game process. The app prints two timestamps when `FORGELINE_TRACE=1` is set: "first view drawn" and "snapshot ready after save change". Tests copy a fixture or a save copy over a copy of the save in a scratch folder, never the live one.
+- **Notes:** ported from the archived Phase 1 `spikes/sampler` in step 10, now our own product-side tool; step 11 adds the app trace points. The Windows frame-time module needs administrator rights and never touches the game process. The app prints two timestamps when `FORGELINE_TRACE=1` is set: "first view drawn" and "snapshot ready after save change". Tests copy a fixture or a save copy over a copy of the save in a scratch folder, never the live one.
 
-#### `docs/ram-log.md` (steps 1, 9, every later PR)
+#### `docs/ram-log.md` (steps 1, 11, every later PR)
 - **Purpose:** the running RAM record (section 3.4).
 - **Inputs and outputs:** one line per PR that changes the app: date, PR, private bytes, working set, change from the previous line.
 - **Depends on:** nothing.
@@ -314,14 +344,14 @@ Budget rows from [performance-budget.md](../performance-budget.md), what this ph
 
 | Row | Target / hard limit | Phase 1 measured (empty egui window) | Phase 2 expectation | Checked in |
 |-----|---------------------|--------------------------------------|---------------------|------------|
-| Cold start to last view | under 1 s / 2 s | 200 ms to first frame | stays well under 1 s: read one small JSON, draw | step 9 |
-| Idle RAM | under 80 MB / 150 MB | 73.5 MB working set, 127 MB private | at most a few MB more; data held is a summary of a few KB | every PR, step 9 |
-| Idle CPU / GPU | 0% / no redraws | 0.00% / 0.00% | unchanged; the watcher is event driven | step 9 |
-| Save change to updated view | under 2 s / 5 s | not measured | read, inflate, walk and summarise 16.5 MB: expected well under 1 s on the test PC | step 9 |
-| UI freeze during work | none over 16 ms / 50 ms | none seen | all work off the UI thread | step 9 |
-| Background work | low priority, at most 2 cores | job on 1 core, no stutter | engine is one thread; update is one process at below-normal priority | step 9 |
-| Extraction | under 5 min, under 1 GB / 10 min, 2 GB | not measured | pack index about 17 MB plus single files; mostly disk time | step 9 |
-| Install size | under 50 MB / 100 MB | not measured | one binary, no bundled data | step 9 |
+| Cold start to last view | under 1 s / 2 s | 200 ms to first frame | stays well under 1 s: read one small JSON, draw | step 11 |
+| Idle RAM | under 80 MB / 150 MB | 73.5 MB working set, 127 MB private | at most a few MB more; data held is a summary of a few KB | every PR, step 11 |
+| Idle CPU / GPU | 0% / no redraws | 0.00% / 0.00% | unchanged; the watcher is event driven | step 11 |
+| Save change to updated view | under 2 s / 5 s | not measured | read, inflate, walk and summarise 16.5 MB: expected well under 1 s on the test PC | step 11 |
+| UI freeze during work | none over 16 ms / 50 ms | none seen | all work off the UI thread | step 11 |
+| Background work | low priority, at most 2 cores | job on 1 core, no stutter | engine is one thread; update is one process at below-normal priority | step 11 |
+| Extraction | under 5 min, under 1 GB / 10 min, 2 GB | not measured | pack index about 17 MB plus single files; mostly disk time | step 11 |
+| Install size | under 50 MB / 100 MB | not measured | one binary, no bundled data | step 11 |
 
 **RAM rule for every PR (approved by the maintainer 2026-10-27, caps included):**
 
@@ -334,15 +364,15 @@ Budget rows from [performance-budget.md](../performance-budget.md), what this ph
 - **Docs-only PRs** skip both checks.
 - **Known gap:** the headless check does not include the graphics driver's share, which is most of the 127 MB. That is why the PC reading exists.
 
-**Proposed changes to the budget (deferred by the maintainer 2026-10-27: the current budget stands as written; discuss at the step 10 budget re-review, or earlier only if the measurements suggest the budget is impossible to meet):**
+**Proposed changes to the budget (deferred by the maintainer 2026-10-27: the current budget stands as written; discuss at the step 12 budget re-review, or earlier only if the measurements suggest the budget is impossible to meet):**
 
 - Define "Idle RAM" as two rows: working set (target 80 MB) and private bytes (hard limit 150 MB), because Phase 1 showed they differ by 50 MB and the old row did not say which was meant.
-- Make "no visible game stutter" a number (the limit is to be proposed with the step 9 numbers in hand).
+- Make "no visible game stutter" a number (the limit is to be proposed with the step 11 numbers in hand).
 - Add rows for "last view on screen" (cold start with real data) and "save change to updated view", now that they can be measured.
-- Reconsider the 80 MB working-set target if step 9 shows it cannot be met with real data; the maintainer decides between loosening it and cutting features.
+- Reconsider the 80 MB working-set target if step 11 shows it cannot be met with real data; the maintainer decides between loosening it and cutting features.
 
 ## 4. Steps
-Each step is one thread, one PR and one test round. Steps 2 to 8 change what the app reads or shows, so their rounds run on the maintainer's PC (steps 2 to 6 through `forgeline-check`, 7 and 8 through the app). Steps 1, 10 and 11 are cloud-only. Every PR from step 2 on says whether it is untested against the real files.
+Each step is one thread, one PR and one test round. Steps 2 to 6 and 8 to 11 change what the app reads or shows or measure it, so their rounds run on the maintainer's PC (steps 2 to 6 through `forgeline-check`, 8 and 9 through the app). Step 7 is cloud only; the maintainer reacts to its mock-ups. Steps 1, 10 and 11 are cloud-only. Every PR from step 2 on says whether it is untested against the real files.
 
 The last step of every phase is the close-out. Besides updating `PLAN.md`, it updates `README.md`:
 - the README text (status paragraph, roadmap list, repository layout, versioning note) matches the phase result
@@ -359,25 +389,28 @@ The last step of every phase is the close-out. Besides updating `PLAN.md`, it up
 | 4 | 3 | Save reader: decrypt, inflate, walk, typed summary, active slot; `forgeline-check save` | Reader thread (reads `research.md` only) | Cloud code, PC check | PR: `forgeline-save` | 1 to 2 threads, 1 cloud round, 1 PC round; about 2 h | 1, 3 |
 | 5 | 2 | Pack reader and exe scan (route A), needed-files list, ree-pak-rs credit; `forgeline-check pak` | Pack thread | Cloud code, PC check | PR: `forgeline-pak`, notices | 1 to 2 threads, 1 cloud round, 1 to 2 PC rounds; about 3 h | 1 |
 | 6 | 3 | Update flow: stage, validate (structural gate), swap, keep last good; `--update` mode; `forgeline-check update` | Update thread | Cloud code, PC check | PR: `forgeline-update` | 1 thread, 1 cloud round, 1 PC round; about 2 h | 2, 5 |
-| 7 | 4 | Engine: save-folder watcher, background recompute at low priority, view cache, `Snapshot` | Engine thread | Cloud code, PC check | PR: `forgeline-engine` | 1 thread, 1 cloud round, 1 PC round; about 1.5 h | 2, 4 |
-| 8 | 5 | The bare egui window from the debug data viewer, update button and notices | Window thread | Cloud code, PC check | PR: `forgeline-app` | 1 to 2 threads, 1 cloud round, 1 PC round; about 2 h | 6, 7 |
-| 9 | 6 | Measure with Wilds running: benchmark harness, cold start to last view, recompute time, idle RAM, CPU and GPU, game frame times; fill `ram-log.md`; confirm the active-slot field | Benchmark thread | PC | PR: `tools/bench`, `research.md` section | 1 thread, 1 to 2 PC rounds; about 2 h | 8 |
-| 10 | 7 | Re-review `performance-budget.md` against the Phase 1 and step 9 numbers | Docs thread | Cloud | PR: budget changes | 1 thread, 1 cloud round; about 0.5 h | 9 |
-| 11 | 8 | Close-out: `PLAN.md`, `README.md` (text, badges, roadmap, banner phase label, first screenshot), `CHANGELOG.md` 0.2.0, version bump, plan time log | Docs thread | Cloud | PR: docs and version | 1 thread, 1 cloud round; about 0.75 h | 1 to 10 |
+| 7 | 3 | UX design: a short UX brief, clickable dark-theme mock-ups of the 3 or 4 main screens (published as Artifact pages) and a style guide; the widget list the UI footprint check needs | UX design thread | Cloud | PR: `docs/ux/` (brief, mock-ups, style guide) | 1 to 2 threads, 1 to 2 cloud rounds (the maintainer reacts to the mock-ups); about 3 h | 1 |
+| 8 | 4 | Engine: save-folder watcher, background recompute at low priority, view cache, `Snapshot` | Engine thread | Cloud code, PC check | PR: `forgeline-engine` | 1 thread, 1 cloud round, 1 PC round; about 1.5 h | 2, 4 |
+| 9 | 5 | The bare egui window from the debug data viewer, update button and notices | Window thread | Cloud code, PC check | PR: `forgeline-app` | 1 to 2 threads, 1 cloud round, 1 PC round; about 2 h | 6, 7, 8 |
+| 10 | 6 | UI footprint check: port the benchmark harness; four variants (egui wgpu, egui glow with features off, Slint under its royalty-free or MIT-compatible terms, plain Win32 window) render the same small dark sample view built from step 7's widget list; private bytes, working set, cold start and a screenshot of each | UI footprint thread | Cloud code, PC measurement | PR: `tools/bench`, `tools/ui-footprint`, `research.md` section | 1 to 2 threads, 1 cloud round, 1 PC round; about 3 h | 7, 9 |
+| 11 | 7 | Measure with Wilds running: cold start to last view, recompute time, idle RAM, CPU and GPU, game frame times; fill `ram-log.md`; confirm the active-slot field | Benchmark thread | PC | PR: `tools/bench`, `research.md` section | 1 thread, 1 to 2 PC rounds; about 1.5 h | 9, 10 |
+| 12 | 8 | Re-review `performance-budget.md` against the Phase 1 and step 11 numbers | Docs thread | Cloud | PR: budget changes | 1 thread, 1 cloud round; about 0.5 h | 11 |
+| 13 | 9 | Close-out: `PLAN.md`, `README.md` (text, badges, roadmap, banner phase label, first screenshot), `CHANGELOG.md` 0.2.0, version bump, plan time log | Docs thread | Cloud | PR: docs and version | 1 thread, 1 cloud round; about 0.75 h | 1 to 12 |
 
-Total estimate: 11 to 14 threads and 14 to 16 test rounds, 8 to 9 of them on the PC. At most 3 threads run at once. Estimates are guesses and will be compared with the time log.
+Total estimate: 13 to 18 threads and 17 to 20 test rounds, 9 to 10 of them on the PC. At most 3 threads run at once. Estimates are guesses and will be compared with the time log.
 
 Hours (rough wall-clock from thread start to merge, each including its test round and the wait for the maintainer to pass it):
 
-- **Per step:** the figures in the table above, 17 h added up (1 + 1.5 + 1 + 2 + 3 + 2 + 1.5 + 2 + 2 + 0.5 + 0.75 = 17.25).
-- **Total with parallel stages:** about 13 h from approval to the last merge. Stage 1 is 1 h, stage 2 is 3 h (steps 2, 3 and 5 overlap, step 5 is the longest), stage 3 is 2 h, stage 4 is 1.5 h, stage 5 is 2 h, stage 6 is 2 h, stage 7 is 0.5 h and stage 8 is 0.75 h.
-- **Plausible range:** 10 to 18 h. It assumes the maintainer passes each test round within about 15 minutes; a slower reply adds to the total.
+- **Per step:** the figures in the table above, about 23 h added up (1 + 1.5 + 1 + 2 + 3 + 2 + 3 + 1.5 + 2 + 3 + 1.5 + 0.5 + 0.75 = 22.75).
+- **Total with parallel stages:** about 16 h from approval to the last merge. Stage 1 is 1 h, stage 2 is 3 h (steps 2, 3 and 5 overlap, step 5 is the longest), stage 3 is 3 h (steps 4, 6 and 7 overlap, step 7 waits for the maintainer's reaction), stage 4 is 1.5 h, stage 5 is 2 h, stage 6 is 3 h, stage 7 is 1.5 h, stage 8 is 0.5 h and stage 9 is 0.75 h.
+- **Plausible range:** 13 to 22 h. It assumes the maintainer passes each test round within about 15 minutes; a slower reply adds to the total.
 - **Calibration:** Phase 1 took 2 h 06 min for 7 steps (about 18 min a step), but those were docs and throwaway spikes with several threads in parallel. Phase 2 steps are real code with tests, CI and PC rounds, so each is estimated at 3 to 6 times a Phase 1 step.
-- **Least certain:** step 5 (3 h) and step 9 (2 h, a second round if RAM is over a limit).
+- **Least certain:** step 5 (3 h), step 7 (3 h, depends on how many rounds of reaction the mock-ups need), step 10 (3 h, new code in four frameworks, one of them unfamiliar) and step 11 (1.5 h, a second round if RAM is over a limit).
+- **Not counted:** a port of `view.rs` to another UI library, if the maintainer picks one after step 10 (about 2 h and one PC round).
 
 Where the estimate is most likely wrong:
 - Step 5 is the largest unknown: the restricted exe rebuild must run in seconds, and the pack table handling for the two newest patches uses the chunk table. If it needs more than 2 threads, stop and report to the maintainer (Opus on high may then be worth suggesting).
-- Step 9 may take a second round if the first reading is over a RAM limit and a fix is needed.
+- Step 11 may take a second round if the first reading is over a RAM limit and a fix is needed.
 
 ## 5. Tools (need the maintainer's yes)
 All are our own Rust. The fixture builder, `forgeline-check` and `tools/bench` were approved by the maintainer on 2026-10-27; the rest need a yes before they are added. Nothing here installs outside normal user folders.
@@ -385,10 +418,13 @@ All are our own Rust. The fixture builder, `forgeline-check` and `tools/bench` w
 | Tool | Step | Why (plain words) | Built or third-party | Licence |
 |------|------|-------------------|----------------------|---------|
 | `tools/fixture-builder` | 3 | Problem: tests must pass without Wilds and must never use your real save, because it holds hunter IDs. This tool builds tiny invented saves in the real format with known contents. Without it we either commit a real save (forbidden) or cannot test the reader. It touches nothing on your PC; it only writes files into the repo checkout. | Built, from `research.md` notes only | ours (MPL-2.0) |
-| `tools/forgeline-check` | 2 | Problem: until the window exists (step 8) there is no way to see what the reader and extractor do on your real files, and every PC round would need a custom program. This is one small report tool for all of them. It prints counts and names only. On your PC it copies your save into its own work folder and reads the copy, reads the game install read-only, and writes only to `E:\mhbis`. | Built | ours |
-| `tools/bench` | 9 | Problem: the budget is judged on numbers from your PC with Wilds running, not impressions. This measures start-up, RAM, CPU, recompute time and the game's frame times the same way every time. Without it the RAM rule cannot be checked and the Phase 1 gaps stay open. It is the Phase 1 sampler, ported from `spikes-archive`, with the Windows-only frame-time module (needs administrator rights while running; it reads Windows present events and never touches the game process). On your PC it reads process and event figures and writes to `E:\mhbis\bench`. | Built (ported) | ours; `ferrisetw` (MIT OR Apache-2.0), `sysinfo` (MIT) and `windows` crates recorded in `THIRD-PARTY-NOTICES.md` |
+| `tools/forgeline-check` | 2 | Problem: until the window exists (step 9) there is no way to see what the reader and extractor do on your real files, and every PC round would need a custom program. This is one small report tool for all of them. It prints counts and names only. On your PC it copies your save into its own work folder and reads the copy, reads the game install read-only, and writes only to `E:\mhbis`. | Built | ours |
+| `tools/bench` | 9, 10 | Problem: the budget is judged on numbers from your PC with Wilds running, not impressions. This measures start-up, RAM, CPU, recompute time and the game's frame times the same way every time. Without it the RAM rule cannot be checked and the Phase 1 gaps stay open. It is the Phase 1 sampler, ported from `spikes-archive`, with the Windows-only frame-time module (needs administrator rights while running; it reads Windows present events and never touches the game process). On your PC it reads process and event figures and writes to `E:\mhbis\bench`. | Built (ported) | ours; `ferrisetw` (MIT OR Apache-2.0), `sysinfo` (MIT) and `windows` crates recorded in `THIRD-PARTY-NOTICES.md` |
+| `tools/ui-footprint` | 9 | Problem: the empty egui window already uses 127 MB private bytes, and we do not know how much of that is egui, the renderer or any graphics window at all. Without it we build the whole app on a choice we have measured once. It compares four ways of drawing the same small dark view and gives numbers and screenshots so you can judge both memory and looks. On your PC it runs the four sample apps beside Wilds, then stops them, and writes only to `E:\mhbis\bench`. | Built (needs the maintainer's yes) | ours; the egui, Slint and `windows` crates are licence-checked first (Slint only under its royalty-free or MIT-compatible terms, never the GPL option) and recorded |
 | Rust crates for the product | 1, 2, 5, 7, 8 | Problem: some jobs (window, file watching, inflate and zstd, JSON) are not worth hand-writing and a bug there costs more than a dependency. Each crate's licence and RAM cost is checked when it is added and recorded in `THIRD-PARTY-NOTICES.md`; GPL crates are refused. Candidates: `eframe`/`egui`, `notify`, `flate2` or `miniz_oxide`, `zstd`, `serde`, `serde_json`, `winreg`. | Third-party | MIT/Apache-2.0 expected; confirmed per crate |
 | GitHub Actions jobs (format, clippy, tests, RAM check) | 1 | Problem: nothing is checked unless something runs it on every PR. Without it, a PR that breaks the Linux build or adds RAM goes unnoticed until your PC. It runs on GitHub's machines, never on yours. | Third-party service (standard) | GitHub terms |
+
+Step 7 uses no new tool: the mock-ups are hand-written HTML pages published as Artifacts, and the brief and style guide are Markdown.
 
 Not proposed: any injecting, hooking or memory-reading tool, and any tool that writes to the save, the game install or the Steam folders.
 
@@ -406,11 +442,12 @@ GitHub Actions on Ubuntu and Windows, fixtures only. Nothing touches the real sa
 - `index.rs`, `read.rs`, `paths.rs` (step 5): read a tiny synthetic pack with an encrypted table, a chunked entry, a deflate entry and a zstd entry; later packs override earlier ones; known hash vectors match.
 - `exescan.rs` (step 5): finds the expected names in a synthetic exe and records its size and time.
 - `validate.rs`, `lib.rs` of `forgeline-update` (step 6): a good staging swaps in; a missing file, a shrunk category, a file that does not open or an older build blocks; a failure partway leaves `current/` unchanged; the old data is kept as `previous/`.
-- `watch.rs` (step 7): a write to a temp file triggers one callback after the quiet period; several quick writes trigger one; no events means no wake-ups.
-- `engine` (step 7): a changed fixture save produces a new `Snapshot`; a corrupt save keeps the old summary and sets an error; a change during a recompute runs once more.
-- `cache.rs` (step 7): round trip; a corrupt or old-schema file is ignored.
-- `view.rs` (step 8): the view function draws every `Snapshot` state (empty, loading, ok, error, patch notice, update rejected) without panicking, using egui's headless context.
-- RAM check (steps 1, 8): headless check on Windows stays under the limit in section 3.4.
+- `watch.rs` (step 8): a write to a temp file triggers one callback after the quiet period; several quick writes trigger one; no events means no wake-ups.
+- `engine` (step 8): a changed fixture save produces a new `Snapshot`; a corrupt save keeps the old summary and sets an error; a change during a recompute runs once more.
+- `cache.rs` (step 8): round trip; a corrupt or old-schema file is ignored.
+- `view.rs` (step 9): the view function draws every `Snapshot` state (empty, loading, ok, error, patch notice, update rejected) without panicking, using egui's headless context.
+- RAM check (steps 1, 9): headless check on Windows stays under the limit in section 3.4.
+- `tools/ui-footprint` (step 10): each variant builds on Windows in CI (`cargo check`) and starts with a `--exit-after-first-frame` flag, with no network code; this runs on the Windows job only and is skipped if the variant needs a GPU the runner lacks.
 - A smoke test that starts the binary with `--headless-check` against a fixture and exits cleanly.
 
 ### 6.2 Pass or fail criteria
@@ -434,7 +471,7 @@ GitHub Actions on Ubuntu and Windows, fixtures only. Nothing touches the real sa
 - Pass: on a copy of the maintainer's save, the report shows 3 slots with the active one marked, and counts that the maintainer confirms match the game.
 - Pass: reading the real save takes under 1 s and its peak memory is reported.
 - Partial: the container reads but the `Active` field does not pick a slot; the window will show all slots (section 2).
-- Fail: decryption or the walk errors on the real save; fix before step 7.
+- Fail: decryption or the walk errors on the real save; fix before step 8.
 
 **Step 5, pack reader and exe scan**
 - Pass: on the real install the pack index builds in under 10 s and the needed-files list resolves every path (a missing one is named).
@@ -448,30 +485,45 @@ GitHub Actions on Ubuntu and Windows, fixtures only. Nothing touches the real sa
 - Pass: the update takes under 5 minutes and under 1 GB peak, at below-normal priority, and the game shows no stutter by eye.
 - Pass: nothing is written outside the app's data directory.
 
-**Step 7, engine**
+**Step 7, UX design**
+- Pass: `docs/ux/brief.md` names the user, the key moments (for example "just finished a hunt, what now?") and what must be visible at a glance, and says whether an in-game overlay matters (it stays deferred).
+- Pass: 3 or 4 clickable mock-ups of the main screens (best build, why this build and its alternatives and assumptions, shopping list, data and update status) are published as Artifact pages in the dark theme, using invented sample names and numbers, with no Capcom data.
+- Pass: `docs/ux/style-guide.md` fixes colours, font sizes readable on a second monitor, spacing and layout rules, and lists the widgets the screens need (tables, tooltips, comparisons, stat tiles) for step 10's sample view.
+- Pass: the maintainer has reacted to the mock-ups, and the requested changes are in.
+- No performance claim is made from mock-ups; they say nothing about egui's limits, which step 10 checks.
+
+**Step 8, engine**
 - Pass: the cache shows within 100 ms of start on the PC.
 - Pass: a save by the game updates the snapshot with no polling (the watcher wakes the thread; no timer).
 - Pass: recompute after a save change is under 2 s (target) on the PC with Wilds running.
 - Pass: a half-written or locked save never produces a wrong view; the old summary stays and the error is visible.
 
-**Step 8, window**
+**Step 9, window**
 - Pass: the window opens on the maintainer's PC, dark theme, readable at a glance on a second monitor.
 - Pass: it shows the paths, build ID, slot table, counts, data status and the update button, and every number traces to a source in the report.
 - Pass: the update button runs the update, shows progress, shows a rejection or failure visibly, and keeps the last good data.
 - Pass: a game patch (build ID differs from the manifest) shows the "data may be out of date" notice and does not recommend pressing update (no confidence measure exists yet).
 - Pass: hunter name and ID are not shown.
 
-**Step 9, measurement**
+**Step 10, UI footprint check**
+- Pass: all variants render the same sample view (a table of invented gear, a few stat numbers and a button) in the dark theme.
+- Pass: private bytes, working set, cold start and idle CPU and GPU are reported for each variant, median of 3 runs at the standard benchmark spot with Wilds running, and a screenshot of each is saved.
+- Pass: the Slint licence terms used are named and recorded in `THIRD-PARTY-NOTICES.md`, and the GPL option is not used. If those terms cannot be confirmed, Slint is reported as skipped.
+- Pass: the report states plainly that (a) and (b) look identical and (c) and (d) look different.
+- Pass: the harness runs on the real PC and writes only to `E:\mhbis\bench`.
+- The report does not choose a library. It gives numbers and screenshots; the maintainer decides.
+
+**Step 11, measurement**
 - Pass: the numbers are median of 3 runs at the standard benchmark spot with Wilds running, written to `research.md`.
 - Pass: cold start to last view under 2 s (target under 1 s); idle CPU and GPU about 0; save change to updated view under 5 s (target under 2 s).
 - Pass: the game's median, 99th percentile and worst frame times are reported next to the control run, during a recompute and during an update, as raw numbers. No new pass or fail rule is applied until the budget discussion; the maintainer's judgement of stutter by eye stands.
 - Pass: private bytes at most 140 MB and working set at most 80 MB, or the overage is reported to the maintainer with options.
-- Fail: any hard limit broken; fix in a follow-up PR before step 10, and consider the Slint test.
+- Fail: any hard limit broken; fix in a follow-up PR before step 12, and consider the Slint test.
 
-**Step 10, budget review**
-- Pass: the proposed changes in section 3.4 are put to the maintainer with the step 9 numbers, and each decision (or deferral) is recorded in the change log of `performance-budget.md`.
+**Step 12, budget review**
+- Pass: the proposed changes in section 3.4 are put to the maintainer with the step 11 numbers, and each decision (or deferral) is recorded in the change log of `performance-budget.md`.
 
-**Step 11, close-out**
+**Step 13, close-out**
 - Pass: `PLAN.md` reflects the results, lists the Phase 3 inputs and the motion-value plan.
 - Pass: `README.md` text, badges, roadmap and screenshot match the phase result; the screenshot hides any personal data.
 - Pass: the banner and its alt text name Phase 3 as in progress.
@@ -479,7 +531,7 @@ GitHub Actions on Ubuntu and Windows, fixtures only. Nothing touches the real sa
 - Pass: every answered question is flagged for the coordinator to move.
 
 ### 6.3 Test round checklist
-Queued, one at a time. Steps 2 to 6 use `forgeline-check`; the window exists from step 8. Expected values are from the maintainer's save as last checked (Phase 1 step 4: 3 character slots, 1 in use, about 14 light bowguns and 7 armor pieces created, one talisman, about 221 item types in the box). Counts may have changed since; the round says so if they differ.
+Queued, one at a time. Steps 2 to 6 use `forgeline-check`; the window exists from step 9. Expected values are from the maintainer's save as last checked (Phase 1 step 4: 3 character slots, 1 in use, about 14 light bowguns and 7 armor pieces created, one talisman, about 221 item types in the box). Counts may have changed since; the round says so if they differ.
 
 **Step 1**
 - [ ] CI is green on Ubuntu and Windows.
@@ -507,35 +559,53 @@ Queued, one at a time. Steps 2 to 6 use `forgeline-check`; the window exists fro
 - [ ] Your save and the game folders have no new modified times.
 
 **Step 7**
+- [ ] You open each mock-up and say what you would change: first screen, order of information, what is missing.
+- [ ] You check the text sizes and colours in the style guide on your second monitor.
+- [ ] You confirm the widget list covers what you expect the app to need.
+
+**Step 8**
 - [ ] The engine report shows the snapshot appearing within 100 ms from the cache.
 - [ ] After the game saves, the snapshot changes within 2 seconds, with no polling.
 
-**Step 8**
+**Step 9**
 - [ ] The window opens, dark, readable on the second monitor.
 - [ ] It shows the Steam account folder, the install, the build ID, the active slot and the same counts as step 4.
 - [ ] Pressing Update shows progress and ends with `Replaced` or `Unchanged`; the window stays responsive.
 - [ ] Hunter name and ID appear nowhere.
 
-**Step 9**
+**Step 10**
+- [ ] The report shows private bytes, working set and cold start for each of the four variants, next to Phase 1's egui glow figures (127 MB private, 73.5 MB working set, 200 ms).
+- [ ] You can open a screenshot of each variant and judge how it looks (the two egui variants look the same; Slint and the plain Win32 window look different).
+- [ ] You say which memory saving, if any, is worth which change in looks, and whether to keep egui.
+- [ ] The harness ran as administrator only for the frame-time part, and stopped the sample apps afterwards.
+
+**Step 11**
 - [ ] The benchmark table shows cold start to last view, private bytes, working set, idle CPU and GPU, and save-change recompute time, median of 3 runs, with Wilds running at the Scarlet Forest base camp.
 - [ ] The frame-time report (run as administrator) shows the game's median, 99th percentile and worst frame time during idle, a recompute and an update.
 - [ ] `docs/ram-log.md` has the first real reading.
 - [ ] The report says whether the `Active` field picked your active slot.
 
+**Look check (every PR that changes the window, from step 9 on)**
+- [ ] The window follows the mock-ups and the style guide: dark theme, text readable on the second monitor, layout as agreed. You note any difference, next to the performance numbers.
+
 **Every PC step**
 - [ ] No save, dump or extracted Capcom data appears in git or in the PR.
 - [ ] The PC thread reports it did not write to the save, the game install or the Steam folders, and that it stopped the dev build when done.
 
-Steps 1, 3, 10 and 11 are cloud-only and checked in the cloud.
+Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 
 ## 7. Risks and open questions
 
-- **Private bytes pass 140 MB with real data (step 9).** Notice: the RAM rule or the step 9 reading. Fallbacks, in order: trim features of the window; try a lighter egui build (fewer features, smaller fonts, no image loaders); check whether the allocator holds on to freed buffers; test Slint as the Phase 1 gap and settle its licence terms first (open question 6); finally ask the maintainer whether to loosen the budget.
+- **The mock-ups ask for something egui cannot do well.** Notice: the widget list against step 10's sample view. Fallback: change the mock-up, or add the widget to step 10 and measure it, before Phase 6.
+- **The mock-ups need more reaction rounds than planned.** Notice: step 7 still open when step 9 should start. Fallback: step 9 starts on the style guide's first version and follows later changes.
+- **The UI footprint check (step 10) finds a much lighter library, and it looks worse or is harder to build.** Notice: the step 10 report. Fallback: the maintainer decides; a port of `view.rs` is a follow-up step, and the standing rule that the UI is pure Rust still holds for all four variants.
+- **Slint's royalty-free terms cannot be confirmed (open question 6).** Notice: the licence read at the start of step 10. Fallback: skip variant (c) and report it; the other three still run.
+- **Private bytes pass 140 MB with real data (step 11).** Notice: the RAM rule or the step 11 reading. Fallbacks, in order: trim features of the window; try a lighter egui build (fewer features, smaller fonts, no image loaders); check whether the allocator holds on to freed buffers; test Slint as the Phase 1 gap and settle its licence terms first (open question 6); finally ask the maintainer whether to loosen the budget.
 - **Parse peaks stay in the app's memory after a recompute.** Notice: private bytes grow after the first save change. Fallback: large buffers are freed back to Windows immediately in most cases; if not, run the parse in a short-lived worker process like the update.
 - **Pack handling for the newest patches (chunk table) breaks on a future patch.** Notice: step 5 report, or an update finding. Fallback: the update is rejected visibly and the last good data stays.
 - **The restricted exe rebuild is still slow or misses classes.** Notice: step 5 timing or the class count below 185. Fallback: widen the hash set from the save copy, then fall back to route B for the missing classes.
 - **A needed file moves or is renamed in a patch.** Notice: the validation gate names it. Fallback: update the needed-files list by hand; the app keeps the last good data.
-- **The `Active` field does not pick the right slot.** Notice: step 9. Fallback: show all slots and let the user pick, saved in `settings.json`.
+- **The `Active` field does not pick the right slot.** Notice: step 11. Fallback: show all slots and let the user pick, saved in `settings.json`.
 - **Reading the save while the game writes.** Notice: size or modified time changes during a read, or inflate fails. Fallback: retry after the quiet period; keep the previous summary and show the error.
 - **The watcher misses events (network drive, antivirus, cloud sync).** Notice: the save changed but the view did not. Fallback: a "Refresh" button, and a single check of the save's modified time on window focus (not a timer).
 - **Windows hosted runners cannot show a window.** The CI RAM check is headless by design, so the GL cost is only seen on the PC. Fallback: the PC reading on every app-changing PR.
@@ -544,7 +614,7 @@ Steps 1, 3, 10 and 11 are cloud-only and checked in the cloud.
 - **Questions for the maintainer** are the decisions listed in the box at the top. New questions go to `docs/open-questions.md` via the coordinator.
 
 ## 8. Versioning and changelog
-- The workspace version is `0.2.0-dev` from step 1 and becomes `0.2.0` at close-out (step 11).
+- The workspace version is `0.2.0-dev` from step 1 and becomes `0.2.0` at close-out (step 13).
 - Steps do not bump the version. A fix after 0.2.0 bumps `0.2.1`.
 - `CHANGELOG.md` gets one line per merged step under `Unreleased`, in Added, Changed or Fixed:
   - Step 1: Added the workspace, CI and hygiene checks.
@@ -553,18 +623,22 @@ Steps 1, 3, 10 and 11 are cloud-only and checked in the cloud.
   - Step 4: Added the save reader and the active slot summary.
   - Step 5: Added the pack reader, the exe scan and the type-name table.
   - Step 6: Added the update flow with staging, structural validation and keep-last-good.
-  - Step 7: Added the save watcher, background recompute and the view cache.
-  - Step 8: Added the first window (the debug data viewer).
-  - Step 9: Added the benchmark harness and the first RAM log.
-  - Step 10: Changed the performance budget.
-  - Step 11: Released 0.2.0.
+  - Step 7: Added the UX brief, the mock-ups and the style guide (`docs/ux/`).
+  - Step 8: Added the save watcher, background recompute and the view cache.
+  - Step 9: Added the first window (the debug data viewer).
+  - Step 10: Added the UI footprint check (`tools/ui-footprint`) and the benchmark harness.
+  - Step 11: Added the first RAM log from measurements with Wilds running.
+  - Step 12: Changed the performance budget.
+  - Step 13: Released 0.2.0.
 - The release and the `v0.2.0` tag are the maintainer's action (box at the top).
 
 ## 9. Review log
 | Date | Reviewer | Edit or decision |
 |------|----------|------------------|
-| 2026-10-27 | The maintainer | Asked for the Phase 1 retro items to be folded in (steps 1, 9, 10, RAM rule, CI), and for releases, tags and branch deletions to be listed up front. |
+| 2026-10-27 | The maintainer | Asked for the Phase 1 retro items to be folded in (steps 1, 11, 12, RAM rule, CI), and for releases, tags and branch deletions to be listed up front. |
 | 2026-10-27 | The maintainer | Asked for an hours estimate in every plan. Added per step and in total (about 13 h, range 10 to 18 h), calibrated on Phase 1's 2 h 06 min. |
+| 2026-10-27 | The maintainer | Approved a UX design step 7 (brief, clickable mock-ups, style guide), cloud only and parallel to the backend, so every later window follows the mock-ups and the style guide; a look check sits next to the performance check in test rounds. Phase 6 is visual polish on top of it. Later steps renumbered; hours and totals updated. |
+| 2026-10-27 | The maintainer | Approved a new step 10, the UI footprint check (egui wgpu and glow, Slint, plain Win32 window), to see how much of the 127 MB is the graphics stack and how each looks. Later steps renumbered; hours and totals updated. |
 | 2026-10-27 | The maintainer | The README banner still said Phase 1: this PR sets it to Phase 2, and the close-out step and the template now check the README text, badges, roadmap and banner every phase. |
 | 2026-10-27 | The maintainer | Motion values: all four routes approved (effective raw meanwhile, deep game-file search early in Phase 3 for all 14 weapons, training-dummy measurement in Phase 5, credited community data labelled unverified as a fallback). Recorded in `PLAN.md` and `closed-questions.md`. |
 
@@ -583,6 +657,8 @@ Steps 1, 3, 10 and 11 are cloud-only and checked in the cloud.
 | Step 9 PR merged | |
 | Step 10 PR merged | |
 | Step 11 PR merged | |
+| Step 12 PR merged | |
+| Step 13 PR merged | |
 | Phase finished | |
 
 ### Actual time per step
@@ -596,10 +672,12 @@ Filled at close-out. Actual hours run from the first thread start to the merge (
 | 4 | 2 | | |
 | 5 | 3 | | |
 | 6 | 2 | | |
-| 7 | 1.5 | | |
-| 8 | 2 | | |
+| 7 | 3 | | |
+| 8 | 1.5 | | |
 | 9 | 2 | | |
-| 10 | 0.5 | | |
-| 11 | 0.75 | | |
+| 10 | 3 | | |
+| 11 | 1.5 | | |
+| 12 | 0.5 | | |
+| 13 | 0.75 | | |
 
-Elapsed from approval to finish: `<hours>`. Steps overlap, so they do not add up to this. Compare with the 13 h estimate in section 4 (range 10 to 18 h).
+Elapsed from approval to finish: `<hours>`. Steps overlap, so they do not add up to this. Compare with the 16 h estimate in section 4 (range 13 to 22 h).
