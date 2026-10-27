@@ -1,6 +1,6 @@
 # Phase 1: Spikes
 
-Target version: 0.1.0 · Status: draft (awaiting Thomas's review; nothing starts until approved)
+Target version: 0.1.0 · Status: approved (Thomas, 2026-10-27 13:05 UTC)
 
 Each phase plan is written just before its phase, using what earlier phases found. Thomas reviews and approves it before any work starts. Estimates are in threads and test rounds, not hours; real durations go in the time log (section 10).
 
@@ -250,13 +250,14 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 ## 9. Review log
 | Date | Reviewer | Edit or decision |
 |------|----------|------------------|
+| 2026-10-27 13:05 UTC | Thomas | Approved Phase 1. |
 | 2026-10-27 | Thomas | Answers: all tools approved, own sampler, `E:\mhbis`, spikes-archive branch, performance budget added. |
 | 2026-10-27 | Thomas | Readability review: steps renumbered in run order, every step in Architecture, lists instead of paragraphs, fixed per-file blocks, plain-words tool reasons, "how to read" box. Plan writing rules added to the template. |
 
 ## 10. Time log
 | Event | Date and time |
 |-------|---------------|
-| Phase approved by Thomas | |
+| Phase approved by Thomas | 2026-10-27 13:05 UTC |
 | Step 1 (licence review) PR merged | |
 | Step 2 (clean-room study) PR merged | |
 | Step 3 (type data) PR merged | |
