@@ -29,7 +29,7 @@ Third-party code needs its licence recorded in [THIRD-PARTY-NOTICES.md](THIRD-PA
 
 ## AI-assisted development
 
-Much of this project is written with AI assistance (Claude) and directed and reviewed by the maintainer. AI-assisted contributions are fine under the same rules: you are responsible for what you submit, game facts must still be verified, and nothing generated may include copied third-party code or data.
+Most of the code and documents are written by Claude under the maintainer's direction. The maintainer sets the direction, reviews and approves every plan, pull request and document, and runs every test round on their own PC with the real game; nothing merges without that review (see "How Forgeline is made" in the README). AI-assisted contributions are fine under the same rules: you are responsible for what you submit, game facts must still be verified, and nothing generated may include copied third-party code or data.
 
 ## Conduct
 

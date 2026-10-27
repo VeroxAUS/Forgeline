@@ -70,6 +70,13 @@ One sub-list per step or feature, one criterion per line.
 Queued, one at a time, grouped by step. Each item says what the app should show for the maintainer's current save:
 - [ ] Step N: with your save, the app should show <X>
 
+### 6.4 Merge checklist (coordinator)
+Done for every step PR when it merges:
+- [ ] The test round passed and the maintainer's go is recorded.
+- [ ] A comment on the PR starts "Tested and approved by the maintainer:" and says what was checked, where (cloud or their PC, with or without Wilds), the result and the pass time in UTC.
+- [ ] The step's `CHANGELOG.md` entry (from 0.2.0) ends with "Reviewed and tested by VeroxAUS".
+- [ ] The time log, the per-step time table and `closed-questions.md` are updated.
+
 ## 7. Risks and open questions
 Each risk: how we would notice it, and the fallback. New questions go to `docs/open-questions.md` via the coordinator.
 
