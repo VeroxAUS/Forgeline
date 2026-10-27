@@ -16,3 +16,4 @@ Nothing is waiting on Thomas right now. All items below are research unknowns th
 8. **UI toolkit.** Does pure-Rust UI pass the Phase 1 comparison against Tauri and Electron (measured with Wilds running)? Step 6.
 9. **Update validation gate.** How to implement the >95% confidence check (re-scoring old versus new data after skill, set bonus or weight changes)?
 10. **Nexus comments and bugs.** Does Nexus's GraphQL v2 expose comments or bug reports, and does Nexus email authors about them? Check Thomas's author notification settings once the mod page is live (see `docs/research.md`, "Nexus monitoring").
+11. **Motion values and base power.** Motion values, and attack and ammo base power (for example bowgun ammo values), were not found in the game files in step 5. The Phase 4 damage formula and any future simulation need them. The Phase 3 and Phase 4 plans must address this early: a cited source, or Phase 5 training-room measurement.

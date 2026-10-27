@@ -264,7 +264,7 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 | Step 2 (clean-room study) PR merged | |
 | Step 3 PR merged | 2026-10-27 (Thomas passed 13:40 UTC; save half only, data-file sample moved to step 5) |
 | Step 4 (ID matching, talismans) PR merged | |
-| Step 5 (extraction test) PR merged | |
+| Step 5 (extraction test) PR merged | 2026-10-27 (Thomas passed 13:58 UTC; partial: located but not decoded, route B schemas needed in Phase 3; motion values not found) |
 | Step 6 (UI comparison) PR merged | |
 | Step 7 (close-out) PR merged | |
 | Phase finished | |
