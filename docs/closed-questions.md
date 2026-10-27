@@ -131,3 +131,7 @@ All answered 2026-10-27, in the order they were asked.
 
 ### Hours estimates in plans (2026-10-27)
 - **Should plans include an hours estimate?** Yes, the maintainer said so ("Yeah probably"). Every plan's estimates section now gives rough wall-clock hours per step and in total next to threads and test rounds (`docs/plans/TEMPLATE.md`, rule 11). The Phase 2 plan estimates about 13 h (range 10 to 18 h), calibrated on Phase 1's 2 h 06 min for 7 steps.
+
+### Phase 2 tools (2026-10-27)
+- **Approve the Phase 2 tools?** Yes, the maintainer approved all three: the fixture save builder (`tools/fixture-builder`), `forgeline-check` (counts and names only) and the benchmark harness (`tools/bench`, the Phase 1 sampler ported from `spikes-archive`). Recorded as decision A of the Phase 2 plan (PR #21).
+

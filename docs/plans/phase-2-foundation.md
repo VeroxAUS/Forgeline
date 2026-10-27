@@ -19,7 +19,7 @@ Each phase plan is written just before its phase, using what earlier phases foun
 
 **Decisions needed from the maintainer** (details in section 7):
 
-- Approve the four tools in section 5: the fixture save builder, `forgeline-check`, the benchmark harness, and the ported Phase 1 sampler inside it.
+- Tools: approved 2026-10-27 (fixture save builder, `forgeline-check`, `tools/bench`).
 - Approve the RAM rule for every PR (section 3.4): a CI check on every PR, plus a PC reading on every PR that changes the app.
 - Approve the proposed performance budget changes (step 10, list in section 3.4).
 - Approve the update flow running as a short-lived child process of the app, not as a thread (section 3.1).
@@ -380,7 +380,7 @@ Where the estimate is most likely wrong:
 - Step 9 may take a second round if the first reading is over a RAM limit and a fix is needed.
 
 ## 5. Tools (need the maintainer's yes)
-All are our own Rust. Each needs a yes before it is created or run. Nothing here installs outside normal user folders.
+All are our own Rust. The fixture builder, `forgeline-check` and `tools/bench` were approved by the maintainer on 2026-10-27; the rest need a yes before they are added. Nothing here installs outside normal user folders.
 
 | Tool | Step | Why (plain words) | Built or third-party | Licence |
 |------|------|-------------------|----------------------|---------|
