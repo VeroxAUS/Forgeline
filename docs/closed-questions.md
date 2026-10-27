@@ -134,4 +134,8 @@ All answered 2026-10-27, in the order they were asked.
 
 ### Phase 2 tools (2026-10-27)
 - **Approve the Phase 2 tools?** Yes, the maintainer approved all three: the fixture save builder (`tools/fixture-builder`), `forgeline-check` (counts and names only) and the benchmark harness (`tools/bench`, the Phase 1 sampler ported from `spikes-archive`). Recorded as decision A of the Phase 2 plan (PR #21).
+- **RAM rule for every PR (decision B)?** Yes, approved: a headless CI check on every PR plus a PC reading on every app-changing PR, logged in `docs/ram-log.md`; at most +3 MB private per PR without a written reason; caps of 140 MB private bytes and 80 MB working set.
+- **Update as a short-lived child process (decision C)?** Yes, approved.
+- **Needed-files path list in the repo (decision D)?** Yes, approved (paths only, no game content).
+- **Budget changes (decision E)?** Not decided: deferred to the step 10 budget re-review (see `open-questions.md`).
 

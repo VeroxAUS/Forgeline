@@ -20,10 +20,10 @@ Each phase plan is written just before its phase, using what earlier phases foun
 **Decisions needed from the maintainer** (details in section 7):
 
 - Tools: approved 2026-10-27 (fixture save builder, `forgeline-check`, `tools/bench`).
-- Approve the RAM rule for every PR (section 3.4): a CI check on every PR, plus a PC reading on every PR that changes the app.
-- Approve the proposed performance budget changes (step 10, list in section 3.4).
-- Approve the update flow running as a short-lived child process of the app, not as a thread (section 3.1).
-- Approve keeping a short hand-written list of the game file paths we need in the repo (section 3.3).
+- Approved 2026-10-27: the RAM rule for every PR (section 3.4), including its caps of 140 MB private bytes and 80 MB working set.
+- Approved 2026-10-27: the update flow runs as a short-lived child process of the app, not as a thread (section 3.1).
+- Approved 2026-10-27: a short hand-written list of the game file paths we need is kept in the repo (section 3.3).
+- Deferred: the proposed performance budget changes (section 3.4). The current budget stands as written until they are discussed at the step 10 budget re-review, or earlier only if the measurements suggest the budget is impossible to meet.
 
 **Maintainer's own actions, listed up front (trial arrangement, sessions cannot push tags or delete branches):**
 
@@ -323,7 +323,7 @@ Budget rows from [performance-budget.md](../performance-budget.md), what this ph
 | Extraction | under 5 min, under 1 GB / 10 min, 2 GB | not measured | pack index about 17 MB plus single files; mostly disk time | step 9 |
 | Install size | under 50 MB / 100 MB | not measured | one binary, no bundled data | step 9 |
 
-**RAM rule for every PR (proposed, needs approval):**
+**RAM rule for every PR (approved by the maintainer 2026-10-27, caps included):**
 
 - **CI, every PR:** the Windows job runs the headless check and fails above 20 MB private bytes for the data and engine side with fixture data. This catches data structures that grow, and runs without a GPU.
 - **PC reading, every PR that changes the app:** the test round reads private bytes and working set in the real window, with Wilds running, and adds a line to `docs/ram-log.md`.
@@ -334,10 +334,10 @@ Budget rows from [performance-budget.md](../performance-budget.md), what this ph
 - **Docs-only PRs** skip both checks.
 - **Known gap:** the headless check does not include the graphics driver's share, which is most of the 127 MB. That is why the PC reading exists.
 
-**Proposed changes to the budget (decided in step 10, from step 9's numbers):**
+**Proposed changes to the budget (deferred by the maintainer 2026-10-27: the current budget stands as written; discuss at the step 10 budget re-review, or earlier only if the measurements suggest the budget is impossible to meet):**
 
 - Define "Idle RAM" as two rows: working set (target 80 MB) and private bytes (hard limit 150 MB), because Phase 1 showed they differ by 50 MB and the old row did not say which was meant.
-- Make "no visible game stutter" a number: the game's median and 99th percentile frame time within 1 ms of the control run.
+- Make "no visible game stutter" a number (the limit is to be proposed with the step 9 numbers in hand).
 - Add rows for "last view on screen" (cold start with real data) and "save change to updated view", now that they can be measured.
 - Reconsider the 80 MB working-set target if step 9 shows it cannot be met with real data; the maintainer decides between loosening it and cutting features.
 
@@ -464,12 +464,12 @@ GitHub Actions on Ubuntu and Windows, fixtures only. Nothing touches the real sa
 **Step 9, measurement**
 - Pass: the numbers are median of 3 runs at the standard benchmark spot with Wilds running, written to `research.md`.
 - Pass: cold start to last view under 2 s (target under 1 s); idle CPU and GPU about 0; save change to updated view under 5 s (target under 2 s).
-- Pass: the game's median and 99th percentile frame times stay within 1 ms of the control run during a recompute and during an update.
+- Pass: the game's median, 99th percentile and worst frame times are reported next to the control run, during a recompute and during an update, as raw numbers. No new pass or fail rule is applied until the budget discussion; the maintainer's judgement of stutter by eye stands.
 - Pass: private bytes at most 140 MB and working set at most 80 MB, or the overage is reported to the maintainer with options.
 - Fail: any hard limit broken; fix in a follow-up PR before step 10, and consider the Slint test.
 
 **Step 10, budget review**
-- Pass: each proposed change in section 3.4 has the maintainer's decision recorded in the change log of `performance-budget.md`.
+- Pass: the proposed changes in section 3.4 are put to the maintainer with the step 9 numbers, and each decision (or deferral) is recorded in the change log of `performance-budget.md`.
 
 **Step 11, close-out**
 - Pass: `PLAN.md` reflects the results, lists the Phase 3 inputs and the motion-value plan.

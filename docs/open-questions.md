@@ -2,7 +2,7 @@
 
 Written only by the coordinator. This file holds research unknowns that the plan still has to answer, plus any question awaiting the maintainer. Every question asked to the maintainer is recorded here; once answered, it moves to [closed-questions.md](closed-questions.md).
 
-Waiting on the maintainer: the four remaining Phase 2 plan decisions below (B to E; A was answered) (asked 2026-10-27, PR #21). Phase 1 is closed; the items below are the research unknowns it left open, with what each still needs and which phase picks it up.
+Waiting on the maintainer: one deferred Phase 2 plan decision below (E) (asked 2026-10-27, PR #21). Phase 1 is closed; the items below are the research unknowns it left open, with what each still needs and which phase picks it up.
 
 ## Open
 
@@ -21,7 +21,4 @@ Numbers are kept stable; answered questions leave a gap (question 8 moved to clo
 
 ## Waiting on the maintainer (asked 2026-10-27, Phase 2 plan, PR #21)
 
-B. **RAM rule for every PR.** A headless CI check on every PR, plus a PC reading on every PR that changes the app; at most +3 MB private bytes per PR without a reason; at most 140 MB private bytes and 80 MB working set in total. Approve?
-C. **Update as a child process.** Run the update as a short-lived child process of the app instead of a thread, so its memory never counts against the thin RAM headroom. Approve?
-D. **Needed-files path list in the repo.** Keep a hand-written list of about 80 game file paths (paths only, no Capcom data) in `crates/forgeline-pak/src/paths.rs`. Approve?
-E. **Budget changes (decided in step 10).** Split "Idle RAM" into working set (target 80 MB) and private bytes (hard limit 150 MB); make "no stutter" a number (game median and 99th percentile frame time within 1 ms of the control run); add rows for "last view on screen" and "save change to updated view". Agree in principle?
+E. **Budget changes.** *Deferred by the maintainer (2026-10-27): discuss at step 10 budget re-review, or earlier only if the measurements suggest the budget is impossible to meet. Until then the current budget stands as written, and step 9 reports raw RAM and frame-time numbers without a new pass/fail rule.* Split "Idle RAM" into working set (target 80 MB) and private bytes (hard limit 150 MB); make "no stutter" a number (game median and 99th percentile frame time within 1 ms of the control run); add rows for "last view on screen" and "save change to updated view". Agree in principle?
