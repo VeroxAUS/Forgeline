@@ -120,3 +120,8 @@ All answered 2026-10-27, in the order they were asked.
 - **Which licence?** MPL-2.0 (full text in `LICENSE`), chosen over PolyForm Shield, GPL/AGPL and a custom licence. It lets anyone fork and republish with credit; changed MPL files stay open. It does not give an "ask permission" rule. Dependencies checked: MIT, Apache-2.0 and Unlicense crates are compatible; see `docs/research.md`.
 - **Contributors?** No extra process: no DCO sign-off, no CLA, no copyright assignment. Contributions come in under MPL-2.0. Changing the licence later would need the contributors' agreement.
 - **Does the licence PR pass?** Yes, the maintainer passed it (PR #14, merged 2026-10-27 15:02:04 UTC): MPL-2.0, no DCO, Ko-fi tip jar on GitHub only (link in the README and `.github/FUNDING.yml`).
+
+### Phase 1 close-out (2026-10-27)
+- **Does pure-Rust UI pass the Phase 1 comparison against Tauri and Electron (old open question 8)?** Yes. Answered by step 6 and passed by the maintainer (PR #15): egui is the UI toolkit. See the step 6 entry above and `docs/research.md`. Moved here from `open-questions.md` at close-out.
+- **Spike code from the never-merged PRs?** Collected into the `spikes-archive` branch (`spikes/`), one folder per step, with a README; PRs #5, #9, #11 and #16 closed with a pointer. The 129-byte pak table constant from ree-pak-rs (MIT) was redacted from the archive copy.
+

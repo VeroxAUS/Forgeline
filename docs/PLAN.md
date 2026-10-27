@@ -1,6 +1,6 @@
 # Forgeline: MH Wilds Build Planner, project plan and handover
 
-Written from the design conversation with the maintainer on 2026-10-27 and updated with every decision made that day. Nothing has been built yet. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
+Written from the design conversation with the maintainer on 2026-10-27 and updated with every decision made that day. **Phase 1 (spikes) is closed (version 0.1.0); no product code exists yet.** Phase 2 is next. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
 
 ## 1. Goal
 
@@ -31,7 +31,7 @@ The prototype is the **light bowgun**. The engine is generic and the extractor a
   - `_Item`: `_BoxItem` (900 entries of `ItemIdFixed`, `Num`), `_PouchItem`, `_PouchShell`, `_ItemFoundFlag` and `_ItemCheckedFlag` (bitsets, max 2000 items).
   - `_Equip`: `_EquipBox` (2400 entries with `Category_Gender`, `BonusByCreating`, `BonusByGrinding`, `GrindingNum`, `BowgunCustomizeId[4]`, `EquipmentAccessoryIdArray[3]` and free values), `_WeaponFlagParam` (per weapon type "created" and "checked" bitsets), armor created/checked bitsets per slot.
   - `_Story` (flags, `ProgressId`), `_Mission` (clear, active and failed flag bitsets), `_EnemyReport` (`_Boss`: `FixedId`, `SlayingNum`, `CaptureNum`, size records; also `_Zako`, `_Animal`, `_AnimalFishing`), `_Collection`, `_ItemRecipe`, `_LargeWorkshop`, `_QuestRecord`, `_Player`, and many more.
-- Item and equipment IDs in the save are "fixed IDs". **Whether they match any data source's IDs is not yet verified.** Owned talismans were not located yet.
+- Item and equipment IDs in the save are "fixed IDs". **Whether they match the game data's IDs by name is not yet verified** (by range and internal consistency they do; the by-name check needs the text files, Phase 3). One likely talisman entry was found (count confirmed by the maintainer); its skills are not decoded. See the Phase 1 results in section 6.
 - Reading is safe; the MHWeditor disclaimer concerns editing. Our app is read-only and only ever analyses copies of the save.
 
 ### Game install (verified)
@@ -60,15 +60,15 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 ## 4. Design decisions
 
 - **Rust everywhere**, with our own tools. Every new tool needs the maintainer's yes before it is created or run. If a Nexus release requires open source, the project goes open source.
-- **MHWeditor is dropped as a dependency.** It has no licence (no LICENSE file, no Cargo licence fields, only a README disclaimer), so it is treated as all rights reserved. We learn facts from it, not code: one thread studies it and writes the facts in its own words to `research.md` with credit; a separate thread writes our reader from those notes only. Its type data licence and a possible upstream (c-ola) are still unchecked. Third-party code in the repo needs its licence recorded in `THIRD-PARTY-NOTICES.md`; GPL code stays out until the licence review says what a Nexus release must be.
+- **MHWeditor is dropped as a dependency.** It has no licence (no LICENSE file, no Cargo licence fields, only a README disclaimer), so it is treated as all rights reserved. We learn facts from it, not code: one thread studies it and writes the facts in its own words to `research.md` with credit; a separate thread writes our reader from those notes only. The licence review (Phase 1 step 1) found its type dump comes from other unlicensed work, so fallback C is not cleared. Third-party code in the repo needs its licence recorded in `THIRD-PARTY-NOTICES.md`; GPL code stays out until the licence review says what a Nexus release must be.
 - **Type data (needed to read the save and game files), fallbacks in order:**
   - A: our own static dumper that reads the game's `.exe` on disk, run on the user's PC, nothing shipped.
   - B: a hand-written schema for only the classes we need.
   - C: a licence-checked community dump downloaded on update, never shipped; we never run injecting tools ourselves.
   - D: map fields by hashes and value patterns.
   - Last resort if no game data can be read: MHDB data, clearly labelled to the user as older and unsupported.
-  This spike runs first in Phase 1.
-- **UI:** pure Rust if the Phase 1 comparison allows. Phase 1 measures pure-Rust UI (egui, Slint or similar) against Tauri and Electron (cold start, idle RAM and CPU) with Wilds running. Dark theme only.
+  Phase 1 result: route A works for the save (see section 6); route B (hand-written schemas) is needed for the game data files.
+- **UI: pure Rust, egui (glow backend).** Chosen by the Phase 1 comparison, measured with Wilds running: egui meets the performance budget; Tauri and Electron fail the RAM hard limit. Slint was not tested. Dark theme only.
 - **Data from the game files.** Our own extractor reads the user's own install when they press the update button. We never ship Capcom data. The update never auto-fetches.
 - **Update validation gate.** A new extraction is staged next to the last good data and validated before it replaces it. It is blocked if items the build uses disappear, if an upgrade is not a real increase, or if builds score worse after skill, set bonus or weight changes (the model re-scores old versus new data and flags worse ones). If extraction fails, a format changed or validation fails, the app keeps the last good data and says so visibly. How to implement the confidence measure is open.
 - **Patch warning.** When the game build changes, the app warns that data may be out of date. It suggests pressing update only when confidence is above 95% that nothing will break or get worse. Game build ID and file structure hashes are stored with each extraction as inputs.
@@ -81,6 +81,7 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 - **Out of scope unless the maintainer reopens it:** a rotation-based DPS simulator and a statistical fight model.
 - **Weapons:** the extractor and data model cover all weapons from Phase 3. Every weapon is optimized before 1.0.0, light bowgun first; each weapon is labelled "tuned" or "generic model" in the app. Which weapon follows the light bowgun is decided later.
 - **Saves:** the app auto-picks the active slot and the Steam ID comes from the folder name.
+- **Licence: MPL-2.0** for our own code (chosen 2026-10-27): forks welcome with "based on Forgeline" credit, no contributor paperwork, optional Ko-fi tip link on GitHub only. A Nexus release does not force open source as long as no GPL code is used (none is).
 - **Distribution:** Nexus. Local only (no network listener, telemetry or accounts). Windows and Steam only.
 - **Versioning:** semantic versioning. 1.0.0 is the full release; a major addition bumps x.1.x; a bug fix bumps x.x.1. Changelog from Phase 2.
 
@@ -96,7 +97,7 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 
 Each phase has a detailed plan in `docs/plans/phase-N-name.md`, written just before the phase from the template in [plans/TEMPLATE.md](plans/TEMPLATE.md), reviewed and approved by the maintainer before any work. When a phase finishes, this file is updated.
 
-1. **Spikes**, each with a pass or fail result:
+1. **Spikes** (done, 0.1.0; results below), each with a pass or fail result:
    - **Type data first**, with fallbacks A to D named in the plan.
    - Save-to-data ID matching, and owned talismans, on a copy of the save.
    - Licence review (cloud, in parallel): MHWeditor and its possible upstream, mhdb-wilds-data (GPL-3.0), MHDB data.
@@ -109,6 +110,28 @@ Each phase has a detailed plan in `docs/plans/phase-N-name.md`, written just bef
 6. **Interface and shopping list:** polish of the bare window, dark theme, equipment-style display with hover details, shopping list.
 7. **Farming routes, decorations and melding.**
 8. **Artian and Gogma Artian planner.**
+
+### Phase 1 results (closed 2026-10-27, version 0.1.0)
+
+Details and evidence are in [research.md](research.md); the plan and its time log are in [plans/phase-1-spikes.md](plans/phase-1-spikes.md). Spike code is archived on the `spikes-archive` branch (never merged to `main`).
+
+| Step | Result | What it decides |
+|------|--------|-----------------|
+| 1 Licence review | Pass | MHWeditor and its type dump: not usable (no licence), so route C is blocked. mhdb-wilds-data code is GPL, stays out. A Nexus release does not force open source if no GPL code is used. Still open: Slint terms, mhdb-wilds-data output files, MHDB terms, Nexus rules on a user-pressed update. |
+| 2 Clean-room study | Pass | Save container, Steam-ID decryption, deflate wrapper and the class stream are written down in our own words. A second pass fixed the key setup. |
+| 3 Type data | Pass for the save, partial overall | **Route A works**: scanning the game `.exe` on disk named 185 of 187 save classes and 1,215 of 1,221 class and field pairs (99.5%). The save decrypts and parses. The data-file half moved to step 5. |
+| 4 ID matching, talismans | Partial | Slots, equipment box and flags read and confirmed against the maintainer's game (1 of 3 slots used, about 14 light bowguns, 7 armor pieces, 1 talisman). IDs fit the data ranges; by-name matching moves to Phase 3. Talisman skills not decoded. Active-slot field and kills-to-unlocked-monsters mapping still open. |
+| 5 Extraction test | Partial | Our own pack reader works on the real install (never reads whole packs). Skills, all 14 weapon types, armor, decorations, charms, Artian, items and monster files are **located but not decoded**. **Motion values were not found** (open question 11); real drop tables and hitzones are unconfirmed. Game-data classes need hand-written **route B schemas**. |
+| 6 UI comparison | Pass | **egui (pure Rust)** meets the budget with Wilds running (cold start 200 ms, 73.5 MB working set, 0% idle CPU and GPU). Tauri and Electron fail the RAM hard limit. No candidate stuttered the game. Standard benchmark spot: Scarlet Forest base camp. |
+| 7 Close-out | This update | |
+
+**Inputs for the Phase 2 plan:**
+
+- Foundation uses egui (glow); re-measure RAM against the 80 MB target as soon as the window holds real data (egui had about 6 MB of headroom on the working-set target).
+- The save reader and the update-time exe scan (route A) are proven; restrict the class rebuild (namespace `app.savedata`, names starting with `c`) so it runs in seconds, and record the game build ID with each scan.
+- The extractor reads packs by index and single entries; the pack format facts and the table key come from ree-pak-rs (MIT). Credit and record it in `THIRD-PARTY-NOTICES.md` when the key constant enters the repo, and add the MPL-2.0 file notice to each source file.
+- Data-file decoding needs route B schemas written per class (Phase 3 scope); Phase 2 only needs the pack reader, discovery and the update flow with staging and validation.
+- Open for Phase 3 and 4: by-name ID matching, talisman decoding, unlocked-monster mapping, motion values and ammo base power (question 11).
 
 After that: the other weapons one at a time (each optimized and labelled tuned or generic before 1.0.0), then Nexus packaging.
 
@@ -127,18 +150,18 @@ Built when needed, each needing the maintainer's yes at the time: save diff (com
 ## 8. Open questions
 
 The full list is in [open-questions.md](open-questions.md). In short:
-- Do the save's fixed IDs match the data's IDs? Is there an owned-talisman record?
+- Do the save's fixed IDs match the data's IDs by name? Can talisman skills be decoded? (Both partly answered in Phase 1.)
 - How do kills and story and mission flags map to "monsters I've unlocked"?
-- Do the game files contain numeric skill parameters, Artian and Gogma Artian bonus tables with pool weights, and motion values?
+- Do the game files contain numeric skill parameters, Artian and Gogma Artian bonus tables with pool weights, and motion values? (Located but not decoded; motion values not found.)
 - How does Wilds melding work, and what does the data offer?
-- Licences: MHWeditor's upstream and type data assets; whether GPL code forces an open-source Nexus release.
+- Licences, what is left: Slint terms, mhdb-wilds-data output files, MHDB terms, Nexus rules on a user-pressed update. (MPL-2.0 chosen; Nexus does not force open source.)
 - How the update validation gate measures confidence.
 - What the training dummy shows (Phase 5 or later).
 
 ## 9. Risks
 
 - Game updates can break the extractor or the save reader. The app must fail visibly and keep the last good data. A read-only reader cannot damage a save.
-- Getting the game's type data ourselves may be the hardest spike; if it fails, the reader and extractor stall. Hence it runs first, with fallbacks A to D.
+- Type data: route A worked for the save, but game-data classes still need hand-written schemas (route B), and a game patch can change types. Fallbacks A to D stay in place.
 - Extracted numbers still need interpreting; that is reverse-engineering work whatever the source.
 - The model can't be checked against the real game beyond hands-on tests. The last part of accuracy costs more at each step and needs real hunt data.
 - GPL code may force an open-source release.

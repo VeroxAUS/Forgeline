@@ -1,0 +1,40 @@
+name: Bug report
+description: Something in Forgeline is wrong or broken
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never attach your save files, decrypted dumps or extracted game data.** They hold your hunter ID and Capcom data. Describe what you see instead.
+  - type: input
+    id: app-version
+    attributes:
+      label: Forgeline version
+      description: Shown in the app, or the release you downloaded.
+    validations:
+      required: true
+  - type: input
+    id: game-version
+    attributes:
+      label: Monster Hunter Wilds version
+      description: Game build or title update, and whether it was patched recently.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open the app\n2. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected and what happened
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Weapon type, rank, screenshots with no personal info, or error text.
