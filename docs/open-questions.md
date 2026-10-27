@@ -2,7 +2,7 @@
 
 Written only by the coordinator. This file holds research unknowns that the plan still has to answer, plus any question awaiting the maintainer. Every question asked to the maintainer is recorded here; once answered, it moves to [closed-questions.md](closed-questions.md).
 
-Nothing is waiting on the maintainer. Phase 1 is closed; the items below are the research unknowns it left open, with what each still needs and which phase picks it up.
+Waiting on the maintainer: the five Phase 2 plan decisions below (asked 2026-10-27, PR #21). Phase 1 is closed; the items below are the research unknowns it left open, with what each still needs and which phase picks it up.
 
 ## Open
 
@@ -19,3 +19,10 @@ Numbers are kept stable; answered questions leave a gap (question 8 moved to clo
 10. **Nexus comments and bugs.** Does Nexus's GraphQL v2 expose comments or bug reports, and does Nexus email authors about them? Check the maintainer's author notification settings once the mod page is live (see `docs/research.md`, "Nexus monitoring").
 11. **Motion values and base power.** Motion values, and attack and ammo base power (for example bowgun ammo values), were not found in the game files in step 5. The Phase 4 damage formula and any future simulation need them. The Phase 3 and Phase 4 plans must address this early: a cited source, or Phase 5 training-room measurement.
 
+## Waiting on the maintainer (asked 2026-10-27, Phase 2 plan, PR #21)
+
+A. **Tools for Phase 2.** Approve the fixture save builder (`tools/fixture-builder`), `forgeline-check` (counts and names only) and `tools/bench` (the Phase 1 sampler ported from `spikes-archive`)?
+B. **RAM rule for every PR.** A headless CI check on every PR, plus a PC reading on every PR that changes the app; at most +3 MB private bytes per PR without a reason; at most 140 MB private bytes and 80 MB working set in total. Approve?
+C. **Update as a child process.** Run the update as a short-lived child process of the app instead of a thread, so its memory never counts against the thin RAM headroom. Approve?
+D. **Needed-files path list in the repo.** Keep a hand-written list of about 80 game file paths (paths only, no Capcom data) in `crates/forgeline-pak/src/paths.rs`. Approve?
+E. **Budget changes (decided in step 10).** Split "Idle RAM" into working set (target 80 MB) and private bytes (hard limit 150 MB); make "no stutter" a number (game median and 99th percentile frame time within 1 ms of the control run); add rows for "last view on screen" and "save change to updated view". Agree in principle?
