@@ -1,10 +1,16 @@
-# Monster Hunter Wilds Gear Progression Helper
+<p align="center">
+  <img src="./assets/readme/hero.svg" width="100%" alt="Monster Hunter Wilds Gear Progression Helper: the best build you can make right now. Pre-alpha, phase 1, nothing usable yet.">
+</p>
 
-A planned Windows and Steam desktop app that reads your Monster Hunter Wilds save and shows the best build you can make **right now**: weapon, armor, decorations, talisman and upgrades. It is meant to follow you through low rank, high rank and endgame.
+A planned Windows and Steam desktop app that reads your Monster Hunter Wilds save and shows the **best build you can make right now**: weapon, armor, decorations, talisman and upgrades. It is meant to follow you through low rank, high rank and endgame.
 
 > **Status: pre-alpha. Nothing is usable yet.** The project is in Phase 1 (spikes): research and throwaway experiments that decide the architecture. There is no release, no installer and no working app. Everything below describes the plan, and every feature is **planned** unless stated otherwise.
 
 ## What it will do (planned)
+
+<p align="center">
+  <img src="./assets/readme/workflow.svg" width="100%" alt="Planned flow: your save, read-only copy, shows what you have unlocked, which gives the best build now plus a shopping list. Game data comes from your own install and nothing leaves your PC.">
+</p>
 
 - Read your save automatically and pick the active character slot.
 - Show the best build you can make with the gear you have unlocked. It never shows a "wait until endgame" build.
