@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340" role="img" aria-labelledby="t d">
+  <title id="t">How the app is planned to work</title>
+  <desc id="d">Planned flow: a read-only copy of your save shows which monsters you have unlocked, which gives the best build you can make now, with missing materials on a shopping list. Game data comes from your own install. Nothing leaves your PC.</desc>
+  <defs>
+    <marker id="a" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto">
+      <path d="M0 0L12 6L0 12Z" fill="#e0a43a"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="340" rx="26" fill="#0d1117"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" text-anchor="middle">
+    <text x="64" y="64" font-size="40" font-weight="800" fill="#e6edf3" text-anchor="start">How it is planned to work</text>
+    <g stroke="#30363d" stroke-width="2" fill="#161b22">
+      <rect x="64" y="100" width="320" height="130" rx="16"/>
+      <rect x="440" y="100" width="320" height="130" rx="16"/>
+      <rect x="816" y="100" width="320" height="130" rx="16" stroke="#e0a43a"/>
+    </g>
+    <g stroke="#e0a43a" stroke-width="3" marker-end="url(#a)">
+      <path d="M388 165H430"/><path d="M764 165H806"/>
+    </g>
+    <g font-size="24" font-weight="700" fill="#e6edf3">
+      <text x="224" y="156">Your save</text>
+      <text x="600" y="156">What you've unlocked</text>
+      <text x="976" y="156">Best build now</text>
+    </g>
+    <g font-size="20" fill="#8b949e">
+      <text x="224" y="194">read-only copy</text>
+      <text x="600" y="194">gear from unlocked monsters</text>
+      <text x="976" y="194">+ shopping list</text>
+    </g>
+    <rect x="64" y="256" width="1072" height="52" rx="12" fill="#10201f" stroke="#4fb3a9"/>
+    <text x="600" y="290" font-size="22" fill="#4fb3a9">Game data from your own install · local only · nothing leaves your PC</text>
+  </g>
+</svg>
