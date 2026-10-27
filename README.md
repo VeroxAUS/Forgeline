@@ -112,8 +112,18 @@ Contributions are accepted under the same licence, with no extra paperwork.
 
 Forgeline is free. If you want to, you can leave an optional tip on [Ko-fi](https://ko-fi.com/veroxaus). It is a tip with no perks: nothing is locked behind it, and every feature and update stays free. The tip link lives on this GitHub page only, not on the Nexus Mods page.
 
+## How Forgeline is made
+
+Forgeline is a human-directed project built with AI assistance. The maintainer (VeroxAUS):
+
+- sets the direction and makes every product decision
+- reviews and approves every phase plan before any work starts
+- reviews every pull request, plan, document and code change before it merges
+- runs every test round on their own PC with the real game, including benchmarks with Wilds running, and does the in-game testing
+- decides every rule, licence and tool
+
+Claude (Anthropic's AI) writes most of the code and documents under that direction. Game data and results are verified against the game, never filled in by the AI.
+
 ## Disclaimer
 
 This is an unofficial fan project. It is not affiliated with or endorsed by Capcom or Valve. Monster Hunter Wilds is a trademark of Capcom.
-
-This project is written with AI assistance (Claude), directed and reviewed by the maintainer. Game data and results are verified against the game, never filled in by AI.
