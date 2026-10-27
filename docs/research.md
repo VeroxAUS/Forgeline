@@ -97,7 +97,7 @@ Method: read the source of MHWeditor (https://github.com/this-nerd/MHWeditor, no
 
 ### 2. Mandarin decryption (the Steam ID layer)
 - Key: the full 64-bit Steam ID, used as is for Wilds (no transformation). It is the folder number under `userdata` plus `0x0110000100000000`. The tool treats the key as the bitwise NOT of that number wherever it is mixed in.
-- The last 12 bytes before the file checksum hold, first, the decrypted length as a 64-bit number (the 8 bytes sit right before the final 4-byte checksum) . The 4 bytes after those 8 are the file checksum. The encrypted region is everything from the aligned start up to 12 bytes before the end, which also includes a trailing 0x80-byte blob (an RSA-style value) after the last block. Our reader can ignore that blob for decrypting.
+- The file tail is, in order: the 0x80-byte RSA-style blob, then the decrypted length as a 64-bit number, then the 4-byte file checksum. So the decrypted length sits 12 bytes from the end. The encrypted blocks run from the aligned start up to the blob. Our reader can ignore the blob when decrypting.
 - The encrypted data is cut into blocks. The block sizes come from a pseudo-random sequence:
   - generator: SplitMix64 (a public algorithm; add `0x9E3779B97F4A7C15`, then the usual two multiply and xor-shift steps with `0xBF58476D1CE4E5B9` and `0x94D049BB133111EB`, then a final xor-shift of 31).
   - starting state for the size sequence: a per-game constant. For Wilds it is `0x7A36955255266CED`. A second per-game constant, `0xBFACF76C3F96`, seeds a sequence that is only used on the encrypt side to build the RSA-style blob.
