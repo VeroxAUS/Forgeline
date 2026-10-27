@@ -1,0 +1,28 @@
+name: Build or feature request
+description: Suggest a feature, a build check, or a weapon to prioritise
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Forgeline shows the best build you can make right now. **Never attach save files or extracted game data.** Link public sources for any game facts.
+  - type: textarea
+    id: request
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does it help?
+      description: What you do in game that this would improve.
+  - type: input
+    id: weapon
+    attributes:
+      label: Weapon type (if relevant)
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference build or source (optional)
+      description: A community build or guide, with a link and credit. We use these as checks, not as copied answers.

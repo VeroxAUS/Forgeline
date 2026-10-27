@@ -1,6 +1,6 @@
 # Phase 1: Spikes
 
-Target version: 0.1.0 · Status: approved (the maintainer, 2026-10-27 13:05 UTC)
+Target version: 0.1.0 · Status: closed at step 7 (approved by the maintainer 2026-10-27 13:05 UTC; results in [PLAN.md](../PLAN.md) section 6)
 
 Each phase plan is written just before its phase, using what earlier phases found. The maintainer reviews and approves it before any work starts. Estimates are in threads and test rounds, not hours; real durations go in the time log (section 10).
 
@@ -35,14 +35,16 @@ Spikes produce findings in `docs/research.md`, not product code. Spike code is t
 
 Done means:
 
-- [ ] Each of the seven steps has a recorded result in `docs/research.md` (pass, partial or fail), with evidence and a status of verified, reported or open.
-- [ ] The type-data route is chosen (A, B, C or D, or the MHDB last resort), with the reason written down.
-- [ ] Open questions 1 to 6 and 8 are answered, or re-stated with what is still missing (the coordinator moves answers to `closed-questions.md`).
-- [ ] The licence review states what a Nexus release may include and whether the project must go open source.
-- [ ] The UI toolkit (pure Rust, Tauri or Electron) is chosen from numbers measured with Wilds running, against the performance budget drafted with the maintainer.
-- [ ] `docs/PLAN.md` is updated with the results, so the Phase 2 plan can be written from them.
-- [ ] `README.md` is updated at close-out (status and version badges, roadmap progress).
-- [ ] No save, decrypted dump or extracted Capcom data is in git.
+- [x] Each of the seven steps has a recorded result in `docs/research.md` (pass, partial or fail), with evidence and a status of verified, reported or open.
+- [x] The type-data route is chosen (A, B, C or D, or the MHDB last resort), with the reason written down.
+- [x] Open questions 1 to 6 and 8 are answered, or re-stated with what is still missing (the coordinator moves answers to `closed-questions.md`).
+- [x] The licence review states what a Nexus release may include and whether the project must go open source.
+- [x] The UI toolkit (pure Rust, Tauri or Electron) is chosen from numbers measured with Wilds running, against the performance budget drafted with the maintainer.
+- [x] `docs/PLAN.md` is updated with the results, so the Phase 2 plan can be written from them.
+- [x] `README.md` is updated at close-out (status and version badges, roadmap progress).
+- [x] No save, decrypted dump or extracted Capcom data is in git.
+
+Close-out notes: steps 4 and 5 ended partial (by-name ID matching, talisman skills, data-file decoding and motion values are carried to Phases 3 and 4 in `open-questions.md`); route A is chosen for the save and route B schemas are needed for game data; egui is the UI; MPL-2.0 is the licence.
 
 ## 2. Inputs and dependencies
 
@@ -296,6 +298,7 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 | Plan page builder (`tools/plan-page`, not a numbered step) PR #12 merged | 2026-10-27 14:20 UTC (the maintainer passed 14:20 UTC: looks fine, keep the How-to-read box; docs tooling, cloud check) |
 | Step 6 (UI comparison) PR #15 merged | 2026-10-27 14:58:32 UTC (the maintainer passed; pass: egui chosen; Scarlet Forest base camp is the standard benchmark spot; docs only, merge commit 25c7114) |
 | Licence PR #14 merged (not a numbered step) | 2026-10-27 15:02:04 UTC (the maintainer passed 15:01 UTC; pass: MPL-2.0, no DCO, Ko-fi on GitHub only; docs and LICENSE only, merge commit 054d586) |
+| Step 7 (close-out) PR opened | 2026-10-27 (docs only; also adds `CONTRIBUTING.md`, `SECURITY.md`, issue templates and `CODE_OF_CONDUCT.md`, approved by the maintainer; merge time and pass to be logged by the coordinator) |
 | Step 7 (close-out) PR merged | |
 | Phase finished | |
 
