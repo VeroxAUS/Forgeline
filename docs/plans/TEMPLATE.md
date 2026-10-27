@@ -88,7 +88,7 @@ Version bump per step (0.N.x for additions, x.x.1 for fixes) and the changelog l
 | Step 2 PR merged | |
 | Phase finished | |
 
-Elapsed from approval to finish: <hours>. Compare with the estimates in section 4.
+Elapsed from approval to finish: `<hours>`. Compare with the estimates in section 4.
 
 ## Plan writing rules (check before publishing)
 1. Number steps in the order they run and use the same numbers in every section. Parallel steps share a stage.
@@ -100,3 +100,4 @@ Elapsed from approval to finish: <hours>. Compare with the estimates in section 
 7. The final step is a close-out that includes the `README.md` update (section 4), and the done checklist lists it.
 8. Check the rendered page against this list before publishing the PR and the Artifact. Republish the same Artifact link when the plan changes.
 9. Publish plan pages only via `tools/plan-page` (see its README), never with a hand-built page, so every republish looks identical.
+10. Before the close-out PR merges, the time log has no placeholders left: every row is filled (merge times to the second where the API gives them), the rows are in time order, "Phase finished" has its time, and the elapsed time is written out with a one-line comparison against the section 4 estimate. The coordinator checks this at close-out.
