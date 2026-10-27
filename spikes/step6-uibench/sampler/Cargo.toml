@@ -1,0 +1,12 @@
+[package]
+name = "sampler"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+sysinfo = "0.39"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = ["Win32_System_Performance", "Win32_Foundation"] }
+ferrisetw = "1.2"
