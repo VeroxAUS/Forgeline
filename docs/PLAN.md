@@ -1,4 +1,4 @@
-# MH Wilds BiS app: project plan and handover
+# Forgeline: MH Wilds Build Planner, project plan and handover
 
 Written from the design conversation with Thomas on 2026-10-27 and updated with every decision made that day. Nothing has been built yet. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
 

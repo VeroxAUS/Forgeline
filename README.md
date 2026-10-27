@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/readme/hero.svg" width="100%" alt="Monster Hunter Wilds Gear Progression Helper: the best build you can make right now. Pre-alpha, phase 1, nothing usable yet.">
+  <img src="./assets/readme/hero.svg" width="100%" alt="Forgeline, MH Wilds Build Planner: the best build you can make right now. Pre-alpha, phase 1, nothing usable yet.">
 </p>
 
 <p align="center">

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" role="img" aria-labelledby="t d">
-  <title id="t">Monster Hunter Wilds Gear Progression Helper</title>
+  <title id="t">Forgeline: MH Wilds Build Planner</title>
   <desc id="d">Planned desktop app that shows the best build you can make right now. Five empty gear tiles (weapon, armor, decorations, talisman, upgrades) mark what it will fill. Status: pre-alpha, nothing usable yet.</desc>
   <defs>
     <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -16,8 +16,8 @@
     <g transform="translate(64 62)">
       <rect width="318" height="38" rx="19" fill="#2a2110" stroke="#e0a43a"/>
       <text x="159" y="26" text-anchor="middle" font-size="20" font-weight="700" fill="#e0a43a" letter-spacing="1">PRE-ALPHA · PHASE 1</text>
-      <text y="150" font-size="50" font-weight="800" fill="#e6edf3">Monster Hunter Wilds</text>
-      <text y="212" font-size="50" font-weight="800" fill="#e0a43a">Gear Progression Helper</text>
+      <text y="150" font-size="50" font-weight="800" fill="#e6edf3">Forgeline</text>
+      <text y="212" font-size="50" font-weight="800" fill="#e0a43a">MH Wilds Build Planner</text>
       <text y="262" font-size="26" fill="#c9d1d9">The best build you can make right now.</text>
       <text y="296" font-size="22" fill="#8b949e">From your first hunt to endgame.</text>
     </g>
