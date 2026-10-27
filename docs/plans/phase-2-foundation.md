@@ -43,7 +43,7 @@ Each phase plan is written just before its phase, using what earlier phases foun
 - GitHub Actions for the app crates (format, clippy, tests) from the first PR (step 1).
 
 ## 1. Goal and done
-Build the foundation every later phase stands on: the app finds the maintainer's save and game install by itself, reads the active save slot, watches the save folder without polling, stages and validates an update of the game data, and shows all of it in a bare egui window grown from the debug data viewer. There is no optimizer yet; the window shows what the app knows, not a build.
+Build the foundation every later phase stands on: the app finds the maintainer's save and game install by itself, reads the active save slot, watches the save folder without polling, stages and validates an update of the game data, and shows all of it in a bare egui window grown from the debug data viewer. There is no optimizer yet; the window shows what the app knows, not a build. A UX design step (brief, mock-ups, style guide) also runs beside the backend work, so that this and every later window follows an agreed look, not "whatever works".
 
 Done means:
 
@@ -300,7 +300,7 @@ Files are listed by step. Every source file starts with the MPL-2.0 Exhibit A no
 
 #### `tools/ui-footprint/` (step 10)
 - **Purpose:** compare what each UI choice costs and how it looks, on the same small dark sample view, before the app grows around the current choice.
-- **Inputs and outputs:** four small apps in their own Cargo workspace. Each shows a table of invented gear, a few stat numbers and a button, in the dark theme. Out, per variant: private bytes, working set, cold start to first frame and idle CPU and GPU (through `tools/bench`), plus a screenshot saved on the PC.
+- **Inputs and outputs:** four small apps in their own Cargo workspace. Each shows the widgets from step 7's list (at least a table of invented gear, a few stat numbers and a button), in the dark theme and the style guide's colours. Out, per variant: private bytes, working set, cold start to first frame and idle CPU and GPU (through `tools/bench`), plus a screenshot saved on the PC.
 - **Depends on:** `tools/bench` (ported in this step).
 - **Notes:** variants are (a) egui with the wgpu renderer, (b) egui with the glow (OpenGL) renderer and unneeded features off, (c) Slint under its royalty-free or MIT-compatible terms only (never the GPL option; the licence is read first and recorded in `THIRD-PARTY-NOTICES.md`, and the variant is skipped and reported if those terms cannot be confirmed), (d) a plain native Win32 window through the `windows` crate. (a) and (b) look identical because the renderer does not change how egui looks; (c) and (d) look different. Phase 1 measured the glow backend, so (b) is the Phase 1 baseline re-measured with features off and (a) is new. No network code, no Capcom data, no real save data. Not part of the shipped app.
 

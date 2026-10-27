@@ -73,6 +73,7 @@ One sub-list per step or feature, one criterion per line.
 ### 6.3 Test round checklist
 Queued, one at a time, grouped by step. Each item says what the app should show for the maintainer's current save:
 - [ ] Step N: with your save, the app should show <X>
+- [ ] Look check (every step that changes the window, from Phase 2 on): the window follows the mock-ups and style guide in `docs/ux/`, and the maintainer notes any difference next to the performance numbers
 
 ## 7. Risks and open questions
 Each risk: how we would notice it, and the fallback. New questions go to `docs/open-questions.md` via the coordinator.
