@@ -185,15 +185,49 @@ They re-encrypt by reversing every step above. We are read-only on the game, so 
 
 ## Step 3: type-data spike, route A (2026-10-28)
 
-Question: can the game `.exe` on disk give us the names behind the save's hashes (route A)?
+Question: can the game `.exe` on disk give us the names behind the save's hashes (route A), well enough to parse a save into named classes?
 
-Method: our own throwaway Rust tool (`spikes/typedump`, branch `spike/step3-typedump`, never merged) read `MonsterHunterWilds.exe` from the Steam library found through `libraryfolders.vdf` (read-only, one pass, about 2 s), took every printable-ASCII string of 3 to 200 characters and hashed it with murmur3 (seed `0xFFFFFFFF`, as in step 2). The install is modded (`dinput8.dll`, `reframework`, `pak_mods`, Fluffy Mod Manager marker); the `.exe` is the one on disk and was not launched. Results stay in `E:\mhbis\out` (not in git). Code ran against the real exe and a copy of the real save.
+**Result: route A passes for the save. The "sample of game data files" half of the criterion is not done (it needs step 5's pack reader).** Chosen route: **A**. B, C and D were not needed for the save. Status of everything below: **verified** on Thomas's PC (real exe, a copy of the real save).
 
-Results:
-- **Verified:** 2,252,128 distinct strings; the hashes of `_Data`, `_BasicData`, `_BoxItem`, `_PouchItem` and `_ItemFoundFlag` (field names from step 2) all appear in the exe's strings. So field names can be recovered by hashing exe strings (about 67,700 strings start with `_` and a capital).
-- **Verified:** full dotted class names (for example `app.MissionIDList.ID`) are **not** stored as plain strings. Only namespace pieces (198 `app.` strings, e.g. `app.savedata`) and about 17,500 short class-like names (`cXxx`) exist. Class hashes would have to be rebuilt by combining namespace and short name and hashing; that is untested because the next point blocks it.
-- **Blocked:** the save copy could not be decrypted from the step 2 notes. With flags `0x18` and layout confirmed (encrypted area is exactly two blocks of 6 x 0x4000 bytes plus two 0x210 headers, if block sizes use the generator output rather than the raw state), no key derivation I tried produced the expected deflate wrapper (about 1.5 million combinations of generator start, how the Steam ID is mixed in, skipped outputs, key/IV byte lanes and AES mode OFB/CTR/CFB). So no save hash was available to match, and the step 3 pass criterion (parse a save into named classes) is **not yet met**.
+Method: our own throwaway Rust tool (`spikes/typedump`, PR #5, never merged; ran against the real files). It reads `MonsterHunterWilds.exe` on disk (read-only, about 2 s for 546 MB, never launched), hashes every printable-ASCII string of 3 to 200 characters with murmur3 (seed `0xFFFFFFFF`) and matches the hashes found in the save. The install is modded (`dinput8.dll`, `reframework`, `pak_mods`, a Fluffy Mod Manager marker); the `.exe` on disk was used as is. Outputs stay in `E:\mhbis\out` (not in git).
 
-Status of route A: **partial** (names for fields recoverable, class names unconfirmed, no save parse). Not a fail of the exe approach itself; the blocker is step 2's crypto notes.
+### Save decryption (confirms the step 2 follow-up recipe)
+- The recipe in the step 2 follow-up works as written: the oracle value matched on the first try, then the whole save decrypted and inflated (header size equals stream size; about 16.5 MB inflated from a 198 KB file). Flags `0x18` confirmed, two real blocks of 6 x 0x4000 bytes. My first attempt (from the first version of the notes) failed only because of the generator feedback chain and step count the follow-up corrected.
+- CityHash was not needed: a successful inflate plus a clean full-stream walk is the check. CityHash revision still unknown.
 
-Needs from the coordinator: a clean-room study thread to re-read MHWeditor's key setup (how the Steam ID enters the generator and how the key and IV bytes are drawn) and write the answer in own words, or a licensed alternative. Then step 3 can finish (class-name reconstruction plus parse) in about one more thread.
+### Corrections to the class stream format (step 2 section 4), found by walking the real save
+1. **16-byte structs are 16-aligned:** after the size prefix (16), the 16 bytes start on a 16-byte boundary (relative to the stream start, also a 16-byte boundary in the file). Without this the walk desyncs in the first slot.
+2. **Arrays of scalars and structs are packed:** after the array header (member type, member size, count, kind) the elements are `count x member size` raw bytes with no per-element size prefix (arrays of 16-byte structs are 16-aligned once, at the start). Arrays of strings and of classes are as in section 4.
+3. Everything else in section 4 held: field and class layout, hashes, the `0xFFEEFFEE` optional marker, top-level entries starting with a 32-bit hash.
+
+With those fixes the whole 16.5 MB stream walks to the exact end with no error: **187 distinct classes**.
+
+### Names recovered from the exe
+- Exe scan: 2,252,128 distinct strings. About 67,700 are field-like (`_Xxx`) and about 17,500 are short class-like names (`cXxx`). Full dotted class names are **not** stored as strings, only namespace pieces (6,648 `app.`/`via.` strings), so class names are rebuilt as namespace + "." + short name and hashed.
+- **Field names: 1,215 of 1,221 distinct (class, field) pairs resolved (99.5%)**, from exe strings alone.
+- **Class names: 185 of 187 resolved** (183 as `app.savedata.cXxx`, one `app.cEmProp`, plus the top-level `via.storage.saveService.SaveFileDetail`). Unresolved: one class with 2 fields repeated 14,346 times, and one other. Caveat: murmur3 is 32 bits and about 5.5 billion candidate names were tried, so chance collisions exist (some hashes also match odd `via.*` names). Rule used: accept only `app.<namespace>.c<Upper...>`; 2 hashes still had two plausible names and need a field-name check before use.
+- The classes step 3 asked for are all present and named (entries counted in the save copy):
+
+| Need | Class | Entries | Fields |
+|------|-------|---------|--------|
+| save root | `app.savedata.cUserSaveData` | 1 | 3 |
+| character slot | `app.savedata.cUserSaveParam` | 3 | 118 |
+| equipment | `app.savedata.cEquipParam` | 3 | 58 |
+| items | `app.savedata.cItemParam` | 3 | 16 |
+| enemy report | `app.savedata.cBossReportParam` | 300 | 9 |
+| story | `app.savedata.cStoryParam` | 3 | 8 |
+| mission | `app.savedata.cMissionParam` | present | not recorded |
+| workshop | `app.savedata.cLargeWorkshopParam` | 3 | 5 |
+
+  Also present and likely useful later: `cEquipWork` (7,245 entries), `cEquipMyset`, `cItemWork` (10,254), `cCharmEquipped`, `cArtianPartsWork`, `cArtianCreateCountParam`, `cWeaponFlagParam`, `cArmorFlagParam`, `cOtEquipWork`. Three slots are visible (`cUserSaveParam` x3). Which slot is active and what the ids mean is step 4.
+- Enums: the stream stores enum values as numbers with a width. Enum type and value names were not examined (they would need other string tables or the game data files).
+
+### Not done / open
+- **Sample of game data files not parsed** (second half of the step 3 pass criterion). It needs the pack reader of step 5; carry it there.
+- A class name is only "plausible" until its fields match the exe field names for that class (not checked per class).
+- Only names are recovered; field meaning and which enum a number belongs to are not. A small hand-written schema (route B) will probably be needed for meanings, built on these names.
+- Unchanged from step 2: CityHash revision, the 16-byte "mandrake" structs, bitset fields.
+- Route C was skipped (licence not cleared); route D (hashing exe strings) turned out to be the same method as route A here.
+
+### Decision this supports
+Route A is enough to name the save. Phase 2's reader can use the same method at update time (scan the user's exe; nothing shipped). The exe scan takes about 2 s. The class-name rebuild took minutes in the throwaway tool and must be restricted (namespace `app.savedata`, names starting with `c`) to run quickly.
