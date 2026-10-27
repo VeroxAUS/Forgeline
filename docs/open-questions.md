@@ -2,7 +2,7 @@
 
 Written only by the coordinator. This file holds research unknowns that the plan still has to answer, plus any question awaiting the maintainer. Every question asked to the maintainer is recorded here; once answered, it moves to [closed-questions.md](closed-questions.md).
 
-Nothing is waiting on the maintainer right now. All items below are research unknowns that the Phase 1 spikes are working on.
+Items 12 to 16 are waiting on the maintainer. The rest are research unknowns that the Phase 1 spikes are working on.
 
 ## Open
 
@@ -17,3 +17,11 @@ Nothing is waiting on the maintainer right now. All items below are research unk
 9. **Update validation gate.** How to implement the >95% confidence check (re-scoring old versus new data after skill, set bonus or weight changes)?
 10. **Nexus comments and bugs.** Does Nexus's GraphQL v2 expose comments or bug reports, and does Nexus email authors about them? Check the maintainer's author notification settings once the mod page is live (see `docs/research.md`, "Nexus monitoring").
 11. **Motion values and base power.** Motion values, and attack and ammo base power (for example bowgun ammo values), were not found in the game files in step 5. The Phase 4 damage formula and any future simulation need them. The Phase 3 and Phase 4 plans must address this early: a cited source, or Phase 5 training-room measurement.
+
+### Asked to the maintainer (2026-10-27, licence and donations; see [research.md](research.md), "Licence options and donations")
+
+12. **Source-available licence.** Is a source-available licence (not OSI open source) acceptable for the "ask permission to republish" rule? Recommended: PolyForm Shield 1.0.0. The open-source alternative is MPL-2.0, which cannot give that rule.
+13. **Competing forks.** Is it fine to bar all competing forks, including free ones that add features and share them as their own?
+14. **Fork names.** Must forks rename, or is "based on Forgeline" enough?
+15. **Contributions.** Should contributions be licensed to the maintainer so the licence can change later, or stay under the contributor's own copyright?
+16. **Tip link.** A voluntary tip link with no perks: yes or no? If yes, GitHub only, or also on Nexus?
