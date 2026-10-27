@@ -418,3 +418,31 @@ Build the Phase 2 interface in pure Rust (egui with glow is the measured baselin
 
 ### Decision (2026-10-27)
 The maintainer chose **MPL-2.0**, forks allowed with "based on Forgeline" credit, no competing-fork ban, no contributor paperwork, and a Ko-fi tip jar on GitHub only (none on Nexus). Compatibility with our dependencies: MIT, Apache-2.0, Unlicense and MIT OR Apache-2.0 crates can be combined with MPL-2.0 code; only the notices must be kept (`THIRD-PARTY-NOTICES.md`). GPL code (including Slint's GPL option and mhdb-wilds-data's toolkit) is not covered by that and stays out. MPL-2.0 asks for a short notice at the top of each source file (its Exhibit A); add it when code files appear.
+
+## Overlay target detection: how HunterPie reads Wilds, and read-only options (2026-10-27)
+
+Question: can an in-game shopping-list overlay learn the current target monster automatically, and how would a read-only approach look? Research only; nothing built, run or downloaded. Status: **reported** unless noted. Readable page: the Artifact report published with this entry (link in the PR).
+
+### HunterPie (https://github.com/HunterPie/HunterPie)
+- Its own [overview](https://docs.hunterpie.com/posts/hunterpie-an-in-depth-overview/) describes two methods: memory scanning (per-game map files of addresses and offsets, pointer paths from static memory, background thread at a user-set interval, a circuit-breaker for failing scans) and injection of a native library for data that is not in memory (remote thread plus `LoadLibraryW`, a local TCP link, function detours). The article uses injection for Rise damage numbers.
+- **Not confirmed:** whether the Wilds integration injects; whether it uses `ReadProcessMemory` by name; patch turnaround; Wilds window-mode needs. The Wilds source was not readable (fetch blocked by robots rules). The World FAQ says the overlay needs DirectX 12 or borderless windowed.
+- Wilds support: "partial" in [v2.12.0](https://docs.hunterpie.com/posts/update-v2.12.0) (monster, abnormalities, clock, damage meter widgets).
+- Licence: v2 Apache-2.0 (repo label); archived v1 (Haato3o/HunterPie) MIT. Permissive, so we may learn from it with credit; copying code needs a THIRD-PARTY-NOTICES.md entry. Offset tables are not to be used without checking their licence.
+
+### Anti-cheat and Capcom
+- Denuvo Anti-Tamper from launch ([Deltia's Gaming, Feb 2025](https://deltiasgaming.com/?p=155498)); a July 2025 [Automaton report](https://automaton-media.com/en/news/monster-hunter-wilds-players-think-anti-cheat-system-is-the-cause-of-repeated-crashes/) adds a Capcom proprietary anti-cheat and community reports (player claims about per-frame checks are unconfirmed). No Enigma mention found.
+- Capcom, [April 2025](https://www.gfinityesports.com/article/capcom-issues-warning-over-modding-in-monster-hunter-wilds): action against mods that alter game data in online quests; suspensions or permanent bans possible. Nothing about external or read-only tools. [MeinMMO, March 2025](https://mein-mmo.de/monster-hunter-wilds-mods-permanenter-account-bann/): reported bans were for a mod unlocking paid DLC; no official mod statement.
+- No report of a ban for a read-only reader or overlay found in Wilds, Rise or World. This is absence of evidence only.
+
+### Nexus
+- [File Submission Guidelines](https://help.nexusmods.com/article/28-file-submission-guidelines) have no rule on reading game memory. Relevant: nothing disruptive to persistent multiplayer, truthful claims, no internet-connected executables unless essential. HunterPie is listed for Wilds on Nexus (seen in search results only; page not readable).
+
+### Save file
+- Step 4 above found `cMissionParam`, `cStoryParam`, `cBossReportParam`; nobody has looked for an accepted, tracked or in-progress quest. **Open.** Capcom's April 2025 advice says autosave only runs after the results screen, which suggests accepting a quest does not write the save (inference). Test: decode a save copy before and after accepting a quest (needs the save-diff tool the maintainer has not yet approved).
+
+### Screen reading
+- [windows-capture](https://docs.rs/windows-capture) (MIT) wraps Windows Graphics Capture and DXGI duplication; no benchmark numbers. `Windows.Media.Ocr.OcrEngine` is Windows 10+, documented for UWP; desktop use unconfirmed; needs an installed OCR language. CPU cost **unmeasured**. HUD position, language, window mode (exclusive fullscreen) and the capture border are unknowns.
+
+### Recommendation and safeguards
+- Ladder by risk: save test, then screen-reading prototype, then external read-only memory reading only if both fail.
+- Memory safeguards if ever approved: opt-in with a warning; `PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_READ` only; `ReadProcessMemory` only (no injection, hooks, debugger attach or thread suspension); own separate overlay window, no renderer hooks; enabled only for a game build with a known offset map; validate every read against known monster ids with a circuit breaker; slow, only during a quest, low priority; offset map is local data. **Unsolved:** how we would find addresses without debugger-style tools.
