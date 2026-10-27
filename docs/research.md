@@ -78,3 +78,77 @@ Every dependency of any shipped crate still needs its own check at Phase 2 (for 
 - Whether Nexus allows a user-pressed update download, and the AI-generated tag.
 - Slint royalty-free terms.
 - Licence of Rust toolchain.
+
+## Step 2: save format, clean-room study of MHWeditor (2026-10-27)
+
+Question: what does the Wilds save file look like on disk, how is it decrypted, and how are its contents described, so that a separate thread can write our own reader from these notes without opening MHWeditor?
+
+Method: read the source of MHWeditor (https://github.com/this-nerd/MHWeditor, no licence, see the licence entry above) on 2026-10-27, mainly its save module (container, crypto, types), its type map and its dashboard code. Facts are restated in my own words. No code, no type data files and no real save data were copied or opened. The README says the project is a fork of kvasszn/ree-save-editor and the code looks derived from earlier REE tools; credit goes to those authors for the reverse engineering. Status: **reported** for everything below (read from their source, not yet reproduced by us). Spike 4 turns it into **verified** or not.
+
+### 1. File layout, outermost first
+- The file ends with a 4-byte little-endian checksum: murmur3 (32-bit, x86 variant) of every byte before it, seed `0xFFFFFFFF`. MHWeditor only warns on a mismatch.
+- Header, all little-endian:
+  - bytes 0 to 3: the ASCII magic `DSSS`.
+  - bytes 4 to 7: version, must be 2.
+  - bytes 8 to 11: flags.
+- Flag bits: `0x1` Blowfish, `0x2` has an ID, `0x4` Citrus (a different cipher, not used by Wilds), `0x8` Deflate, `0x10` Mandarin (called Lime in another game).
+- Wilds uses Deflate plus Mandarin only (flags `0x18`). Blowfish and ID fields are therefore absent; the header is then 12 bytes, and the encrypted section starts at the next 16-byte boundary (offset 0x10). **Open:** confirm the real flag value on our own save.
+- Layers, outer to inner: Mandarin encryption, then a Deflate wrapper, then the class stream.
+
+### 2. Mandarin decryption (the Steam ID layer)
+- Key: the full 64-bit Steam ID, used as is for Wilds (no transformation). It is the folder number under `userdata` plus `0x0110000100000000`. The tool treats the key as the bitwise NOT of that number wherever it is mixed in.
+- The file tail is, in order: the 0x80-byte RSA-style blob, then the decrypted length as a 64-bit number, then the 4-byte file checksum. So the decrypted length sits 12 bytes from the end. The encrypted blocks run from the aligned start up to the blob. Our reader can ignore the blob when decrypting.
+- The encrypted data is cut into blocks. The block sizes come from a pseudo-random sequence:
+  - generator: SplitMix64 (a public algorithm; add `0x9E3779B97F4A7C15`, then the usual two multiply and xor-shift steps with `0xBF58476D1CE4E5B9` and `0x94D049BB133111EB`, then a final xor-shift of 31).
+  - starting state for the size sequence: a per-game constant. For Wilds it is `0x7A36955255266CED`. A second per-game constant, `0xBFACF76C3F96`, seeds a sequence that is only used on the encrypt side to build the RSA-style blob.
+  - for each potential block, size = (state & 7) + 1, in units of 0x4000 bytes (so 16 KiB to 128 KiB), then the state advances once. The number of potential blocks is the decrypted length divided by 0x4000, rounded up.
+  - real blocks are consumed in order until the remaining decrypted length fits in the current block; the last block is shorter in plain data but still stored at full block size.
+- After the size sequence, the state is advanced by adding the NOT of the key (wrapping). From there every block does the same, in order:
+  1. Draw 16 values from the generator. For each, the low byte is the next AES key byte and the second byte (bits 8 to 15) is the matching IV byte.
+  2. The block on disk is a 0x210-byte header followed by the data (block size bytes). XOR the 0x210 header with 0x210 further generator outputs (low byte each). This keeps the generator in step even if you ignore the header.
+  3. Decrypt the data with AES-128 in OFB mode using that key and IV. (OFB is symmetrical, so this is the same call as encrypting.)
+  4. The header holds a key/IV proof (4 pairs of 64-byte numbers, 0x200 bytes), then a 64-bit checksum at offset 0x200, then 8 bytes of unknown purpose at 0x208. The checksum is CityHash64 of the decrypted data of the block (only the real data length for the last block). MHWeditor treats a failed proof as a log line only and a failed checksum as a hard error. So for our reader the checksum is the useful "is the Steam ID right" test, and the proof (an ElGamal-style check) can be skipped.
+- Wrong Steam ID: the keystream is wrong, the checksum of the first block fails straight away. MHWeditor also has a brute-force mode that tests ID guesses on the first 8 header bytes only; we do not need it because we know the ID from the folder name.
+- Cost: one pass of AES-OFB and CityHash over a few MB. Light enough to run on every save change. **Open:** save size not measured.
+
+### 3. Deflate wrapper
+- After decryption, at the 8-byte aligned position, comes a small header: a 64-bit value (compressed size plus 0x10), a 32-bit value that is always 1 in their writer, a 32-bit compressed size, then a 64-bit decompressed size.
+- The data that follows is a raw deflate stream (no zlib header) of the stated compressed size. MHWeditor warns but continues if the output length differs from the stated size.
+- Output is the class stream. Offsets inside it are measured as "stream position", with the header bytes before the payload kept in place in their buffer. If our reader works with the payload alone, field alignment (below) must be counted from the same origin as the game does. **Open:** alignment is relative to the start of the whole file buffer in MHWeditor; check on a real save whether it matches relative to the payload (matters because the payload starts at an offset which is a multiple of 8, so likely equivalent).
+
+### 4. The class stream (self-describing, no type data needed to walk it)
+Everything is little-endian and aligned to 4 bytes unless stated.
+- The stream is a flat list of top-level entries until the end: a 32-bit hash, then one class. MHWeditor stops 7 bytes before the end of the buffer.
+- Class: a 32-bit field count, a 32-bit class hash, then that many fields.
+- Field: a 32-bit field-name hash, a 32-bit type code, then the value, then padding to a 4-byte boundary.
+- Type codes: -1 array, 1 enum, 2 bool, 3 s8, 4 u8, 5 s16, 6 u16, 7 s32, 8 u32, 9 s64, 10 u64, 11 f32, 12 f64, 13 char8, 14 char16, 15 string, 16 struct (raw bytes), 17 class (a nested class). 0 means unknown and is an error.
+- Value encoding:
+  - Scalars and enums: align to 4, a 32-bit size in bytes (1, 2, 4 or 8), then the value aligned to its own size. Enum widths come from that size field, so enums can be read without type data.
+  - Struct: same size prefix, then that many raw bytes. Known uses: 16-byte vectors, 4-byte colours, and a 16-byte pair of 64-bit numbers they call "mandrake" (value and multiplier, likely an obfuscated number; **open**).
+  - String: align to 4, a 32-bit length in characters, then that many UTF-16 code units.
+  - Class: just a nested class (count, hash, fields).
+  - Array: align to 4, then member type code (32-bit), member size (32-bit), element count (32-bit), array kind (0 = values, 1 = classes). For class arrays an optional marker `0xFFEEFFEE` may follow, then one 32-bit class hash per element; if the marker is absent the 4 bytes are not consumed. Then the elements: values use the sized encoding (strings use the string encoding); classes are full class entries. Aligned to 4 at the end.
+- Consequence: a reader can walk the whole save, and decode all numbers, with no type data at all. Type data is only needed to turn hashes into names and to know which fields mean what.
+
+### 5. Hashes and type data
+- Both field names and class names are hashed the same way: murmur3 (32-bit x86 variant), seed `0xFFFFFFFF`, over the plain name bytes (UTF-8, no terminator). Class names are full dotted names such as `app.something.cSomething`.
+- The type data MHWeditor loads is a JSON file keyed by class-name hash. Each class has a CRC, a name, and a map of field-name hash to field info: name, original type name, a simple type label, array flag, size, alignment and a native flag. This is the same RSZ type dump format used by other REE tools; it is their data asset, not ours (do not use it, see licence entry). A separate enum file maps enum names to values.
+- They also keep a map from murmur3 hash to string for every string found in the game executable. This supports our fallback A and D: hashes can be turned back into names by hashing every string found in the exe and matching. **Open:** whether the executable holds all class and field names; that is spike 3.
+- Fields not found in the type data are still readable from the stream, as shown in section 4.
+
+### 6. Where things live (only what they use; names come from their code and are **reported**)
+- The top-level class of interest has a `_Data` array. One entry per character slot. Each slot has a `_BasicData` field (name, ids, play time and similar; hunter IDs live in here, so never print it).
+- Inside a slot, fields they touch: `_Item` with `_BoxItem` and `_PouchItem` (item box and pouch), `_Quest` (mission completion), flag lists called `_ItemFoundFlag` and `_ItemCheckedFlag` with a `_Value`. Mission IDs are typed `app.MissionIDList.ID`.
+- Some fields are bitsets with no type attached in the dump; MHWeditor maintains a hand-written file that tells it how to read them.
+- The slot selection in the file name (`data001Slot.bin`) is outside this format. How "active slot" is chosen is not covered here. **Open.**
+
+### 7. Writing (for reference only; we never write saves)
+They re-encrypt by reversing every step above. We are read-only on the game, so none of this is needed.
+
+### Gaps for spike 4
+- **Not found in their code:** equipment, armour pieces, decorations, owned charms/talismans, weapon lists, monster kill counts and story flags. Their dashboard only deals with item box, pouch and missions. Locating these (open questions: save-ID to data-ID mapping, owned talismans, kills to unlocked monsters) needs our own look at a save copy with the class walker from section 4.
+- The exact slot count, active slot marker and the top-level hashes need a real save.
+- Encoded numbers ("mandrake") might guard some counters; unknown which.
+- Block sizes, header length and the flag value above should be checked against a real save, since their code handles several games and I only followed the Wilds path.
+- CityHash64 version: they use a Rust crate; the checksum must match the game's variant. If our crate gives a different value on a known-good block, try the other CityHash revisions (v1.0 or v1.1, or Google FarmHash `Hash64`) before suspecting the key.
+- Licence of the type data asset and of the code they may derive from: still open (see licence entry).
