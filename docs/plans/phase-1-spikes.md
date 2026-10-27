@@ -294,7 +294,7 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 | Step 4 (ID matching, talismans) PR #10 merged | 2026-10-27 14:06 UTC (the maintainer passed 14:05 UTC; partial: by-name check moves to Phase 3, talisman skills undecoded) |
 | Step 5 (extraction test) PR #8 merged | 2026-10-27 14:00 UTC (the maintainer passed 13:58 UTC; partial: located but not decoded, route B schemas needed in Phase 3; motion values not found) |
 | Plan page builder (`tools/plan-page`, not a numbered step) PR #12 merged | 2026-10-27 14:20 UTC (the maintainer passed 14:20 UTC: looks fine, keep the How-to-read box; docs tooling, cloud check) |
-| Step 6 (UI comparison) PR merged | |
+| Step 6 (UI comparison) PR #15 merged | 2026-10-27 14:58:32 UTC (the maintainer passed; pass: egui chosen; Scarlet Forest base camp is the standard benchmark spot; docs only, merge commit 25c7114) |
 | Step 7 (close-out) PR merged | |
 | Phase finished | |
 

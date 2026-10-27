@@ -107,3 +107,15 @@ All answered 2026-10-27, in the order they were asked.
 ### Plan page builder (2026-10-27)
 - **Is a small Rust tool OK to build plan pages, so every published plan page looks the same?** Yes (tool approved, `tools/plan-page`, PR #12).
 - **What is the block at the start of the plan?** It is the "How to read this plan" box (run order, decisions made, what is still open), required by plan-writing rule 6. The maintainer said it is fine and to keep it as it is; PR #12 merged on that pass.
+
+### Licence and donations (2026-10-27)
+- **Barring all competing forks?** No, the maintainer finds it too harsh. This rules out PolyForm Shield as recommended; MPL-2.0 is being considered instead.
+- **Must forks rename?** No. "Based on Forgeline" is fine.
+- **Tip link?** Yes: a voluntary Ko-fi tip jar with no perks, linked from GitHub only and nothing on the Nexus page, to stay clear of Nexus's donation rules.
+
+### Step 6 UI comparison (2026-10-27)
+- **Does the step 6 result pass?** Yes, the maintainer passed it (PR #15, merged 2026-10-27 14:58:32 UTC). Pure Rust (egui) is chosen: it meets the budget with Wilds running; Tauri and Electron fail the RAM hard limit. The standard benchmark spot for every later measurement is Scarlet Forest base camp.
+
+### Licence choice (2026-10-27)
+- **Which licence?** MPL-2.0 (full text in `LICENSE`), chosen over PolyForm Shield, GPL/AGPL and a custom licence. It lets anyone fork and republish with credit; changed MPL files stay open. It does not give an "ask permission" rule. Dependencies checked: MIT, Apache-2.0 and Unlicense crates are compatible; see `docs/research.md`.
+- **Contributors?** No extra process: no DCO sign-off, no CLA, no copyright assignment. Contributions come in under MPL-2.0. Changing the licence later would need the contributors' agreement.
