@@ -103,3 +103,7 @@ All answered 2026-10-27, in the order they were asked.
 ### Step 4 test round (2026-10-27, as of the 2026-10-20 save copy)
 - **Does the reader's picture of your save match your game?** Yes. The maintainer confirmed: only 1 of 3 character slots in use, about 14 light bowguns crafted, 7 armor pieces crafted, one talisman owned, and nothing from the save in git. About 221 item types in the item box: "hard to tell, seems correct" (approximate). Details in `docs/research.md`, "Step 4".
 - **Rewrite git history again to remove the maintainer's name?** No. The name stays in past commits (file contents, two messages, two author display names) and old branches; it was removed from the current files and open PRs only. No history rewrite.
+
+### Plan page builder (2026-10-27)
+- **Is a small Rust tool OK to build plan pages, so every published plan page looks the same?** Yes (tool approved, `tools/plan-page`, PR #12).
+- **What is the block at the start of the plan?** It is the "How to read this plan" box (run order, decisions made, what is still open), required by plan-writing rule 6. The maintainer said it is fine and to keep it as it is; PR #12 merged on that pass.
