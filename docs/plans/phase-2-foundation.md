@@ -586,10 +586,10 @@ Steps 1, 3, 10 and 11 are cloud-only and checked in the cloud.
 | Phase finished | |
 
 ### Actual time per step
-Filled at close-out; see the template for how actual hours are measured.
+Filled at close-out. Actual hours run from the first thread start to the merge (merge times are in the table above); a start that cannot be pinned down is marked approximate with its basis.
 
-| Step | Estimated hours | Actual hours (first thread start to merge) | Note |
-|------|-----------------|--------------------------------------------|------|
+| Step | Estimated hours | Actual | Start basis |
+|------|-----------------|--------|-------------|
 | 1 | 1 | | |
 | 2 | 1.5 | | |
 | 3 | 1 | | |
@@ -601,6 +601,5 @@ Filled at close-out; see the template for how actual hours are measured.
 | 9 | 2 | | |
 | 10 | 0.5 | | |
 | 11 | 0.75 | | |
-| Total (with parallel stages) | about 13 | | range 10 to 18 |
 
-Elapsed from approval to finish: `<hours>`. Compare with the estimates in section 4.
+Elapsed from approval to finish: `<hours>`. Steps overlap, so they do not add up to this. Compare with the 13 h estimate in section 4 (range 10 to 18 h).
