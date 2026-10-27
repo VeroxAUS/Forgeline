@@ -23,7 +23,7 @@ Each phase plan is written just before its phase, using what earlier phases foun
 - Tools: approved 2026-10-27 (fixture save builder, `forgeline-check`, `tools/bench`).
 - Approved 2026-10-27: the RAM rule for every PR (section 3.4), including its caps of 140 MB private bytes and 80 MB working set.
 - Approved 2026-10-27: the update flow runs as a short-lived child process of the app, not as a thread (section 3.1).
-- Approved 2026-10-27: a UX design step 7 (brief, mock-ups, style guide), and a look check next to the performance check in every window test round.
+- Approved 2026-10-27: a UX design step 7 (brief, mock-ups, style guide, including the in-game shopping-list overlay), and a look check next to the performance check in every window test round.
 - Approved 2026-10-27: a short hand-written list of the game file paths we need is kept in the repo (section 3.3).
 - Deferred: the proposed performance budget changes (section 3.4). The current budget stands as written until they are discussed at the step 12 budget re-review, or earlier only if the measurements suggest the budget is impossible to meet.
 
@@ -254,13 +254,13 @@ Files are listed by step. Every source file starts with the MPL-2.0 Exhibit A no
 - **Purpose:** the UX brief: who the user is, the key moments, and what must be visible at a glance.
 - **Inputs and outputs:** in, `PLAN.md` section 2 (what was asked for) and the maintainer's reactions. Out, a short document with the user, 4 to 6 key moments (for example "just finished a hunt, what now?", "second monitor during a quest", "game just patched"), the screen list, and the glance rules.
 - **Depends on:** nothing.
-- **Notes:** says whether an in-game overlay matters (deferred, per the plan). No game data; sample content is invented.
+- **Notes:** covers both ways of seeing the app: the main window and the in-game shopping-list overlay (approved 2026-10-27). For the overlay it states the purpose (mid-hunt, see which parts are still needed, for example "2x plate", and where or how to get them, without alt-tabbing), where it sits, the hotkey, the size, what it shows and what it never shows. The overlay is our own transparent, click-through, always-on-top window placed over the game; it never hooks or draws inside Wilds, and it works in borderless windowed mode only (exclusive fullscreen hides it). It is built in Phase 6 from the same data. No game data; sample content is invented.
 
 #### `docs/ux/mockups/` and the published pages (step 7)
-- **Purpose:** clickable mock-ups of the 3 or 4 main screens for the maintainer to react to.
+- **Purpose:** clickable mock-ups of the 3 or 4 main screens, plus the in-game overlay shown over a game-like background, for the maintainer to react to.
 - **Inputs and outputs:** in, the brief. Out, hand-written HTML pages in the dark theme (best build, why this build with alternatives and assumptions, shopping list, data and update status), kept in the repo and published as Artifact pages.
 - **Depends on:** `docs/ux/brief.md`.
-- **Notes:** invented sample gear names and numbers, clearly labelled as samples; no Capcom names, art or data, no hunter data. Mock-ups show the look and flow, not performance.
+- **Notes:** invented sample gear names and numbers, clearly labelled as samples; no Capcom names, art or data, no hunter data. The overlay mock-up sits on a plain placeholder background labelled "game view (placeholder)", not game art, and settles position, hotkey, size and what is shown. Mock-ups show the look and flow, not performance.
 
 #### `docs/ux/style-guide.md` (step 7)
 - **Purpose:** colours, type and layout rules every later window follows.
@@ -302,7 +302,7 @@ Files are listed by step. Every source file starts with the MPL-2.0 Exhibit A no
 - **Purpose:** compare what each UI choice costs and how it looks, on the same small dark sample view, before the app grows around the current choice.
 - **Inputs and outputs:** four small apps in their own Cargo workspace. Each shows the widgets from step 7's list (at least a table of invented gear, a few stat numbers and a button), in the dark theme and the style guide's colours. Out, per variant: private bytes, working set, cold start to first frame and idle CPU and GPU (through `tools/bench`), plus a screenshot saved on the PC.
 - **Depends on:** `tools/bench` (ported in this step).
-- **Notes:** variants are (a) egui with the wgpu renderer, (b) egui with the glow (OpenGL) renderer and unneeded features off, (c) Slint under its royalty-free or MIT-compatible terms only (never the GPL option; the licence is read first and recorded in `THIRD-PARTY-NOTICES.md`, and the variant is skipped and reported if those terms cannot be confirmed), (d) a plain native Win32 window through the `windows` crate. (a) and (b) look identical because the renderer does not change how egui looks; (c) and (d) look different. Phase 1 measured the glow backend, so (b) is the Phase 1 baseline re-measured with features off and (a) is new. No network code, no Capcom data, no real save data. Not part of the shipped app.
+- **Notes:** variants are (a) egui with the wgpu renderer, (b) egui with the glow (OpenGL) renderer and unneeded features off, (c) Slint under its royalty-free or MIT-compatible terms only (never the GPL option; the licence is read first and recorded in `THIRD-PARTY-NOTICES.md`, and the variant is skipped and reported if those terms cannot be confirmed), (d) a plain native Win32 window through the `windows` crate, and (e) the overlay: a small transparent, click-through, always-on-top window of our own with a global hotkey (registered with the operating system, not through the game), placed over Wilds running in borderless windowed mode, built with the lightest variant above that can do transparency. (e) is measured with Wilds running, with the overlay visible against a control run: the game's median, 99th percentile and worst frame time (the frame-time module reads only Windows present events, never the game process) and the overlay's own private bytes and working set, plus a screenshot. Exclusive fullscreen hides the overlay; the report says so. Whether Wilds' own protections object to another app's overlay window is unverified, so (e) is tested on the offline benchmark spot only, and the report records what was seen. (a) and (b) look identical because the renderer does not change how egui looks; (c) and (d) look different; (e) shows the overlay design from step 7. Phase 1 measured the glow backend, so (b) is the Phase 1 baseline re-measured with features off and (a) is new. No network code, no Capcom data, no real save data. Not part of the shipped app.
 
 #### `tools/bench/src/main.rs` (steps 10, 11)
 - **Purpose:** repeatable numbers: cold start to the last view, idle RAM (working set and private bytes), idle CPU over 60 s, recompute time after a save change, and the game's frame times.
@@ -389,10 +389,10 @@ The last step of every phase is the close-out. Besides updating `PLAN.md`, it up
 | 4 | 3 | Save reader: decrypt, inflate, walk, typed summary, active slot; `forgeline-check save` | Reader thread (reads `research.md` only) | Cloud code, PC check | PR: `forgeline-save` | 1 to 2 threads, 1 cloud round, 1 PC round; about 2 h | 1, 3 |
 | 5 | 2 | Pack reader and exe scan (route A), needed-files list, ree-pak-rs credit; `forgeline-check pak` | Pack thread | Cloud code, PC check | PR: `forgeline-pak`, notices | 1 to 2 threads, 1 cloud round, 1 to 2 PC rounds; about 3 h | 1 |
 | 6 | 3 | Update flow: stage, validate (structural gate), swap, keep last good; `--update` mode; `forgeline-check update` | Update thread | Cloud code, PC check | PR: `forgeline-update` | 1 thread, 1 cloud round, 1 PC round; about 2 h | 2, 5 |
-| 7 | 3 | UX design: a short UX brief, clickable dark-theme mock-ups of the 3 or 4 main screens (published as Artifact pages) and a style guide; the widget list the UI footprint check needs | UX design thread | Cloud | PR: `docs/ux/` (brief, mock-ups, style guide) | 1 to 2 threads, 1 to 2 cloud rounds (the maintainer reacts to the mock-ups); about 3 h | 1 |
+| 7 | 3 | UX design: a short UX brief (including the in-game shopping-list overlay), clickable dark-theme mock-ups of the 3 or 4 main screens and of the overlay over a game-like background (published as Artifact pages) and a style guide; the widget list the UI footprint check needs | UX design thread | Cloud | PR: `docs/ux/` (brief, mock-ups, style guide) | 1 to 2 threads, 1 to 2 cloud rounds (the maintainer reacts to the mock-ups); about 3.5 h | 1 |
 | 8 | 4 | Engine: save-folder watcher, background recompute at low priority, view cache, `Snapshot` | Engine thread | Cloud code, PC check | PR: `forgeline-engine` | 1 thread, 1 cloud round, 1 PC round; about 1.5 h | 2, 4 |
 | 9 | 5 | The bare egui window from the debug data viewer, update button and notices | Window thread | Cloud code, PC check | PR: `forgeline-app` | 1 to 2 threads, 1 cloud round, 1 PC round; about 2 h | 6, 7, 8 |
-| 10 | 6 | UI footprint check: port the benchmark harness; four variants (egui wgpu, egui glow with features off, Slint under its royalty-free or MIT-compatible terms, plain Win32 window) render the same small dark sample view built from step 7's widget list; private bytes, working set, cold start and a screenshot of each | UI footprint thread | Cloud code, PC measurement | PR: `tools/bench`, `tools/ui-footprint`, `research.md` section | 1 to 2 threads, 1 cloud round, 1 PC round; about 3 h | 7, 9 |
+| 10 | 6 | UI footprint check: port the benchmark harness; four variants (egui wgpu, egui glow with features off, Slint under its royalty-free or MIT-compatible terms, plain Win32 window) render the same small dark sample view built from step 7's widget list, plus an overlay variant (small transparent, click-through, always-on-top window with a hotkey) measured over a running Wilds in borderless windowed mode; private bytes, working set, cold start, the game's frame time and RAM with the overlay visible, and a screenshot of each | UI footprint thread | Cloud code, PC measurement | PR: `tools/bench`, `tools/ui-footprint`, `research.md` section | 1 to 2 threads, 1 cloud round, 1 PC round; about 3.5 h | 7, 9 |
 | 11 | 7 | Measure with Wilds running: cold start to last view, recompute time, idle RAM, CPU and GPU, game frame times; fill `ram-log.md`; confirm the active-slot field | Benchmark thread | PC | PR: `tools/bench`, `research.md` section | 1 thread, 1 to 2 PC rounds; about 1.5 h | 9, 10 |
 | 12 | 8 | Re-review `performance-budget.md` against the Phase 1 and step 11 numbers | Docs thread | Cloud | PR: budget changes | 1 thread, 1 cloud round; about 0.5 h | 11 |
 | 13 | 9 | Close-out: `PLAN.md`, `README.md` (text, badges, roadmap, banner phase label, first screenshot), `CHANGELOG.md` 0.2.0, version bump, plan time log | Docs thread | Cloud | PR: docs and version | 1 thread, 1 cloud round; about 0.75 h | 1 to 12 |
@@ -401,11 +401,11 @@ Total estimate: 13 to 18 threads and 17 to 20 test rounds, 9 to 10 of them on th
 
 Hours (rough wall-clock from thread start to merge, each including its test round and the wait for the maintainer to pass it):
 
-- **Per step:** the figures in the table above, about 23 h added up (1 + 1.5 + 1 + 2 + 3 + 2 + 3 + 1.5 + 2 + 3 + 1.5 + 0.5 + 0.75 = 22.75).
-- **Total with parallel stages:** about 16 h from approval to the last merge. Stage 1 is 1 h, stage 2 is 3 h (steps 2, 3 and 5 overlap, step 5 is the longest), stage 3 is 3 h (steps 4, 6 and 7 overlap, step 7 waits for the maintainer's reaction), stage 4 is 1.5 h, stage 5 is 2 h, stage 6 is 3 h, stage 7 is 1.5 h, stage 8 is 0.5 h and stage 9 is 0.75 h.
-- **Plausible range:** 13 to 22 h. It assumes the maintainer passes each test round within about 15 minutes; a slower reply adds to the total.
+- **Per step:** the figures in the table above, about 24 h added up (1 + 1.5 + 1 + 2 + 3 + 2 + 3.5 + 1.5 + 2 + 3.5 + 1.5 + 0.5 + 0.75 = 23.75).
+- **Total with parallel stages:** about 17 h from approval to the last merge. Stage 1 is 1 h, stage 2 is 3 h (steps 2, 3 and 5 overlap, step 5 is the longest), stage 3 is 3.5 h (steps 4, 6 and 7 overlap, step 7 waits for the maintainer's reaction), stage 4 is 1.5 h, stage 5 is 2 h, stage 6 is 3.5 h, stage 7 is 1.5 h, stage 8 is 0.5 h and stage 9 is 0.75 h.
+- **Plausible range:** 14 to 23 h. It assumes the maintainer passes each test round within about 15 minutes; a slower reply adds to the total.
 - **Calibration:** Phase 1 took 2 h 06 min for 7 steps (about 18 min a step), but those were docs and throwaway spikes with several threads in parallel. Phase 2 steps are real code with tests, CI and PC rounds, so each is estimated at 3 to 6 times a Phase 1 step.
-- **Least certain:** step 5 (3 h), step 7 (3 h, depends on how many rounds of reaction the mock-ups need), step 10 (3 h, new code in four frameworks, one of them unfamiliar) and step 11 (1.5 h, a second round if RAM is over a limit).
+- **Least certain:** step 5 (3 h), step 7 (3.5 h, depends on how many rounds of reaction the mock-ups need), step 10 (3.5 h, new code in four frameworks, one of them unfamiliar) and step 11 (1.5 h, a second round if RAM is over a limit).
 - **Not counted:** a port of `view.rs` to another UI library, if the maintainer picks one after step 10 (about 2 h and one PC round).
 
 Where the estimate is most likely wrong:
@@ -486,9 +486,10 @@ GitHub Actions on Ubuntu and Windows, fixtures only. Nothing touches the real sa
 - Pass: nothing is written outside the app's data directory.
 
 **Step 7, UX design**
-- Pass: `docs/ux/brief.md` names the user, the key moments (for example "just finished a hunt, what now?") and what must be visible at a glance, and says whether an in-game overlay matters (it stays deferred).
+- Pass: `docs/ux/brief.md` names the user, the key moments (for example "just finished a hunt, what now?") and what must be visible at a glance, and covers the in-game shopping-list overlay: purpose, position, hotkey, size, what is shown and what is never shown, and the borderless-windowed-only limit.
 - Pass: 3 or 4 clickable mock-ups of the main screens (best build, why this build and its alternatives and assumptions, shopping list, data and update status) are published as Artifact pages in the dark theme, using invented sample names and numbers, with no Capcom data.
 - Pass: `docs/ux/style-guide.md` fixes colours, font sizes readable on a second monitor, spacing and layout rules, and lists the widgets the screens need (tables, tooltips, comparisons, stat tiles) for step 10's sample view.
+- Pass: the overlay mock-up shows the shopping list over a game-like placeholder background, with position, hotkey, size and contents stated on the page.
 - Pass: the maintainer has reacted to the mock-ups, and the requested changes are in.
 - No performance claim is made from mock-ups; they say nothing about egui's limits, which step 10 checks.
 
@@ -510,6 +511,8 @@ GitHub Actions on Ubuntu and Windows, fixtures only. Nothing touches the real sa
 - Pass: private bytes, working set, cold start and idle CPU and GPU are reported for each variant, median of 3 runs at the standard benchmark spot with Wilds running, and a screenshot of each is saved.
 - Pass: the Slint licence terms used are named and recorded in `THIRD-PARTY-NOTICES.md`, and the GPL option is not used. If those terms cannot be confirmed, Slint is reported as skipped.
 - Pass: the report states plainly that (a) and (b) look identical and (c) and (d) look different.
+- Pass: variant (e), the overlay, is a small transparent, click-through, always-on-top window with a global hotkey over a running Wilds in borderless windowed mode. With it visible, the report gives the game's median, 99th percentile and worst frame time and the overlay's own private bytes and working set, next to a control run without it, using the same harness, plus a screenshot. It states that exclusive fullscreen hides the overlay.
+- Pass: the overlay never hooks, injects into or reads the game, and never draws inside it.
 - Pass: the harness runs on the real PC and writes only to `E:\mhbis\bench`.
 - The report does not choose a library. It gives numbers and screenshots; the maintainer decides.
 
@@ -561,6 +564,7 @@ Queued, one at a time. Steps 2 to 6 use `forgeline-check`; the window exists fro
 **Step 7**
 - [ ] You open each mock-up and say what you would change: first screen, order of information, what is missing.
 - [ ] You check the text sizes and colours in the style guide on your second monitor.
+- [ ] You open the overlay mock-up and say whether its position, size, hotkey and contents suit you mid-hunt.
 - [ ] You confirm the widget list covers what you expect the app to need.
 
 **Step 8**
@@ -575,6 +579,7 @@ Queued, one at a time. Steps 2 to 6 use `forgeline-check`; the window exists fro
 
 **Step 10**
 - [ ] The report shows private bytes, working set and cold start for each of the four variants, next to Phase 1's egui glow figures (127 MB private, 73.5 MB working set, 200 ms).
+- [ ] The overlay report shows Wilds' frame times and RAM with the overlay visible against a control run, and a screenshot of the overlay over the game in borderless windowed mode. You judge whether it is readable and unobtrusive mid-hunt.
 - [ ] You can open a screenshot of each variant and judge how it looks (the two egui variants look the same; Slint and the plain Win32 window look different).
 - [ ] You say which memory saving, if any, is worth which change in looks, and whether to keep egui.
 - [ ] The harness ran as administrator only for the frame-time part, and stopped the sample apps afterwards.
@@ -596,6 +601,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 
 ## 7. Risks and open questions
 
+- **The overlay hurts the game or is hidden.** Notice: step 10's frame times with the overlay visible against the control, or an overlay that does not show. Fallback: shrink or simplify it, or drop it (it is optional); exclusive fullscreen hides it, so it is documented as borderless windowed only. Whether Wilds' own protections object to another app's overlay window is unverified; step 10 tests it on the offline spot only and the maintainer decides.
 - **The mock-ups ask for something egui cannot do well.** Notice: the widget list against step 10's sample view. Fallback: change the mock-up, or add the widget to step 10 and measure it, before Phase 6.
 - **The mock-ups need more reaction rounds than planned.** Notice: step 7 still open when step 9 should start. Fallback: step 9 starts on the style guide's first version and follows later changes.
 - **The UI footprint check (step 10) finds a much lighter library, and it looks worse or is harder to build.** Notice: the step 10 report. Fallback: the maintainer decides; a port of `view.rs` is a follow-up step, and the standing rule that the UI is pure Rust still holds for all four variants.
@@ -638,6 +644,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 | 2026-10-27 | The maintainer | Asked for the Phase 1 retro items to be folded in (steps 1, 11, 12, RAM rule, CI), and for releases, tags and branch deletions to be listed up front. |
 | 2026-10-27 | The maintainer | Asked for an hours estimate in every plan. Added per step and in total (about 13 h, range 10 to 18 h), calibrated on Phase 1's 2 h 06 min. |
 | 2026-10-27 | The maintainer | Approved a UX design step 7 (brief, clickable mock-ups, style guide), cloud only and parallel to the backend, so every later window follows the mock-ups and the style guide; a look check sits next to the performance check in test rounds. Phase 6 is visual polish on top of it. Later steps renumbered; hours and totals updated. |
+| 2026-10-27 | The maintainer | Approved an in-game shopping-list overlay (our own transparent, click-through, always-on-top window, hotkey, borderless windowed mode only; built in Phase 6): mock-up in step 7, measurement variant (e) in step 10. Totals updated. |
 | 2026-10-27 | The maintainer | Approved a new step 10, the UI footprint check (egui wgpu and glow, Slint, plain Win32 window), to see how much of the 127 MB is the graphics stack and how each looks. Later steps renumbered; hours and totals updated. |
 | 2026-10-27 | The maintainer | The README banner still said Phase 1: this PR sets it to Phase 2, and the close-out step and the template now check the README text, badges, roadmap and banner every phase. |
 | 2026-10-27 | The maintainer | Motion values: all four routes approved (effective raw meanwhile, deep game-file search early in Phase 3 for all 14 weapons, training-dummy measurement in Phase 5, credited community data labelled unverified as a fallback). Recorded in `PLAN.md` and `closed-questions.md`. |
@@ -672,12 +679,12 @@ Filled at close-out. Actual hours run from the first thread start to the merge (
 | 4 | 2 | | |
 | 5 | 3 | | |
 | 6 | 2 | | |
-| 7 | 3 | | |
+| 7 | 3.5 | | |
 | 8 | 1.5 | | |
 | 9 | 2 | | |
-| 10 | 3 | | |
+| 10 | 3.5 | | |
 | 11 | 1.5 | | |
 | 12 | 0.5 | | |
 | 13 | 0.75 | | |
 
-Elapsed from approval to finish: `<hours>`. Steps overlap, so they do not add up to this. Compare with the 16 h estimate in section 4 (range 13 to 22 h).
+Elapsed from approval to finish: `<hours>`. Steps overlap, so they do not add up to this. Compare with the 17 h estimate in section 4 (range 14 to 23 h).
