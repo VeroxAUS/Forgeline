@@ -1,6 +1,6 @@
-# MH Wilds BiS app: project plan and handover
+# Forgeline: MH Wilds Build Planner, project plan and handover
 
-Written from the design conversation with Thomas on 2026-10-27 and updated with every decision made that day. Nothing has been built yet. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
+Written from the design conversation with the maintainer on 2026-10-27 and updated with every decision made that day. Nothing has been built yet. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
 
 ## 1. Goal
 
@@ -59,7 +59,7 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 
 ## 4. Design decisions
 
-- **Rust everywhere**, with our own tools. Every new tool needs Thomas's yes before it is created or run. If a Nexus release requires open source, the project goes open source.
+- **Rust everywhere**, with our own tools. Every new tool needs the maintainer's yes before it is created or run. If a Nexus release requires open source, the project goes open source.
 - **MHWeditor is dropped as a dependency.** It has no licence (no LICENSE file, no Cargo licence fields, only a README disclaimer), so it is treated as all rights reserved. We learn facts from it, not code: one thread studies it and writes the facts in its own words to `research.md` with credit; a separate thread writes our reader from those notes only. Its type data licence and a possible upstream (c-ola) are still unchecked. Third-party code in the repo needs its licence recorded in `THIRD-PARTY-NOTICES.md`; GPL code stays out until the licence review says what a Nexus release must be.
 - **Type data (needed to read the save and game files), fallbacks in order:**
   - A: our own static dumper that reads the game's `.exe` on disk, run on the user's PC, nothing shipped.
@@ -78,7 +78,7 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 - **Community builds** are added by hand with credit (no scraping) and used as sanity checks and to calibrate the comfort weights (find weights that make trusted builds score near the top). A mismatch means either the model has a gap or the guide leaves damage unused; investigate, don't copy.
 - **Progression:** gear from unlocked monsters, with missing materials on the shopping list; recompute whenever the save changes.
 - **Artian and Gogma Artian:** read actual rolls from the save, rank them against normal weapons, say keep or reroll, show the best target roll; odds only if the game files hold the pools. Do not build around the "craft another weapon first to reroll" trick (one guide only).
-- **Out of scope unless Thomas reopens it:** a rotation-based DPS simulator and a statistical fight model.
+- **Out of scope unless the maintainer reopens it:** a rotation-based DPS simulator and a statistical fight model.
 - **Weapons:** the extractor and data model cover all weapons from Phase 3. Every weapon is optimized before 1.0.0, light bowgun first; each weapon is labelled "tuned" or "generic model" in the app. Which weapon follows the light bowgun is decided later.
 - **Saves:** the app auto-picks the active slot and the Steam ID comes from the folder name.
 - **Distribution:** Nexus. Local only (no network listener, telemetry or accounts). Windows and Steam only.
@@ -94,7 +94,7 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 
 ## 6. Phases
 
-Each phase has a detailed plan in `docs/plans/phase-N-name.md`, written just before the phase from the template in [plans/TEMPLATE.md](plans/TEMPLATE.md), reviewed and approved by Thomas before any work. When a phase finishes, this file is updated.
+Each phase has a detailed plan in `docs/plans/phase-N-name.md`, written just before the phase from the template in [plans/TEMPLATE.md](plans/TEMPLATE.md), reviewed and approved by the maintainer before any work. When a phase finishes, this file is updated.
 
 1. **Spikes**, each with a pass or fail result:
    - **Type data first**, with fallbacks A to D named in the plan.
@@ -113,15 +113,15 @@ Each phase has a detailed plan in `docs/plans/phase-N-name.md`, written just bef
 After that: the other weapons one at a time (each optimized and labelled tuned or generic before 1.0.0), then Nexus packaging.
 
 ### TODO tools
-Built when needed, each needing Thomas's yes at the time: save diff (compare two save copies to map fields to unlocks), fixture save builder, data diff (compare two extractions, feeds the validation gate), build explainer (why the optimizer picked a build), benchmark harness (start-up, RAM, recompute time).
+Built when needed, each needing the maintainer's yes at the time: save diff (compare two save copies to map fields to unlocks), fixture save builder, data diff (compare two extractions, feeds the validation gate), build explainer (why the optimizer picked a build), benchmark harness (start-up, RAM, recompute time).
 
 ## 7. Workflow
 
-- Thomas talks only to the coordinator; threads report to it and it summarises. It posts short status when a phase finishes, when Thomas is needed, when it starts a thread, and on errors.
+- The maintainer talks only to the coordinator; threads report to it and it summarises. It posts short status when a phase finishes, when the maintainer is needed, when it starts a thread, and on errors.
 - Feature and fix threads work in the cloud on their own branch and open a PR. `main` is the only long-lived branch; branches are deleted after merge. Cleanup and docs-only PRs may go straight to `main`.
 - Tests and linters run on GitHub Actions using fixture saves and fixture data; they pass on a machine without Wilds and never touch a real save, install or the live MHDB API. A PR touching the reader or extractor says it is untested against the real files.
 - Every PR gets a test round. Only PRs that change what the app reads or shows run on the developer's PC; the rest are checked in the cloud and reported the same way. Rounds are queued so there is one checklist at a time, each item saying what the app should show for the current save. The coordinator merges once tests pass and reports each merge in detail.
-- The developer's PC is only for what only it can do: running the reader and extractor against the real save and install, building, packaging and installing. One PC thread per queue, in a permanent work folder that is cleaned only when Thomas says so. Installing the app needs Thomas's OK.
+- The developer's PC is only for what only it can do: running the reader and extractor against the real save and install, building, packaging and installing. One PC thread per queue, in a permanent work folder that is cleaned only when the maintainer says so. Installing the app needs the maintainer's OK.
 - Usage: check `research.md` before researching; short thread briefs; search big files with `jq`/`rg` and never load them whole; at most 2 or 3 threads at once, resolved when their work merges; batch questions; a fresh thread per feature. Default model Sonnet 5.5 on medium.
 
 ## 8. Open questions
@@ -143,7 +143,7 @@ The full list is in [open-questions.md](open-questions.md). In short:
 - The model can't be checked against the real game beyond hands-on tests. The last part of accuracy costs more at each step and needs real hunt data.
 - GPL code may force an open-source release.
 - Covering all 14 weapons is a long project; the prototype is one.
-- Building and running our own extraction tools on a PC needs Thomas's yes for each tool.
+- Building and running our own extraction tools on a PC needs the maintainer's yes for each tool.
 - Usage cost: mitigated by the rules in section 7.
 
 ## 10. Practical notes

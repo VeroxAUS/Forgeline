@@ -116,6 +116,36 @@ Method: read the source of MHWeditor (https://github.com/this-nerd/MHWeditor, no
 - The data that follows is a raw deflate stream (no zlib header) of the stated compressed size. MHWeditor warns but continues if the output length differs from the stated size.
 - Output is the class stream. Offsets inside it are measured as "stream position", with the header bytes before the payload kept in place in their buffer. If our reader works with the payload alone, field alignment (below) must be counted from the same origin as the game does. **Open:** alignment is relative to the start of the whole file buffer in MHWeditor; check on a real save whether it matches relative to the payload (matters because the payload starts at an offset which is a multiple of 8, so likely equivalent).
 
+### Follow-up (2026-10-27): precise Mandarin recipe, second read of MHWeditor
+Why: the step 3 PC spike found a valid flags value and block layout but no valid deflate wrapper after ~1.5M key/IV variants. I re-read their decrypt path line by line (src/save/mod.rs, src/save/crypto/mandarin.rs, the SplitMix helper and game table). Status **reported**; the test vector at the end is computed by me from their published constants and gives a cheap check before any AES work. Credit as above.
+
+**Corrections to section 2 and 3 above (these are probably what the spike missed):**
+1. **The generator feeds its output back as its state.** Their helper adds the golden constant to the state, mixes the new value and *returns the mix*; every call site then assigns the returned value *back into the state*. So the chain is `x(n+1) = mix(x(n) + 0x9E3779B97F4A7C15)`, not the textbook SplitMix64 where the additive counter keeps running and only the output is mixed. `mix(z)`: `z = (z ^ z>>30) * 0xBF58476D1CE4E5B9; z = (z ^ z>>27) * 0x94D049BB133111EB; return z ^ z>>31`, all wrapping 64-bit.
+2. **The size loop advances over every potential block, not only real ones.** So the state entering the key/IV phase is `x(N)`, with `N = ceil(decrypted_len / 0x4000)`.
+3. **The deflate wrapper starts at the very first decrypted byte** (not at some later aligned offset).
+
+**Recipe, in order (all integers little-endian):**
+1. Read the file. Check magic `DSSS`, version 2, flags `0x18`. Header is 12 bytes; the encrypted region starts at file offset **0x10** (next 16-byte boundary) and runs to `file_len - 4` (the last 4 bytes are the murmur3 checksum and are not part of it). The encrypted region therefore still contains the tail (0x80-byte blob, then the 8-byte length).
+2. `decrypted_len` = u64 at `file_len - 12`.
+3. `key` = the full 64-bit Steam ID (the 0x0110000100000000-based one) with **no transform** for Wilds. Only its bitwise NOT, `nk = !key`, is used.
+4. `N = (decrypted_len >> 14) + (decrypted_len & 0x3FFF != 0)`. Start `x = 0x7A36955255266CED` (used raw, the first size comes from the seed itself). For `i` in `0..N`: `size[i] = (x & 7) + 1`; then `x = step(x)` (x becomes the mixed output). After the loop `x = x(N)`. For this seed the sizes begin `6, 6, 2, 2, 5, 1, 1, 5` (checked by me).
+5. Real block count: loop `i` from 0; count the block; if `remaining <= size[i]*0x4000` stop, else `remaining -= size[i]*0x4000` (start `remaining = decrypted_len`). Do not touch `x` here.
+6. `x = x.wrapping_add(nk)`. (`rands` and the 0xBFACF76C3F96 seed are encrypt-side only; ignore both.)
+7. For each real block in order (block `i` sits on disk at the running sum of `0x210 + size*0x4000` of the earlier blocks, starting at file offset 0x10; on disk it is `0x210` header bytes, then `size*0x4000` data bytes, back to back):
+   a. Do 16 calls `x = step(x)`. For call `j`: `aes_key[j] = low byte of x`, `iv[j] = bits 8..15 of x` (both from the same output, key and IV drawn together, interleaved by j, not 16 key bytes then 16 IV bytes).
+   b. Do 0x210 more calls `x = step(x)`; byte `k` of the header is XORed with the low byte of call `k`. (Only needed to keep `x` in step; the header content is not otherwise needed.)
+   c. Decrypt the **whole** `size*0x4000` data bytes (even the padded tail of the last block) with AES-128 in **OFB** mode (standard full-block feedback: keystream block 1 = AES(iv), block 2 = AES(block 1), ...), using `aes_key` and `iv`. The cipher is created fresh per block; no counter, no carry-over between blocks.
+   d. Keep the first `min(size*0x4000, remaining)` bytes; append to the output; `remaining -= size*0x4000` (their code lets it wrap on the last block; ignore).
+8. Block validation (hard error in their code): header offset 0x200 holds a u64, compare with CityHash64 of the kept bytes of that block (after the header XOR of step 7b). They use the Rust crate `cityhasher` 0.1.0, function `hash::<u64>` (plain data bytes, no seed). Which CityHash revision that crate implements is not recorded; treat a mismatch with a correct key as an implementation-variant problem. The ElGamal proof in the same header is skipped by them on failure (log only); we skip it entirely.
+9. Output length is `decrypted_len`. **Deflate wrapper at output byte 0**: u64 (compressed size + 0x10), u32 (value 1), u32 compressed size, u64 decompressed size, then a **raw** deflate stream (no zlib header, no gzip header) of the stated compressed size starting at output byte `0x18`. Only the stated compressed-size bytes are inflated.
+10. The class stream (section 4) begins at the first inflated byte. In their buffer it sits at file position 0x10, so "alignment relative to the whole buffer" and "relative to the stream start" are identical (0x10 is a multiple of 16). This closes the open note in section 3.
+11. File checksum: murmur3 x86 32-bit (the Rust `murmur3` crate's `murmur3_32`, i.e. standard MurmurHash3_x86_32) over all bytes except the last 4, seed `0xFFFFFFFF`, compared to the final u32. Mismatch is only a warning.
+
+**Cheap oracle for the generator before any AES (my own derivation from their key-search routine):** their brute-force step proves a candidate ID using only the first 8 bytes of block 1's header. Recipe: take `x(N)`, add `!id`, do 16 `step` calls (the key/IV draws, discarded), then 8 more calls; the low bytes of those 8 outputs are the header mask. File bytes `0x10..0x18` XOR that mask must equal the constant **`bb39c81702d5495b`** (first 8 bytes of the little-endian 64-byte form of R^20 mod P, where P and R are the 32-byte ElGamal constants in their crypto util; I computed it, they hold it as expected value). If this matches, the Steam ID, the feedback chain and `N` are right and failures after that can only be AES/OFB details. If it does not, check the ID (full 64-bit value, not the 32-bit account number), then `N`, then the feedback in point 1. Cost: a few dozen hash steps.
+
+**Things I confirmed unchanged:** block sizes `size = (x & 7) + 1` in 0x4000 units; header 0x210; flags; blob 0x80 then length then checksum at the tail; murmur3 seed; type codes of the class stream.
+**Still not verified on a real save:** all of the above is reported, not reproduced. The CityHash revision is unknown. The ID passed to the cipher: their reader takes it from the caller and, for the brute force, tries the full 64-bit range starting at 0x0110000100000000.
+
 ### 4. The class stream (self-describing, no type data needed to walk it)
 Everything is little-endian and aligned to 4 bytes unless stated.
 - The stream is a flat list of top-level entries until the end: a 32-bit hash, then one class. MHWeditor stops 7 bytes before the end of the buffer.
@@ -152,3 +182,178 @@ They re-encrypt by reversing every step above. We are read-only on the game, so 
 - Block sizes, header length and the flag value above should be checked against a real save, since their code handles several games and I only followed the Wilds path.
 - CityHash64 version: they use a Rust crate; the checksum must match the game's variant. If our crate gives a different value on a known-good block, try the other CityHash revisions (v1.0 or v1.1, or Google FarmHash `Hash64`) before suspecting the key.
 - Licence of the type data asset and of the code they may derive from: still open (see licence entry).
+
+## Step 3: type-data spike, route A (2026-10-28)
+
+Question: can the game `.exe` on disk give us the names behind the save's hashes (route A), well enough to parse a save into named classes?
+
+**Result: route A passes for the save. The "sample of game data files" half of the criterion is not done (it needs step 5's pack reader).** Chosen route: **A**. B, C and D were not needed for the save. Status of everything below: **verified** on the maintainer's PC (real exe, a copy of the real save).
+
+Method: our own throwaway Rust tool (`spikes/typedump`, PR #5, never merged; ran against the real files). It reads `MonsterHunterWilds.exe` on disk (read-only, about 2 s for 546 MB, never launched), hashes every printable-ASCII string of 3 to 200 characters with murmur3 (seed `0xFFFFFFFF`) and matches the hashes found in the save. The install is modded (`dinput8.dll`, `reframework`, `pak_mods`, a Fluffy Mod Manager marker); the `.exe` on disk was used as is. Outputs stay in `E:\mhbis\out` (not in git).
+
+### Save decryption (confirms the step 2 follow-up recipe)
+- The recipe in the step 2 follow-up works as written: the oracle value matched on the first try, then the whole save decrypted and inflated (header size equals stream size; about 16.5 MB inflated from a 198 KB file). Flags `0x18` confirmed, two real blocks of 6 x 0x4000 bytes. My first attempt (from the first version of the notes) failed only because of the generator feedback chain and step count the follow-up corrected.
+- CityHash was not needed: a successful inflate plus a clean full-stream walk is the check. CityHash revision still unknown.
+
+### Corrections to the class stream format (step 2 section 4), found by walking the real save
+1. **16-byte structs are 16-aligned:** after the size prefix (16), the 16 bytes start on a 16-byte boundary (relative to the stream start, also a 16-byte boundary in the file). Without this the walk desyncs in the first slot.
+2. **Arrays of scalars and structs are packed:** after the array header (member type, member size, count, kind) the elements are `count x member size` raw bytes with no per-element size prefix (arrays of 16-byte structs are 16-aligned once, at the start). Arrays of strings and of classes are as in section 4.
+3. Everything else in section 4 held: field and class layout, hashes, the `0xFFEEFFEE` optional marker, top-level entries starting with a 32-bit hash.
+
+With those fixes the whole 16.5 MB stream walks to the exact end with no error: **187 distinct classes**.
+
+### Names recovered from the exe
+- Exe scan: 2,252,128 distinct strings. About 67,700 are field-like (`_Xxx`) and about 17,500 are short class-like names (`cXxx`). Full dotted class names are **not** stored as strings, only namespace pieces (6,648 `app.`/`via.` strings), so class names are rebuilt as namespace + "." + short name and hashed.
+- **Field names: 1,215 of 1,221 distinct (class, field) pairs resolved (99.5%)**, from exe strings alone.
+- **Class names: 185 of 187 resolved** (183 as `app.savedata.cXxx`, one `app.cEmProp`, plus the top-level `via.storage.saveService.SaveFileDetail`). Unresolved: one class with 2 fields repeated 14,346 times, and one other. Caveat: murmur3 is 32 bits and about 5.5 billion candidate names were tried, so chance collisions exist (some hashes also match odd `via.*` names). Rule used: accept only `app.<namespace>.c<Upper...>`; 2 hashes still had two plausible names and need a field-name check before use.
+- The classes step 3 asked for are all present and named (entries counted in the save copy):
+
+| Need | Class | Entries | Fields |
+|------|-------|---------|--------|
+| save root | `app.savedata.cUserSaveData` | 1 | 3 |
+| character slot | `app.savedata.cUserSaveParam` | 3 | 118 |
+| equipment | `app.savedata.cEquipParam` | 3 | 58 |
+| items | `app.savedata.cItemParam` | 3 | 16 |
+| enemy report | `app.savedata.cBossReportParam` | 300 | 9 |
+| story | `app.savedata.cStoryParam` | 3 | 8 |
+| mission | `app.savedata.cMissionParam` | present | not recorded |
+| workshop | `app.savedata.cLargeWorkshopParam` | 3 | 5 |
+
+  Also present and likely useful later: `cEquipWork` (7,245 entries), `cEquipMyset`, `cItemWork` (10,254), `cCharmEquipped`, `cArtianPartsWork`, `cArtianCreateCountParam`, `cWeaponFlagParam`, `cArmorFlagParam`, `cOtEquipWork`. Three slots are visible (`cUserSaveParam` x3). Which slot is active and what the ids mean is step 4.
+- Enums: the stream stores enum values as numbers with a width. Enum type and value names were not examined (they would need other string tables or the game data files).
+
+### Not done / open
+- **Sample of game data files not parsed** (second half of the step 3 pass criterion). It needs the pack reader of step 5; carry it there.
+- A class name is only "plausible" until its fields match the exe field names for that class (not checked per class).
+- Only names are recovered; field meaning and which enum a number belongs to are not. A small hand-written schema (route B) will probably be needed for meanings, built on these names.
+- Unchanged from step 2: CityHash revision, the 16-byte "mandrake" structs, bitset fields.
+- Route C was skipped (licence not cleared); route D (hashing exe strings) turned out to be the same method as route A here.
+
+### Decision this supports
+Route A is enough to name the save. Phase 2's reader can use the same method at update time (scan the user's exe; nothing shipped). The exe scan takes about 2 s. The class-name rebuild took minutes in the throwaway tool and must be restricted (namespace `app.savedata`, names starting with `c`) to run quickly.
+
+## Nexus monitoring
+
+Question: can a scheduled cloud session read new comments (Posts tab) and bug reports (Bugs tab) on our Nexus mod page? Researched 2026-10-27, read-only, no account made, nothing posted.
+
+### Findings
+- **Official API does not expose comments or bug reports (as far as found).** The public REST v1 API covers mods, files, games and a user's tracked/endorsed mods ([API announcement](https://www.nexusmods.com/news/13921), 2019; docs at https://api-docs.nexusmods.com/). A Nexus forum suggestion dated May 2026 asks for "basic read-only access to recent comments, open bug reports, status, and timestamps" to be added ([thread](https://forums.nexusmods.com/topic/13537574-comments-and-bug-reports-being-available-in-the-api)), which implies it is not there yet. **Unverified:** I could not read the GraphQL v2 schema (https://graphql.nexusmods.com/ refused my fetcher) or the current api-docs page (JS-rendered), so a comments query in v2 is not fully ruled out.
+- **Auth:** a Personal API key (account settings, API Access) works for REST; SSO needs approval from Nexus. Personal keys are tolerated for private/testing use only ([API Acceptable Use Policy](https://help.nexusmods.com/article/114-api-acceptable-use-policy)). Requests must carry honest `Application-Name` / `Application-Version` headers. Storing other users' keys, or using them without the user starting the action, is prohibited.
+- **Rate limits:** 20,000 requests per 24 h, then 500 per hour; remaining count is in response headers ([rate limiting](https://help.nexusmods.com/article/105-api-acceptable-use-policy)). Far more than a daily check needs.
+- **Web pages, logged out:** my fetcher got the mod page shell with "JavaScript is required" and a log-in prompt, no comments, no Cloudflare-style challenge. The mod listing was also empty without JavaScript. So plain HTTP gives no comments; a real browser is needed. I did not test a Wilds page that is live (the one I tried was hidden by its author). The cloud container's network policy blocks `nexusmods.com` outright (proxy 403 on CONNECT), so a scheduled cloud session cannot reach it unless that host is allowed in the environment's network settings.
+- **robots.txt** (https://www.nexusmods.com/robots.txt): `Allow: /` for general crawlers, `Disallow: /ajax/` for everyone, and ClaudeBot, GPTBot, CCBot and similar AI crawlers are disallowed from the whole site; content signal `ai-train=no, use=reference`. A Claude-run reader of the web pages is therefore against the site's stated wishes.
+- **Terms:** the Acceptable Use Policy bans en-masse scraping for rehosting and says Nexus may act on any use it deems detrimental. I did not locate a general Terms of Service clause on automated reading of pages; treat unverified.
+- **Third-party tools exist** that read comments/bugs by driving a headless browser (for example [nexusmods-mcp-server](https://github.com/UberMorgott/nexusmods-mcp-server)); they are unofficial and break when the site changes. Not used or run by us.
+- **Notifications:** Nexus turned off comment notifications for *tracked* mods ([Notifications update](https://www.nexusmods.com/news/14927)). I found nothing confirming email or RSS for comments or bug reports on a mod you author. **Open:** check the author's own Notification settings once the page exists.
+
+### Options, safest first
+1. **The maintainer checks the Nexus site / the maintainer's own notification settings and forwards anything.** Zero risk, no secrets. Ask the maintainer to look at the author notification settings once the page is live.
+2. **Official API, if comments/bugs appear in it (or v2 has them):** a scheduled session with a Personal API key stored as an environment secret, one call a day, honest headers. Needs the key from the maintainer and the host allowed in the cloud network policy.
+3. **Reading the web pages with a headless browser:** works technically, but fragile, against robots.txt for AI crawlers, and needs a browser plus network access. Not recommended.
+
+### Open
+- Does GraphQL v2 expose comments or bugs? Does Nexus send authors an email for new comments or bug reports?
+
+## Step 4: save structure, ID matching and talismans (2026-10-28)
+
+Question: where do the owned gear, items and talismans sit in the save, and do the save's fixed IDs match the game data files?
+
+**Result: partial.** The save's structure is mapped (**verified** on a copy of the maintainer's save from 2026-10-20, on the maintainer's PC). ID matching is only shown **by range and by internal consistency**, not by name: names live in text files that nothing has read yet. Talismans: one candidate location found, **not confirmed**. Code: throwaway `spikes/savecheck` on branch `spike/step4-savecheck` (never merged; ran against the real save copy; the live save folder is refused by the code). Output below is structure and counts only; no hunter data was printed or saved to git.
+
+### Slots and equipment box (verified)
+- The save root (`app.savedata.cUserSaveData`) holds `_Data`, an array of **3** character slots (`cUserSaveParam`, 118 fields each). Field names resolve from exe strings (all but 7 of the slot's fields).
+- Only slot 0 has data. Slots 1 and 2 carry a sentinel (a float field equal to -1.0) and empty content. A one-byte field is 1 in slot 0 and 0 in the others, so it is a **candidate** for the "active" marker; with only one used slot it cannot be told apart from "has data". **Open:** how the game marks the active slot when two slots are used; the app should fall back to "the slot that has data, else the most recently written".
+- Active slot's equipment box: `_Equip._EquipBox` is an array of **2,400** `cEquipWork` entries; **59** are in use in this save. Other arrays: item box `_Item._BoxItem` 900 entries (221 in use), pouch 25, `_ArtianPartsBox` 1,000, `_EquipMySet` 140, `_OtEquipBox` 500 (palico gear).
+- Entry layout (`cEquipWork`, field meanings inferred from values, not verified): one byte category (141 means empty), a 32-bit id, a 32-bit second field, 4 and 3 small 16-bit slot arrays (decoration and augment slots, -1 means empty), and a few more small numbers.
+
+### ID checks (partial)
+| Category | What was compared | Result | Strength |
+|----------|-------------------|--------|----------|
+| Armor | Save armor ids per slot (2, 3, 4, 21, 25, 33, 34) against the set bits of the save's own "armor created" flags | exact match for helmet (4 of 4), body (5 of 5), female helmet (3 of 3) | Internal consistency only: the box id is the bit index. |
+| Armor | Same ids against `ArmorSeriesData.user.3` ids (1 to 194) | 7 of 7 inside the range | Weak (range check). |
+| Weapons | Light bowgun ids in the box (0 to 13) against the light bowgun data file | 14 of 14 present in a column of the data rows | Weak: a small dense id range. |
+| Items | Item box ids (221 distinct, highest 805) against the item data file | 221 of 221 present in the id column (809 row-aligned values, 784 distinct, highest 838) | Weak: the column covers about 93% of the id space, so a random id would match most of the time. |
+| Decorations | | **not located** in the save | A decoration is probably an item-box entry or one of the equipment slot ids; not checked. |
+| By name | | **not done** | Needs the text (name) files from the packs. |
+
+Match rate against the 99% criterion therefore cannot be called: every id checked exists in the data, but the check cannot catch a wrong mapping. To close it: read the name text files, then compare names for the ids in the box (about 80 ids on this save). The save-id to data-id question stays **open**, with the working hypothesis "save id = the id column of the matching data row" (true for every category tested, no counter-example).
+
+### Bitsets (verified)
+Weapon created/checked flags exist per weapon type (14 types, 128 bits each), armor created/checked flags per gender and slot (256 bits), `_ItemFoundFlag` and `_ItemCheckedFlag` (2,016 bits; 264 set here). The weapon type order in the save is: Long sword, Short sword, Twin sword, Tachi, Hammer, Whistle, Lance, Gun lance, Slash axe, Charge axe, Rod, Bow, Heavy bowgun, Light bowgun (field names from the exe). In the box, category 13 lines up with the light bowgun (13 entries, ids 0 to 12 plus 13 three times with different second values). Created bits for the light bowgun are 0, 1, 2, 16, 17.
+
+### Talismans (candidate, not confirmed)
+- Charm data is in the game files (`Charm.user.3`: 167 rows, 48 bytes each, plus `AmuletData` 187 rows and random talisman tables, see step 5).
+- In the save, the equipment box has a category 21 entry (one, id 57) and a category 37 pair (ids 0 and 10) that are neither weapons nor armor. Category 21 id 57 is inside the charm id range, so it is a **candidate** owned charm; its skills are not decoded. Random (mystery) talismans, if they exist in this game, would need their skill rolls stored per entry; the entries here carry no field that looks like that, so **how a random talisman is stored is open**. The fallback in the plan stays valid (user enters talismans by hand) until a save with several talismans is checked.
+
+### Not done / open
+- Names (needed for the name-based ID check).
+- Which field marks the active slot when more than one slot is used.
+- Decoration ownership; talisman decoding; whether this older save (2026-10-20) represents the current one.
+- Kills and story flags to unlocked monsters (`_EnemyReport` has 300 `cBossReportParam`; not examined), mission completion.
+- Unresolved field names stay as hashes: 7 of 118 slot fields and all 12 `cEquipWork` fields (so the entry layout above is inferred from values alone).
+
+### Test round: checked against the maintainer's real game (2026-10-27)
+The maintainer checked the reader's counts against the maintainer's real game, as of the 2026-10-20 save copy (passed 14:05 UTC, 2026-10-27):
+
+| Item | Reader found | The maintainer |
+|------|--------------|--------|
+| Character slots in use | 1 of 3 (slot 1) | right |
+| Light bowguns crafted | about 14 | right |
+| Armor pieces crafted | 7 | right |
+| Item types in the item box | about 221 | hard to tell, seems correct (approximate) |
+| Talismans owned | 1 | right |
+| Nothing from the save in git | confirmed by the thread | right |
+
+This confirms the box counts and the ID ranges against the maintainer's game. It does not close the by-name check, which moves to Phase 3 (needs the text files). The one talisman entry is confirmed as a count only; its skills are still undecoded.
+
+### Decision this supports
+The reader can already list gear, items and crafted flags by id from the save. The final ID mapping needs a text-file reader (names) and a data-row decoder; both belong to Phase 3.
+
+## Step 5: extraction test, pack reader and data files (2026-10-28)
+
+Question: can we read the game's own packs, find the files for skills, weapons, armor, decorations, charms, Artian tables, hitzones, drops and motion values, and say which of them are decoded?
+
+**Result: partial.** Pack reading and file naming work (**verified** on the maintainer's PC, real install, original packs only). Most categories have located data files; none is decoded into named fields yet (that needs a schema for the data files, see "Not done"). Motion values are not located. Code: throwaway `spikes/extract` on branch `spike/step5-extract` (never merged; ran against the real files). Nothing extracted is in git; outputs are in `E:\mhbis\out` only.
+
+### Pack reader (verified)
+- Install found through Steam's `libraryfolders.vdf` (library on `E:`), build ID 25921695. Only the original `re_*.pak` files are read: 32 packs (base, 15 patches, `sub_000` and its patches, the DLC pack). The mod pak in `pak_mods` is never opened. Mod markers present: `dinput8.dll`, `reframework`, `pak_mods`, a Fluffy Mod Manager marker file.
+- Format facts used (credit: [eigeen/ree-pak-rs](https://github.com/eigeen/ree-pak-rs), MIT licence, read for format facts; our reader is our own code, but it holds the one 129-byte table key constant from that project, so credit it in THIRD-PARTY-NOTICES.md if this ever leaves the spike branch):
+  - Header 16 bytes: `KPKA`, version 4.1, feature flags, file count, hash. All 32 paks are version 4.1.
+  - Feature `0x08`: the entry table (48 bytes per file: two path hashes, offset, compressed size, uncompressed size, attributes, checksum) is encrypted. A 128-byte key follows the table; it is raised to the power 65537 modulo a fixed 1024-bit number, and the first 32 bytes of the result drive a byte-wise XOR over the table. It worked first time (entry counts and offsets came out sane).
+  - Feature `0x20`: a chunk table follows the key. It is used by the two newest patches (014 and 015). Files whose attribute bit 24 is set store a chunk index instead of an offset; each chunk is stored or zstd-compressed.
+  - Compression in the low 4 bits of attributes: 0 none, 1 deflate, 2 zstd.
+- The 32 tables hold 349,348 distinct files after later patches override earlier ones. Reading an entry reads only that entry. The full index (tables only, no file data) builds in a few seconds.
+
+### Naming files without a file list (verified)
+- Entries are keyed by two hashes of the path (murmur3, seed `0xFFFFFFFF`, over the UTF-16 path, once lower-cased and once upper-cased). There are no names in the packs.
+- No third-party file list was used. Path strings were found in the exe (only 9,399 strings contain a slash) and then inside the game's own scene, prefab and user data files: each path string found in a file is hashed with the `natives/stm/` prefix and tried with every file-version suffix from 0 to 70 until both hashes match an entry.
+- Starting from one exe string (`Boot/Master.scn`, which resolves to `natives/stm/Boot/Master.scn.21`), one crawl over files up to 8 MB named **113,869 of 349,348 files**, including 48,646 `.user.3` data files. File contents were only held in memory. The rest (textures, meshes, motions, sound) are not referenced from those files by path and stay unnamed; they are not needed.
+
+### Categories (status: located and sized, not decoded)
+Counts are RSZ instances measured in the files; they include wrapper instances and are not item counts. Each file is a `USR` container with an `RSZ` object block whose instances carry a type ID. The type IDs are not hashes of any string in the exe (tested against the 2.25 M exe strings and our rebuilt class names), so they cannot be named by route A.
+
+| Category | Status | Files (under `natives/stm/GameDesign/`) | Evidence |
+|----------|--------|-----------------------------------------|----------|
+| Skills | found, not decoded | `Common/Equip/SkillData.user.3`, `SkillCommonData.user.3`, `HunterActiveSkillData.user.3` | 443 and 218 row-type instances. Per-level numbers not confirmed to be in these files. |
+| Weapons | found, not decoded | `Common/Weapon/<Type>.user.3` for 14 types, plus `<Type>Tree`, `<Type>Recipe`, `Outer<Type>Data`, `RodInsectData`, bowgun customisation | Names: Bow, ChargeAxe, GunLance, Hammer, HeavyBowgun, Lance, LightBowgun, LongSword, Tachi, Rod, ShortSword, SlashAxe, TwinSword, Whistle. The mapping to in-game weapon names (for example Tachi to Long Sword) is **inferred**, not verified. Light bowgun file: 81 weapon rows, 2,108 instances. |
+| Armor | found, not decoded | `Common/Equip/ArmorData`, `ArmorSeriesData`, `ArmorRecipeData`, `ArmorUpgradeData`, `ArmorUpgradeRecipeData`, `ArmorSpUpgradeCostData`, `OuterArmorData` | `ArmorData`: 719 piece rows (9,349 instances); 195 series rows. |
+| Decorations | found, not decoded | `Common/Equip/AccessoryData`, `AccessoryJudgeData`, `AccessoryRankJudgeData` | 361 rows. |
+| Charms | found, not decoded | `Common/Equip/Charm`, `AmuletData`, `AmuletRecipeData`, `RandomAmulet*Table`, `Maka*Table` | 168 charm rows, 187 amulet rows, 181 recipe rows. Random talisman lot tables present. |
+| Artian | found, not decoded | `Common/Equip/ArtianGrindingData`, `ArtianSkillGroupData`, `Em0078_ArtianDatas`, `Facility/ArtianBonusData`, `ArtianBonusCategoryData` | 49, 296, 4, 53 and 6 instances. Gogma Artian tables not separately identified (**open**). |
+| Items | found, not decoded | `Common/Item/itemData`, `ItemRecipe`, `FixItems` | 782 item rows. |
+| Hitzones | located, **unconfirmed** | `Common/Enemy/EM<id>_<variant>_0.user.3`, 88 files (one per monster form) | A monster file holds 29 repeated groups of 4 related rows (262 to 292 instances), consistent with per-part damage data but not decoded, so not confirmed to be hitzones. |
+| Drops | partly located | `Common/Enemy/EnemyReport*RewardData`, `EnemyRewardAddData`, `EnemyReportBossMaterialDispData` | Report-style reward data (716 instances in the part reward file). `EnemyRewardDataSetting.user.3` (18.7 KB) has no RSZ block in its first 400 bytes, so it is a different layout, not read. Real per-monster drop tables not confirmed. |
+| Motion values | **not located** | | Only action shell parameters and collider data were found under `Player/ActionData/Wp*`; no table that looks like motion values. The open question stays open. |
+
+Rows are readable as plain numbers: the 228-byte `ArmorSpUpgradeCostData` shows four rows of small integer triples directly in the data section, so decoding needs a layout per class, not decompression or decryption.
+
+### Not done / open
+- **No category is decoded into named fields.** Next needed: a hand-written schema (route B) for the classes we need, checked against a cited source (MHDB as cross-check only). Field names for the data files cannot come from the exe by hashing (type IDs are not string hashes); how the exe stores its RSZ type table is **open**.
+- The 67% of files with no name (mostly art, sound, motion) were not examined.
+- `EquipDataSetting.user.3` and `EnemyRewardDataSetting.user.3` have no RSZ block near the start; **open**.
+- Names (item, skill, monster) are in separate text message files, not looked for yet.
+- Plausibility against MHDB counts is not done (needs decoding first). The weapon rows per type and the 719 armor pieces look plausible only by size.
+- The survey ran on the patched install (build 25921695); a new game patch will change counts.
+
+### Decision this supports
+All needed categories except motion values (and real drop tables) exist in the game files and can be read from the user's own install at update time, without a third-party file list. Phase 3 must plan a hand-written schema per data class; motion values and drop tables need a separate investigation or a cited source.
