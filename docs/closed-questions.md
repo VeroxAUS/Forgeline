@@ -139,3 +139,21 @@ All answered 2026-10-27, in the order they were asked.
 - **Needed-files path list in the repo (decision D)?** Yes, approved (paths only, no game content).
 - **Budget changes (decision E)?** Not decided: deferred to the step 10 budget re-review (see `open-questions.md`).
 
+### Live reading, app shape and tools (2026-10-27)
+- **Allow live reading of the running game for the overlay, and split the app into three programs?** Yes, the maintainer said "yes" to this single decision:
+  1. **Rule change.** The line "Never inject into, hook or read the memory of the running game" is replaced by: "Never inject into, hook or write to the running game. The desktop app and the updater never touch the running game. Live data comes only from forgeline-live, a separate, optional program for the overlay that is off by default and switched on by the user after a warning. It only reads the game: screen capture first, then memory with read-only access. It never writes, injects or hooks. It shuts itself off on unknown game versions or bad reads, and talks to the app only through a private one-way channel."
+  2. **Three programs.** The main app (Forgeline) with the desktop window and the overlay window; `forgeline-update` (the short-lived updater, decision C); `forgeline-live` (optional, separate, off by default).
+  3. **`forgeline-live` approved as a new tool**, to be built after the Phase 6 overlay as its own step with its own plan for the maintainer to approve.
+  4. **The save-diff tool approved**, to test early whether the save records the current quest (Phase 2 step 4).
+- **Live-data warning text (approved as drafted, shown once when live data is switched on, rereadable in settings, "Keep it off" is the highlighted default):**
+
+  > **Turn on live game data?**
+  > With this on, Forgeline's overlay reads information from Monster Hunter Wilds while it runs, such as the monster you're hunting, parts you've broken and your equipped gear, so it can update without waiting for a save.
+  >
+  > - **Read-only:** Forgeline only reads. It never changes the game, your save or anything you do online.
+  > - **Not approved by Capcom:** Capcom hasn't approved or commented on tools like this. No bans for read-only tools are known, but we can't promise there never will be. You use it at your own risk.
+  > - **Patches:** a game patch can stop live data working until Forgeline is updated. The overlay then falls back to save data automatically.
+  > - **Off any time:** you can switch it off in settings, and nothing else in Forgeline depends on it.
+  >
+  > [Keep it off]  [Turn on live data]
+

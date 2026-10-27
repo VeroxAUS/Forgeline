@@ -76,6 +76,7 @@ Done means:
 - **Why Electron and Slint are not re-run:**
   - Electron's two valid no-Wilds runs only affect a row that was not decisive. With Wilds running it had all 3 runs, and its private bytes (206 MB) are over the 150 MB hard limit by a wide margin, so another run cannot change the verdict.
   - Slint was not tested in Phase 1. The maintainer approved a UI footprint check (step 10) that measures it, with egui on two renderers and a plain Win32 window, on the same small sample view. Slint's licence terms are still open (open question 6), so step 10 reads them first and uses only its royalty-free or MIT-compatible terms, never the GPL option; if those terms cannot be confirmed, Slint is skipped and the report says so.
+- **App shape and live data (approved 2026-10-27):** see section 3.1. `forgeline-live` is not part of Phase 2; this phase only mocks the overlay and tests whether the save records the accepted quest.
 - **Open questions that touch this phase but are not answered here:**
   - Save-ID to data-ID matching by name (question 1), talisman decoding (2) and unlocked-monster mapping (3) are Phase 3. The window shows raw IDs and counts only.
   - Which character slot is active: the notes disagree. [PLAN.md](../PLAN.md) section 3 says one slot has `Active` = 1, but open question 3 lists the active slot as still open. Step 4 reads the `Active` field and step 11 confirms it on the maintainer's save; if it does not hold, the window shows all slots and says the active one is unknown.
@@ -100,6 +101,8 @@ A Cargo workspace of small crates. The UI is a thin shell; nothing heavy lives i
 | `tools/fixture-builder` | builds small synthetic fixture saves | 3 |
 | `tools/bench` | benchmark harness, ported from the Phase 1 sampler | 9 |
 | `tools/ui-footprint` | four small sample apps for the UI footprint check (own workspace, never shipped) | 9 |
+
+App shape (project rule, approved by the maintainer 2026-10-27): one main app, Forgeline, with two windows. The desktop window is the full planner, working from the save and the cached game data. The overlay window is an optional see-through, click-through, always-on-top panel over the game (borderless windowed only) showing the shopping list and save-based info. `forgeline-update` is the short-lived child process for data updates. A separate, optional program, `forgeline-live`, can later feed the overlay live information; it is off by default, switched on only after a warning, and built after the Phase 6 overlay with its own plan. If it is off or broken, the overlay falls back to save data and the desktop window never depends on it. Phase 2 builds the desktop window only; the overlay is a mock-up. Two windows in one program cost far less RAM than two programs, which would each load the UI (about 127 MB private in Phase 1).
 
 What runs where:
 
@@ -201,6 +204,12 @@ Files are listed by step. Every source file starts with the MPL-2.0 Exhibit A no
 - **Inputs and outputs:** in, the stream and a `TypeNames` table. Out, a lightweight tree that visits only the classes and fields we ask for and skips the rest without allocating.
 - **Depends on:** `container.rs`.
 - **Notes:** the full stream is 16.5 MB inflated and has 187 class kinds; we must not build a tree of all of it. Skipping uses the size prefixes.
+
+#### `tools/save-diff/src/main.rs` (step 4)
+- **Purpose:** compare two save copies and list which fields changed, to see whether the save records the accepted quest (and later to map fields to unlocks).
+- **Inputs and outputs:** in, two save copy paths and the Steam ID. Out, a list of changed fields by class and field name with old and new numbers; no hunter name or ID.
+- **Depends on:** `forgeline-save`.
+- **Notes:** approved by the maintainer 2026-10-27. Reads copies only and refuses the live `win64_save` folder. The test needs two copies from the maintainer: one before accepting a quest and one after. The result decides whether the overlay can know the current quest from the save alone (otherwise it relies on forgeline-live, or shows the shopping list without monster context).
 
 #### `crates/forgeline-save/src/model.rs` (step 4)
 - **Purpose:** typed summary of the active slot: slot table, equipment box (category, Artian fields, decoration slots), item box and pouch counts, created and checked flags, and the story, mission and enemy-report records as raw counts.
@@ -386,10 +395,10 @@ The last step of every phase is the close-out. Besides updating `PLAN.md`, it up
 | 1 | 1 | Workspace, CI (format, clippy, tests, RAM check on Linux and Windows), hygiene test, `CHANGELOG.md`, `.gitignore`, MPL notice, `ram-log.md` | Foundation thread | Cloud | PR: workspace and CI | 1 thread, 1 cloud round; about 1 h | none |
 | 2 | 2 | Discovery: Steam, library, install, build ID, Steam ID, save files; data directory; `forgeline-check discover` | Discovery thread | Cloud code, PC check | PR: `forgeline-core`, `forgeline-check` | 1 thread, 1 cloud round, 1 PC round; about 1.5 h | 1 |
 | 3 | 2 | Fixture save builder and first fixtures | Fixture thread (separate from the reader thread) | Cloud | PR: `tools/fixture-builder`, `fixtures/` | 1 thread, 1 cloud round; about 1 h | 1 |
-| 4 | 3 | Save reader: decrypt, inflate, walk, typed summary, active slot; `forgeline-check save` | Reader thread (reads `research.md` only) | Cloud code, PC check | PR: `forgeline-save` | 1 to 2 threads, 1 cloud round, 1 PC round; about 2 h | 1, 3 |
+| 4 | 3 | Save reader: decrypt, inflate, walk, typed summary, active slot; `forgeline-check save`. Plus the early save-diff test: the save-diff tool compares two save copies (taken before and after accepting a quest) to see whether the save records the accepted quest | Reader thread (reads `research.md` only), then a save-diff thread | Cloud code, PC check (two PC rounds, the second with two save copies) | PR: `forgeline-save`, `tools/save-diff`, `research.md` section | 2 to 3 threads, 1 cloud round, 2 PC rounds; about 4 h | 1, 3 |
 | 5 | 2 | Pack reader and exe scan (route A), needed-files list, ree-pak-rs credit; `forgeline-check pak` | Pack thread | Cloud code, PC check | PR: `forgeline-pak`, notices | 1 to 2 threads, 1 cloud round, 1 to 2 PC rounds; about 3 h | 1 |
 | 6 | 3 | Update flow: stage, validate (structural gate), swap, keep last good; `--update` mode; `forgeline-check update` | Update thread | Cloud code, PC check | PR: `forgeline-update` | 1 thread, 1 cloud round, 1 PC round; about 2 h | 2, 5 |
-| 7 | 3 | UX design: a short UX brief (including the in-game shopping-list overlay), clickable dark-theme mock-ups of the 3 or 4 main screens and of the overlay over a game-like background (published as Artifact pages) and a style guide; the widget list the UI footprint check needs | UX design thread | Cloud | PR: `docs/ux/` (brief, mock-ups, style guide) | 1 to 2 threads, 1 to 2 cloud rounds (the maintainer reacts to the mock-ups); about 3.5 h | 1 |
+| 7 | 3 | UX design: a short UX brief (including the in-game shopping-list overlay in both modes), clickable dark-theme mock-ups of the 3 or 4 main screens and of the overlay over a game-like background in both modes, save-only and auto-detect with live data, plus the live-data warning screen (published as Artifact pages) and a style guide; the widget list the UI footprint check needs | UX design thread | Cloud | PR: `docs/ux/` (brief, mock-ups, style guide) | 1 to 2 threads, 1 to 2 cloud rounds (the maintainer reacts to the mock-ups); about 4 h | 1 |
 | 8 | 4 | Engine: save-folder watcher, background recompute at low priority, view cache, `Snapshot` | Engine thread | Cloud code, PC check | PR: `forgeline-engine` | 1 thread, 1 cloud round, 1 PC round; about 1.5 h | 2, 4 |
 | 9 | 5 | The bare egui window from the debug data viewer, update button and notices | Window thread | Cloud code, PC check | PR: `forgeline-app` | 1 to 2 threads, 1 cloud round, 1 PC round; about 2 h | 6, 7, 8 |
 | 10 | 6 | UI footprint check: port the benchmark harness; four variants (egui wgpu, egui glow with features off, Slint under its royalty-free or MIT-compatible terms, plain Win32 window) render the same small dark sample view built from step 7's widget list, plus an overlay variant (small transparent, click-through, always-on-top window with a hotkey) measured over a running Wilds in borderless windowed mode; private bytes, working set, cold start, the game's frame time and RAM with the overlay visible, and a screenshot of each | UI footprint thread | Cloud code, PC measurement | PR: `tools/bench`, `tools/ui-footprint`, `research.md` section | 1 to 2 threads, 1 cloud round, 1 PC round; about 3.5 h | 7, 9 |
@@ -397,15 +406,15 @@ The last step of every phase is the close-out. Besides updating `PLAN.md`, it up
 | 12 | 8 | Re-review `performance-budget.md` against the Phase 1 and step 11 numbers | Docs thread | Cloud | PR: budget changes | 1 thread, 1 cloud round; about 0.5 h | 11 |
 | 13 | 9 | Close-out: `PLAN.md`, `README.md` (text, badges, roadmap, banner phase label, first screenshot), `CHANGELOG.md` 0.2.0, version bump, plan time log | Docs thread | Cloud | PR: docs and version | 1 thread, 1 cloud round; about 0.75 h | 1 to 12 |
 
-Total estimate: 13 to 18 threads and 17 to 20 test rounds, 9 to 10 of them on the PC. At most 3 threads run at once. Estimates are guesses and will be compared with the time log.
+Total estimate: 14 to 19 threads and 18 to 21 test rounds, 10 to 11 of them on the PC. At most 3 threads run at once. Estimates are guesses and will be compared with the time log.
 
 Hours (rough wall-clock from thread start to merge, each including its test round and the wait for the maintainer to pass it):
 
-- **Per step:** the figures in the table above, about 24 h added up (1 + 1.5 + 1 + 2 + 3 + 2 + 3.5 + 1.5 + 2 + 3.5 + 1.5 + 0.5 + 0.75 = 23.75).
-- **Total with parallel stages:** about 17 h from approval to the last merge. Stage 1 is 1 h, stage 2 is 3 h (steps 2, 3 and 5 overlap, step 5 is the longest), stage 3 is 3.5 h (steps 4, 6 and 7 overlap, step 7 waits for the maintainer's reaction), stage 4 is 1.5 h, stage 5 is 2 h, stage 6 is 3.5 h, stage 7 is 1.5 h, stage 8 is 0.5 h and stage 9 is 0.75 h.
-- **Plausible range:** 14 to 23 h. It assumes the maintainer passes each test round within about 15 minutes; a slower reply adds to the total.
+- **Per step:** the figures in the table above, about 27 h added up (1 + 1.5 + 1 + 4 + 3 + 2 + 4 + 1.5 + 2 + 3.5 + 1.5 + 0.5 + 0.75 = 26.25).
+- **Total with parallel stages:** about 18 h from approval to the last merge. Stage 1 is 1 h, stage 2 is 3 h (steps 2, 3 and 5 overlap, step 5 is the longest), stage 3 is 4 h (steps 4, 6 and 7 overlap, step 7 waits for the maintainer's reaction), stage 4 is 1.5 h, stage 5 is 2 h, stage 6 is 3.5 h, stage 7 is 1.5 h, stage 8 is 0.5 h and stage 9 is 0.75 h.
+- **Plausible range:** 15 to 24 h. It assumes the maintainer passes each test round within about 15 minutes; a slower reply adds to the total.
 - **Calibration:** Phase 1 took 2 h 06 min for 7 steps (about 18 min a step), but those were docs and throwaway spikes with several threads in parallel. Phase 2 steps are real code with tests, CI and PC rounds, so each is estimated at 3 to 6 times a Phase 1 step.
-- **Least certain:** step 5 (3 h), step 7 (3.5 h, depends on how many rounds of reaction the mock-ups need), step 10 (3.5 h, new code in four frameworks, one of them unfamiliar) and step 11 (1.5 h, a second round if RAM is over a limit).
+- **Least certain:** step 5 (3 h), step 4 (4 h, the quest test depends on getting two good save copies), step 7 (4 h, depends on how many rounds of reaction the mock-ups need), step 10 (3.5 h, new code in four frameworks, one of them unfamiliar) and step 11 (1.5 h, a second round if RAM is over a limit).
 - **Not counted:** a port of `view.rs` to another UI library, if the maintainer picks one after step 10 (about 2 h and one PC round).
 
 Where the estimate is most likely wrong:
@@ -418,6 +427,7 @@ All are our own Rust. The fixture builder, `forgeline-check` and `tools/bench` w
 | Tool | Step | Why (plain words) | Built or third-party | Licence |
 |------|------|-------------------|----------------------|---------|
 | `tools/fixture-builder` | 3 | Problem: tests must pass without Wilds and must never use your real save, because it holds hunter IDs. This tool builds tiny invented saves in the real format with known contents. Without it we either commit a real save (forbidden) or cannot test the reader. It touches nothing on your PC; it only writes files into the repo checkout. | Built, from `research.md` notes only | ours (MPL-2.0) |
+| `tools/save-diff` | 4 | Problem: we do not know whether the save records the quest you have just accepted, which decides whether the overlay can show monster-specific information without reading the running game. This tool compares two copies of your save (before and after accepting a quest) and lists what changed. Without it we would guess. On your PC it reads two save copies in `E:\mhbis\copies` only, never the live save, and prints field names and numbers only. | Built (approved by the maintainer 2026-10-27) | ours |
 | `tools/forgeline-check` | 2 | Problem: until the window exists (step 9) there is no way to see what the reader and extractor do on your real files, and every PC round would need a custom program. This is one small report tool for all of them. It prints counts and names only. On your PC it copies your save into its own work folder and reads the copy, reads the game install read-only, and writes only to `E:\mhbis`. | Built | ours |
 | `tools/bench` | 9, 10 | Problem: the budget is judged on numbers from your PC with Wilds running, not impressions. This measures start-up, RAM, CPU, recompute time and the game's frame times the same way every time. Without it the RAM rule cannot be checked and the Phase 1 gaps stay open. It is the Phase 1 sampler, ported from `spikes-archive`, with the Windows-only frame-time module (needs administrator rights while running; it reads Windows present events and never touches the game process). On your PC it reads process and event figures and writes to `E:\mhbis\bench`. | Built (ported) | ours; `ferrisetw` (MIT OR Apache-2.0), `sysinfo` (MIT) and `windows` crates recorded in `THIRD-PARTY-NOTICES.md` |
 | `tools/ui-footprint` | 9 | Problem: the empty egui window already uses 127 MB private bytes, and we do not know how much of that is egui, the renderer or any graphics window at all. Without it we build the whole app on a choice we have measured once. It compares four ways of drawing the same small dark view and gives numbers and screenshots so you can judge both memory and looks. On your PC it runs the four sample apps beside Wilds, then stops them, and writes only to `E:\mhbis\bench`. | Built (needs the maintainer's yes) | ours; the egui, Slint and `windows` crates are licence-checked first (Slint only under its royalty-free or MIT-compatible terms, never the GPL option) and recorded |
@@ -471,6 +481,7 @@ GitHub Actions on Ubuntu and Windows, fixtures only. Nothing touches the real sa
 - Pass: on a copy of the maintainer's save, the report shows 3 slots with the active one marked, and counts that the maintainer confirms match the game.
 - Pass: reading the real save takes under 1 s and its peak memory is reported.
 - Partial: the container reads but the `Active` field does not pick a slot; the window will show all slots (section 2).
+- Pass: the save-diff report, from two copies taken before and after accepting a quest, says whether any field records the accepted quest or its monster, with field names only. "No field found" is also a valid result and is recorded as such.
 - Fail: decryption or the walk errors on the real save; fix before step 8.
 
 **Step 5, pack reader and exe scan**
@@ -489,7 +500,8 @@ GitHub Actions on Ubuntu and Windows, fixtures only. Nothing touches the real sa
 - Pass: `docs/ux/brief.md` names the user, the key moments (for example "just finished a hunt, what now?") and what must be visible at a glance, and covers the in-game shopping-list overlay: purpose, position, hotkey, size, what is shown and what is never shown, and the borderless-windowed-only limit.
 - Pass: 3 or 4 clickable mock-ups of the main screens (best build, why this build and its alternatives and assumptions, shopping list, data and update status) are published as Artifact pages in the dark theme, using invented sample names and numbers, with no Capcom data.
 - Pass: `docs/ux/style-guide.md` fixes colours, font sizes readable on a second monitor, spacing and layout rules, and lists the widgets the screens need (tables, tooltips, comparisons, stat tiles) for step 10's sample view.
-- Pass: the overlay mock-up shows the shopping list over a game-like placeholder background, with position, hotkey, size and contents stated on the page.
+- Pass: the overlay mock-up shows the shopping list over a game-like placeholder background in both modes: save-only (top shopping-list items and where to get them, next upgrade, active skills) and auto-detect with live data (adds info for the current monster), with position, hotkey, size and contents stated on the page.
+- Pass: the live-data warning screen shows the approved text (recorded in `docs/closed-questions.md`) with "Keep it off" as the highlighted default.
 - Pass: the maintainer has reacted to the mock-ups, and the requested changes are in.
 - No performance claim is made from mock-ups; they say nothing about egui's limits, which step 10 checks.
 
@@ -549,6 +561,7 @@ Queued, one at a time. Steps 2 to 6 use `forgeline-check`; the window exists fro
 - [ ] With your save, the report shows 3 slots, 1 in use and marked active, about 14 light bowguns and 7 armor pieces created, one talisman candidate, about 221 item types.
 - [ ] The report prints no hunter name or ID.
 - [ ] The read takes under 1 second.
+- [ ] You provide two save copies, one before accepting a quest and one after, and the save-diff report lists the changed fields (names and numbers) and says whether the quest is recorded.
 
 **Step 5**
 - [ ] The pack report shows 32 packs opened (the original `re_*.pak` only), about 349,000 files, and every needed path resolved.
@@ -601,6 +614,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 
 ## 7. Risks and open questions
 
+- **The save does not record the accepted quest (step 4 quest test).** Notice: the save-diff report. Fallback: the overlay shows the shopping list without monster context until `forgeline-live` exists, and the plan says so.
 - **The overlay hurts the game or is hidden.** Notice: step 10's frame times with the overlay visible against the control, or an overlay that does not show. Fallback: shrink or simplify it, or drop it (it is optional); exclusive fullscreen hides it, so it is documented as borderless windowed only. Whether Wilds' own protections object to another app's overlay window is unverified; step 10 tests it on the offline spot only and the maintainer decides.
 - **The mock-ups ask for something egui cannot do well.** Notice: the widget list against step 10's sample view. Fallback: change the mock-up, or add the widget to step 10 and measure it, before Phase 6.
 - **The mock-ups need more reaction rounds than planned.** Notice: step 7 still open when step 9 should start. Fallback: step 9 starts on the style guide's first version and follows later changes.
@@ -644,6 +658,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 | 2026-10-27 | The maintainer | Asked for the Phase 1 retro items to be folded in (steps 1, 11, 12, RAM rule, CI), and for releases, tags and branch deletions to be listed up front. |
 | 2026-10-27 | The maintainer | Asked for an hours estimate in every plan. Added per step and in total (about 13 h, range 10 to 18 h), calibrated on Phase 1's 2 h 06 min. |
 | 2026-10-27 | The maintainer | Approved a UX design step 7 (brief, clickable mock-ups, style guide), cloud only and parallel to the backend, so every later window follows the mock-ups and the style guide; a look check sits next to the performance check in test rounds. Phase 6 is visual polish on top of it. Later steps renumbered; hours and totals updated. |
+| 2026-10-27 | The maintainer | Approved live reading for the overlay as a separate, optional program (`forgeline-live`, built after the Phase 6 overlay with its own plan), the three-program split, the rule change in `CLAUDE.md`, and the save-diff tool. Phase 2 adds the early quest test to step 4, mocks the overlay in both modes and the live-data warning in step 7. Totals updated. |
 | 2026-10-27 | The maintainer | Approved an in-game shopping-list overlay (our own transparent, click-through, always-on-top window, hotkey, borderless windowed mode only; built in Phase 6): mock-up in step 7, measurement variant (e) in step 10. Totals updated. |
 | 2026-10-27 | The maintainer | Approved a new step 10, the UI footprint check (egui wgpu and glow, Slint, plain Win32 window), to see how much of the 127 MB is the graphics stack and how each looks. Later steps renumbered; hours and totals updated. |
 | 2026-10-27 | The maintainer | The README banner still said Phase 1: this PR sets it to Phase 2, and the close-out step and the template now check the README text, badges, roadmap and banner every phase. |
@@ -676,10 +691,10 @@ Filled at close-out. Actual hours run from the first thread start to the merge (
 | 1 | 1 | | |
 | 2 | 1.5 | | |
 | 3 | 1 | | |
-| 4 | 2 | | |
+| 4 | 4 | | |
 | 5 | 3 | | |
 | 6 | 2 | | |
-| 7 | 3.5 | | |
+| 7 | 4 | | |
 | 8 | 1.5 | | |
 | 9 | 2 | | |
 | 10 | 3.5 | | |
@@ -687,4 +702,4 @@ Filled at close-out. Actual hours run from the first thread start to the merge (
 | 12 | 0.5 | | |
 | 13 | 0.75 | | |
 
-Elapsed from approval to finish: `<hours>`. Steps overlap, so they do not add up to this. Compare with the 17 h estimate in section 4 (range 14 to 23 h).
+Elapsed from approval to finish: `<hours>`. Steps overlap, so they do not add up to this. Compare with the 18 h estimate in section 4 (range 15 to 24 h).

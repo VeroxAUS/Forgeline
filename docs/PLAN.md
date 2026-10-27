@@ -82,6 +82,7 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 - **Weapons:** the extractor and data model cover all weapons from Phase 3. Every weapon is optimized before 1.0.0, light bowgun first; each weapon is labelled "tuned" or "generic model" in the app. Which weapon follows the light bowgun is decided later.
 - **Saves:** the app auto-picks the active slot and the Steam ID comes from the folder name.
 - **Licence: MPL-2.0** for our own code (chosen 2026-10-27): forks welcome with "based on Forgeline" credit, no contributor paperwork, optional Ko-fi tip link on GitHub only. A Nexus release does not force open source as long as no GPL code is used (none is).
+- **App shape (approved 2026-10-27):** one main app, Forgeline, with two windows: the desktop window (full planner, from the save and cached game data) and an optional overlay window. `forgeline-update` is a short-lived child process for data updates. `forgeline-live` is a separate, optional program for the overlay (off by default, switched on after a warning, screen capture first then read-only memory, shuts itself off on unknown game versions or bad reads, talks to the app only through a private one-way anonymous pipe, never a listener). It is built after the Phase 6 overlay, as its own step with its own plan for the maintainer to approve. If it is off or broken, the overlay falls back to save data and the desktop window never depends on it. One program with two windows costs far less RAM than two programs. The approved warning text is in `closed-questions.md`.
 - **In-game overlay (approved 2026-10-27):** an optional, small shopping-list panel shown over Wilds mid-hunt (for example "2x plate" and where or how to get it) so the user need not alt-tab. It is our own transparent, click-through, always-on-top window toggled by a hotkey. It never hooks, injects into or draws inside the game, and it works in borderless windowed mode only (exclusive fullscreen hides it). Its design is mocked up in Phase 2 and its cost measured in the Phase 2 UI footprint check; it is built in Phase 6 from the same data as the main window. Whether Wilds' own protections object to another app's overlay window is unverified.
 - **Distribution:** Nexus. Local only (no network listener, telemetry or accounts). Windows and Steam only.
 - **Versioning:** semantic versioning. 1.0.0 is the full release; a major addition bumps x.1.x; a bug fix bumps x.x.1. Changelog from Phase 2.
@@ -91,7 +92,7 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 - Runs alongside the game: low idle CPU, memory and GPU, no polling when nothing changed. Heavy work (extraction, optimizer search) runs only on user trigger, off the UI thread at low priority.
 - Snappy: opens fast and shows the last build from cached data immediately; recompute never blocks the UI. Cold start and recompute time are checked on the developer's PC with Wilds running before a feature ships.
 - The **performance budget** (cold start, idle RAM and CPU, recompute time) is in [performance-budget.md](performance-budget.md), an initial pass reviewed over time; the Phase 1 UI comparison measures against it.
-- Read-only on the game. Never write to the save, the install or the Steam folders. Never inject into, hook or read the memory of the running game.
+- Read-only on the game. Never write to the save, the install or the Steam folders. Never inject into, hook or write to the running game; only the optional `forgeline-live` program may read it (see section 4, App shape).
 - No secrets or personal data in git: saves, decrypted dumps (they hold hunter IDs) and extracted Capcom data stay out of the repo and the Nexus package. Contributors provide their own local saves.
 
 ## 6. Phases
@@ -134,12 +135,14 @@ Details and evidence are in [research.md](research.md); the plan and its time lo
 - Data-file decoding needs route B schemas written per class (Phase 3 scope); Phase 2 only needs the pack reader, discovery and the update flow with staging and validation.
 - Open for Phase 3 and 4: by-name ID matching, talisman decoding, unlocked-monster mapping, motion values and ammo base power (question 11).
 
+Live data (after Phase 6, its own plan and approval): the optional `forgeline-live` program for the overlay (current monster and quest, reading the screen first and memory only if needed, read-only).
+
 After that: the other weapons one at a time (each optimized and labelled tuned or generic before 1.0.0), then Nexus packaging.
 
 **Motion values (open question 11), approved by the maintainer 2026-10-27:** four routes, all kept. (1) Compare builds by effective raw meanwhile (Phase 4). (2) Deep game-file search early in Phase 3 for every weapon's motion values and base power. (3) Training-dummy measurement in Phase 5. (4) Credited, licence-checked community data labelled unverified as the fallback. Motion values matter for all 14 weapons, not only the bowguns and bow.
 
 ### TODO tools
-Built when needed, each needing the maintainer's yes at the time: save diff (compare two save copies to map fields to unlocks), fixture save builder, data diff (compare two extractions, feeds the validation gate), build explainer (why the optimizer picked a build), benchmark harness (start-up, RAM, recompute time).
+Built when needed, each needing the maintainer's yes at the time: save diff (compare two save copies to map fields to unlocks; approved 2026-10-27 and built in Phase 2 step 4 for the accepted-quest test), fixture save builder, data diff (compare two extractions, feeds the validation gate), build explainer (why the optimizer picked a build), benchmark harness (start-up, RAM, recompute time).
 
 ## 7. Workflow
 
