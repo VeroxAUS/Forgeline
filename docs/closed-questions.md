@@ -112,3 +112,6 @@ All answered 2026-10-27, in the order they were asked.
 - **Barring all competing forks?** No, the maintainer finds it too harsh. This rules out PolyForm Shield as recommended; MPL-2.0 is being considered instead.
 - **Must forks rename?** No. "Based on Forgeline" is fine.
 - **Tip link?** Yes: a voluntary Ko-fi tip jar with no perks, linked from GitHub only and nothing on the Nexus page, to stay clear of Nexus's donation rules.
+
+### Step 6 UI comparison (2026-10-27)
+- **Does the step 6 result pass?** Yes, the maintainer passed it (PR #15, merged 2026-10-27 14:58:32 UTC). Pure Rust (egui) is chosen: it meets the budget with Wilds running; Tauri and Electron fail the RAM hard limit. The standard benchmark spot for every later measurement is Scarlet Forest base camp.

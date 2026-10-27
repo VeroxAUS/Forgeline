@@ -370,3 +370,48 @@ Read from public pages on 2026-10-27. Not legal advice. Full write-up with a com
 - **AI authorship:** a US Copyright Office report (Jan 2025, read via a [law-firm summary](https://datamatters.sidley.com/2025/02/07/u-s-copyright-office-issues-report-on-artificial-intelligence-and-copyrightability/)) says purely prompt-generated material is not copyrightable, while human selection, arrangement and modification can be. A licence cannot protect uncopyrightable parts.
 - **Donations:** a voluntary tip link with no perks looks lowest risk. Paywalls, early access and perks conflict with Nexus rules. Capcom's fan-content guidelines (Nov 2025, press report only) bar commercial use of fan content generally and say nothing found about tools or donations. Anthropic's consumer terms assign Outputs to the user "if any" and show no restriction found on tips.
 - **Not verified:** Capcom's own page, Nexus staff view on PolyForm Shield, full Patreon, Ko-fi and Anthropic commercial terms, the Copyright Office report text.
+
+## Step 6: UI toolkit comparison beside Wilds (2026-10-28)
+
+Question: which UI toolkit (pure Rust, Tauri or Electron) is light enough to run beside Wilds, measured against [performance-budget.md](performance-budget.md)?
+
+**Result: pass for pure Rust.** The pure-Rust candidate (egui with the glow backend) meets the budget on every measured row; Tauri and Electron start fast and cost nothing at idle, but both exceed the RAM hard limit. None of the three measurably disturbed the game's frame times. Decision rule from the plan ("pure Rust if it meets the budget") picks **pure Rust**. Status: **verified** on the maintainer's PC, with Wilds running. Code: throwaway `spikes/uibench` (three apps), `spikes/sampler` (process sampler and the Windows frame-time module) on branch `spike/step6-uibench`, never merged.
+
+### Method
+- Three equivalent minimal apps, dark theme, a table of 300 rows, and a background job (one thread of pure CPU work for 5 s, started by the sampler's timer, lowest thread priority where the toolkit allows). egui 0.37 (glow backend, `eframe`), Tauri 2 (system WebView2, static page), Electron 33.2.1 (job in a worker thread; Node cannot lower one thread's priority, so the Electron job runs at normal priority, which makes its job-window result slightly harsher than the others).
+- Our own sampler (`sysinfo` for the whole process tree: working set, private bytes, CPU time; Windows performance counters for GPU use per process). Cold start is spawn to the app's own "ready" line, printed after its first frame (the real app's "last build on screen" is not built yet, so this is an upper bound on the window cost only). Idle window 60 s after a 3 s settle, then the 5 s job, then 5 s after. 3 runs per app, median reported. Each app was killed after its run.
+- Game frame times: our own Windows-only module (`frametime`, in `spikes/sampler`). It listens to the Windows DXGI present events (ETW, the source PresentMon uses; needs administrator rights while running) and records the gap between one process's presents, matched by process id. It never opens or reads the game process; the events carry only a process id and a timestamp. It ran as administrator, started by the maintainer. 9 runs of ~115 s plus a 90 s control with the game alone. The clock is the trace's QPC clock.
+- **Standard benchmark spot** (use it for every later round): Scarlet Forest main base camp, standing outside the tent, camera still, solo / offline session. The game ran at about 85 to 90 frames per second (median frame time 11 ms) and was not limited by our test.
+- Baseline without Wilds ran earlier the same day (3 runs per app; one Electron run lost its ready signal, so Electron has 2 valid no-Wilds runs).
+
+### Results (median of 3 runs, with Wilds running)
+| Measure | Budget (target / hard limit) | egui (pure Rust) | Tauri | Electron |
+|---------|------------------------------|------------------|-------|----------|
+| Cold start to first window | under 1 s / 2 s | 200 ms | 423 ms | 453 ms |
+| Idle RAM, working set | under 80 MB / 150 MB | 73.5 MB | 350 MB | 302 MB |
+| Idle RAM, private bytes | (same row) | 127 MB | 167 MB | 206 MB |
+| Idle CPU (60 s) | under 0.5% / 1% | 0.00% | 0.00% | 0.00% |
+| Idle GPU | under 1% | 0.00% | 0.00% | 0.00% |
+| Job, CPU of one core | at most 2 cores | 98% | 98% | 97% |
+| Game median / p99 frame time, idle window | no visible stutter | 11.13 / 12.53 ms | 11.16 / 12.64 ms | 11.15 / 12.52 ms |
+| Same, during the job | | 11.07 / 12.63 ms | 11.21 / 12.45 ms | 11.23 / 12.65 ms |
+| Same, after the job | | 11.16 / 12.63 ms | 11.17 / 12.61 ms | 11.14 / 12.97 ms |
+
+- Control (game alone, 90 s): median 11.04 ms, p99 12.91 ms, worst 90.4 ms (one hitch of the game's own, 8,078 frames).
+- Per-run job minus idle change in the game's median frame time: egui +0.06, -0.06, +0.13 ms; Tauri +0.05, +0.05, -0.03 ms; Electron -0.07, +0.08, -0.14 ms. All within the run-to-run noise (the game's median moved by about 1 ms between the first and last runs, whatever was running beside it). The worst frame during the job window (13 to 24 ms) stayed within about 1 ms of the worst frame in the idle windows (21 to 24 ms).
+- Both web-based options keep their shared WebView or Chromium pages in the "working set"; the private-bytes figure is the fairer one, and it is still over the hard limit for both (167 MB and 206 MB against 150 MB). egui is under 150 MB private and under 80 MB working set.
+
+### Verdict against the budget
+- **egui (pure Rust): meets every measured row**, with the caveat that this is an empty window with 300 rows. Its private figure (127 MB) leaves about 23 MB of headroom to the hard limit before we add data; the working-set row (73.5 MB) leaves 6 MB to the 80 MB target. Watch RAM in Phase 2.
+- **Tauri and Electron fail the RAM hard limit** at idle, before any app data. They pass the speed, CPU, GPU and stutter rows.
+- No candidate stuttered the game. This test is one thread of CPU work; a real recompute that uses more cores, or memory-heavy extraction, must be re-measured in Phase 2 and Phase 3.
+
+### Not done / open
+- Slint was not tested (licence conditions in the step 1 entry still open).
+- No "last build on screen" time (needs the real app); no save-change-to-build time; no window hidden/minimised test; GPU rows are zero because nothing was redrawn while idle, which is the desired result but means they say nothing about a busy UI.
+- Electron job priority could not be lowered (see method), and Electron has only 2 valid no-Wilds runs.
+- DXGI present events reflect the game's present calls, not what reaches the screen (frame generation or overlays could change that).
+- The ETW crate used is `ferrisetw` 1.2.0 (MIT OR Apache-2.0, step 1); `sysinfo`, `windows`, `windows-sys`, `eframe`, `tauri` and `electron` were used as listed in step 1. Record them in THIRD-PARTY-NOTICES.md if any reaches the product.
+
+### Decision this supports
+Build the Phase 2 interface in pure Rust (egui with glow is the measured baseline). Re-run `spikes/sampler` against the Phase 2 window to check RAM against the 80 MB target as soon as it holds real data.
