@@ -119,3 +119,4 @@ All answered 2026-10-27, in the order they were asked.
 ### Licence choice (2026-10-27)
 - **Which licence?** MPL-2.0 (full text in `LICENSE`), chosen over PolyForm Shield, GPL/AGPL and a custom licence. It lets anyone fork and republish with credit; changed MPL files stay open. It does not give an "ask permission" rule. Dependencies checked: MIT, Apache-2.0 and Unlicense crates are compatible; see `docs/research.md`.
 - **Contributors?** No extra process: no DCO sign-off, no CLA, no copyright assignment. Contributions come in under MPL-2.0. Changing the licence later would need the contributors' agreement.
+- **Does the licence PR pass?** Yes, the maintainer passed it (PR #14, merged 2026-10-27 15:02:04 UTC): MPL-2.0, no DCO, Ko-fi tip jar on GitHub only (link in the README and `.github/FUNDING.yml`).
