@@ -6,8 +6,8 @@ Nothing is waiting on Thomas right now. All items below are research unknowns th
 
 ## Open
 
-1. **Save-ID to data-ID mapping.** Do the fixed IDs in the save match the IDs in the game data and in MHDB? Not answered yet (step 4). Step 3 found where equipment and item records live (`cEquipParam`, `cItemParam`); what the numbers mean is still unknown.
-2. **Owned talismans.** Is there an owned-talisman record in the save, and where? Partly answered: step 3 found a `cCharmEquipped` class (talismans in use). Whether the save lists every owned talisman is still open (step 4).
+1. **Save-ID to data-ID mapping.** Do the fixed IDs in the save match the IDs in the game data and in MHDB? Partly answered (step 4): every checked save ID falls in the data ID range, the armor matches the save's own crafted records exactly, and the counts match Thomas's game. The check by name is not done (needs the text files) and moves to Phase 3. Step 3 found where equipment and item records live (`cEquipParam`, `cItemParam`); what the numbers mean is still unknown.
+2. **Owned talismans.** Is there an owned-talisman record in the save, and where? Partly answered: step 3 found a `cCharmEquipped` class (talismans in use). Step 4 found one likely talisman entry (confirmed as a count by Thomas), but its skills are not decoded and how random talismans are stored is unknown. Still open.
 3. **Unlocked monsters.** How do kills (`SlayingNum`) and story and mission flags map to "monsters I've unlocked"? Partly answered: step 3 located the records (`cBossReportParam`, 300 entries; `cStoryParam`; `cMissionParam`). The mapping to unlocked monsters is still open (step 4). Which character slot is active is also open.
 4. **Game file contents.** Do the game files hold numeric skill parameters, Artian and Gogma Artian bonus tables with pool weights, and motion values? How are they stored and named? Open (step 5; the pack reader is under way).
 5. **Melding.** How does Wilds melding work, and what does the data offer?
