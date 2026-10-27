@@ -14,6 +14,7 @@ What this phase delivers, in two or three sentences.
 
 Done means:
 - [ ] <checklist the test round can verify>
+- [ ] `README.md` is updated at close-out (see the close-out rule in section 4)
 
 ## 2. Inputs and dependencies
 Earlier phases, `research.md` findings, closed questions this phase relies on.
@@ -42,6 +43,11 @@ Expected cold start, RAM and CPU, checked against the performance budget.
 
 ## 4. Steps
 Each step is one thread, one PR and one test round.
+
+The last step of every phase is the close-out. Besides updating `PLAN.md`, it updates `README.md`:
+- the status badge and version badge match the phase's target version
+- the roadmap shows this phase's progress
+- placeholder visuals (such as the hero gear tiles) are replaced with a real screenshot of the app showing a build, once a window exists (from Phase 2); until then they stay labelled as placeholders
 
 | # | Step | Thread | Cloud or PC | Output (PR / doc) | Estimate (threads, test rounds) | Depends on |
 |---|------|--------|-------------|-------------------|---------------------------------|------------|
@@ -91,4 +97,5 @@ Elapsed from approval to finish: <hours>. Compare with the estimates in section 
 4. Per-file designs use one fixed block per file (heading, Purpose, Inputs and outputs, Depends on, Notes).
 5. Each tool's "Why" says what problem it solves, what happens without it, and what it touches on Thomas's PC.
 6. A "How to read this plan" box sits at the top with the run order and the decisions needed.
-7. Check the rendered page against this list before publishing the PR and the Artifact. Republish the same Artifact link when the plan changes.
+7. The final step is a close-out that includes the `README.md` update (section 4), and the done checklist lists it.
+8. Check the rendered page against this list before publishing the PR and the Artifact. Republish the same Artifact link when the plan changes.

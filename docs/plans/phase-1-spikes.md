@@ -37,6 +37,7 @@ Done means:
 - [ ] The licence review states what a Nexus release may include and whether the project must go open source.
 - [ ] The UI toolkit (pure Rust, Tauri or Electron) is chosen from numbers measured with Wilds running, against the performance budget drafted with Thomas.
 - [ ] `docs/PLAN.md` is updated with the results, so the Phase 2 plan can be written from them.
+- [ ] `README.md` is updated at close-out (status and version badges, roadmap progress).
 - [ ] No save, decrypted dump or extracted Capcom data is in git.
 
 ## 2. Inputs and dependencies
@@ -135,7 +136,7 @@ Each step is one thread, one PR and one test round. Spike PRs are doc PRs (resul
 | 4 | 3 | Save-ID to data-ID matching and owned talismans on a save copy | Save thread | PC | PR: `research.md` section | 1 thread, 1 PC round | 2, 3 |
 | 5 | 3 | Extraction test on Thomas's install, all weapons | Extraction thread | PC | PR: `research.md` section (counts, coverage table, what stays hand-written) | 1 to 2 threads, 1 to 2 PC rounds | 3 |
 | 6 | 3 | UI comparison: pure Rust vs Tauri vs Electron, with Wilds running, plus the frame-time module | UI bench thread (plus a second thread for the frame-time module) | PC | PR: `research.md` section with numbers | 2 to 3 threads, 1 to 2 PC rounds | performance budget (drafted), our sampler tool |
-| 7 | 4 | Close-out: update `PLAN.md`, record licence and toolkit decisions | Docs thread | Cloud | PR: `PLAN.md` | 1 thread, 1 cloud round | 1 to 6 |
+| 7 | 4 | Close-out: update `PLAN.md`, record licence and toolkit decisions, update `README.md` (status and version badges, roadmap progress; no screenshot yet, there is no window) | Docs thread | Cloud | PR: `PLAN.md` | 1 thread, 1 cloud round | 1 to 6 |
 
 Total estimate: 8 to 11 threads and 7 to 10 test rounds, 3 to 6 of them on the PC. At most 2 or 3 threads run at once. Estimates are guesses and will be compared with the time log. Step 3 is the largest unknown; if it needs more than 2 threads, stop and report to Thomas rather than continue (Opus on high may then be worth suggesting).
 
@@ -203,6 +204,7 @@ Each result is recorded in `docs/research.md`.
 
 **Step 7, close-out**
 - Pass: `PLAN.md` reflects every result and lists the Phase 2 inputs.
+- Pass: `README.md` status and version badges and roadmap progress match the phase result; the placeholder tiles stay labelled as placeholders because there is no window yet.
 - Pass: every answered open question is flagged for the coordinator to move.
 
 ### 6.3 Test round checklist
