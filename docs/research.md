@@ -253,3 +253,52 @@ Question: can a scheduled cloud session read new comments (Posts tab) and bug re
 
 ### Open
 - Does GraphQL v2 expose comments or bugs? Does Nexus send authors an email for new comments or bug reports?
+
+## Step 5: extraction test, pack reader and data files (2026-10-28)
+
+Question: can we read the game's own packs, find the files for skills, weapons, armor, decorations, charms, Artian tables, hitzones, drops and motion values, and say which of them are decoded?
+
+**Result: partial.** Pack reading and file naming work (**verified** on Thomas's PC, real install, original packs only). Most categories have located data files; none is decoded into named fields yet (that needs a schema for the data files, see "Not done"). Motion values are not located. Code: throwaway `spikes/extract` on branch `spike/step5-extract` (never merged; ran against the real files). Nothing extracted is in git; outputs are in `E:\mhbis\out` only.
+
+### Pack reader (verified)
+- Install found through Steam's `libraryfolders.vdf` (library on `E:`), build ID 25921695. Only the original `re_*.pak` files are read: 32 packs (base, 15 patches, `sub_000` and its patches, the DLC pack). The mod pak in `pak_mods` is never opened. Mod markers present: `dinput8.dll`, `reframework`, `pak_mods`, a Fluffy Mod Manager marker file.
+- Format facts used (credit: [eigeen/ree-pak-rs](https://github.com/eigeen/ree-pak-rs), MIT licence, read for format facts; our reader is our own code, but it holds the one 129-byte table key constant from that project, so credit it in THIRD-PARTY-NOTICES.md if this ever leaves the spike branch):
+  - Header 16 bytes: `KPKA`, version 4.1, feature flags, file count, hash. All 32 paks are version 4.1.
+  - Feature `0x08`: the entry table (48 bytes per file: two path hashes, offset, compressed size, uncompressed size, attributes, checksum) is encrypted. A 128-byte key follows the table; it is raised to the power 65537 modulo a fixed 1024-bit number, and the first 32 bytes of the result drive a byte-wise XOR over the table. It worked first time (entry counts and offsets came out sane).
+  - Feature `0x20`: a chunk table follows the key. It is used by the two newest patches (014 and 015). Files whose attribute bit 24 is set store a chunk index instead of an offset; each chunk is stored or zstd-compressed.
+  - Compression in the low 4 bits of attributes: 0 none, 1 deflate, 2 zstd.
+- The 32 tables hold 349,348 distinct files after later patches override earlier ones. Reading an entry reads only that entry. The full index (tables only, no file data) builds in a few seconds.
+
+### Naming files without a file list (verified)
+- Entries are keyed by two hashes of the path (murmur3, seed `0xFFFFFFFF`, over the UTF-16 path, once lower-cased and once upper-cased). There are no names in the packs.
+- No third-party file list was used. Path strings were found in the exe (only 9,399 strings contain a slash) and then inside the game's own scene, prefab and user data files: each path string found in a file is hashed with the `natives/stm/` prefix and tried with every file-version suffix from 0 to 70 until both hashes match an entry.
+- Starting from one exe string (`Boot/Master.scn`, which resolves to `natives/stm/Boot/Master.scn.21`), one crawl over files up to 8 MB named **113,869 of 349,348 files**, including 48,646 `.user.3` data files. File contents were only held in memory. The rest (textures, meshes, motions, sound) are not referenced from those files by path and stay unnamed; they are not needed.
+
+### Categories (status: located and sized, not decoded)
+Counts are RSZ instances measured in the files; they include wrapper instances and are not item counts. Each file is a `USR` container with an `RSZ` object block whose instances carry a type ID. The type IDs are not hashes of any string in the exe (tested against the 2.25 M exe strings and our rebuilt class names), so they cannot be named by route A.
+
+| Category | Status | Files (under `natives/stm/GameDesign/`) | Evidence |
+|----------|--------|-----------------------------------------|----------|
+| Skills | found, not decoded | `Common/Equip/SkillData.user.3`, `SkillCommonData.user.3`, `HunterActiveSkillData.user.3` | 443 and 218 row-type instances. Per-level numbers not confirmed to be in these files. |
+| Weapons | found, not decoded | `Common/Weapon/<Type>.user.3` for 14 types, plus `<Type>Tree`, `<Type>Recipe`, `Outer<Type>Data`, `RodInsectData`, bowgun customisation | Names: Bow, ChargeAxe, GunLance, Hammer, HeavyBowgun, Lance, LightBowgun, LongSword, Tachi, Rod, ShortSword, SlashAxe, TwinSword, Whistle. The mapping to in-game weapon names (for example Tachi to Long Sword) is **inferred**, not verified. Light bowgun file: 81 weapon rows, 2,108 instances. |
+| Armor | found, not decoded | `Common/Equip/ArmorData`, `ArmorSeriesData`, `ArmorRecipeData`, `ArmorUpgradeData`, `ArmorUpgradeRecipeData`, `ArmorSpUpgradeCostData`, `OuterArmorData` | `ArmorData`: 719 piece rows (9,349 instances); 195 series rows. |
+| Decorations | found, not decoded | `Common/Equip/AccessoryData`, `AccessoryJudgeData`, `AccessoryRankJudgeData` | 361 rows. |
+| Charms | found, not decoded | `Common/Equip/Charm`, `AmuletData`, `AmuletRecipeData`, `RandomAmulet*Table`, `Maka*Table` | 168 charm rows, 187 amulet rows, 181 recipe rows. Random talisman lot tables present. |
+| Artian | found, not decoded | `Common/Equip/ArtianGrindingData`, `ArtianSkillGroupData`, `Em0078_ArtianDatas`, `Facility/ArtianBonusData`, `ArtianBonusCategoryData` | 49, 296, 4, 53 and 6 instances. Gogma Artian tables not separately identified (**open**). |
+| Items | found, not decoded | `Common/Item/itemData`, `ItemRecipe`, `FixItems` | 782 item rows. |
+| Hitzones | located, **unconfirmed** | `Common/Enemy/EM<id>_<variant>_0.user.3`, 88 files (one per monster form) | A monster file holds 29 repeated groups of 4 related rows (262 to 292 instances), consistent with per-part damage data but not decoded, so not confirmed to be hitzones. |
+| Drops | partly located | `Common/Enemy/EnemyReport*RewardData`, `EnemyRewardAddData`, `EnemyReportBossMaterialDispData` | Report-style reward data (716 instances in the part reward file). `EnemyRewardDataSetting.user.3` (18.7 KB) has no RSZ block in its first 400 bytes, so it is a different layout, not read. Real per-monster drop tables not confirmed. |
+| Motion values | **not located** | | Only action shell parameters and collider data were found under `Player/ActionData/Wp*`; no table that looks like motion values. The open question stays open. |
+
+Rows are readable as plain numbers: the 228-byte `ArmorSpUpgradeCostData` shows four rows of small integer triples directly in the data section, so decoding needs a layout per class, not decompression or decryption.
+
+### Not done / open
+- **No category is decoded into named fields.** Next needed: a hand-written schema (route B) for the classes we need, checked against a cited source (MHDB as cross-check only). Field names for the data files cannot come from the exe by hashing (type IDs are not string hashes); how the exe stores its RSZ type table is **open**.
+- The 67% of files with no name (mostly art, sound, motion) were not examined.
+- `EquipDataSetting.user.3` and `EnemyRewardDataSetting.user.3` have no RSZ block near the start; **open**.
+- Names (item, skill, monster) are in separate text message files, not looked for yet.
+- Plausibility against MHDB counts is not done (needs decoding first). The weapon rows per type and the 719 armor pieces look plausible only by size.
+- The survey ran on the patched install (build 25921695); a new game patch will change counts.
+
+### Decision this supports
+All needed categories except motion values (and real drop tables) exist in the game files and can be read from the user's own install at update time, without a third-party file list. Phase 3 must plan a hand-written schema per data class; motion values and drop tables need a separate investigation or a cited source.
