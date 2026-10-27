@@ -1,8 +1,8 @@
 # Phase 1: Spikes
 
-Target version: 0.1.0 · Status: approved (Thomas, 2026-10-27 13:05 UTC)
+Target version: 0.1.0 · Status: approved (the maintainer, 2026-10-27 13:05 UTC)
 
-Each phase plan is written just before its phase, using what earlier phases found. Thomas reviews and approves it before any work starts. Estimates are in threads and test rounds, not hours; real durations go in the time log (section 10).
+Each phase plan is written just before its phase, using what earlier phases found. The maintainer reviews and approves it before any work starts. Estimates are in threads and test rounds, not hours; real durations go in the time log (section 10).
 
 ## How to read this plan
 
@@ -10,10 +10,10 @@ Each phase plan is written just before its phase, using what earlier phases foun
 
 - **Stage 1** (cloud, parallel, start straight away): step 1 licence review, step 2 clean-room study of the MHWeditor save format.
 - **Stage 2** (PC): step 3 type-data spike.
-- **Stage 3** (PC): step 4 ID matching and talismans, step 5 extraction test, step 6 UI comparison. Steps 4 and 5 need step 3. Step 6 needs only the performance budget and can start earlier if Thomas prefers.
+- **Stage 3** (PC): step 4 ID matching and talismans, step 5 extraction test, step 6 UI comparison. Steps 4 and 5 need step 3. Step 6 needs only the performance budget and can start earlier if the maintainer prefers.
 - **Stage 4** (cloud): step 7 close-out.
 
-**Decisions made by Thomas (2026-10-27):**
+**Decisions made by the maintainer (2026-10-27):**
 
 - All tools in section 5 are approved.
 - Step 6 measurement is our own cross-platform Rust sampler, not Windows built-ins.
@@ -22,7 +22,7 @@ Each phase plan is written just before its phase, using what earlier phases foun
 - The performance budget is in [performance-budget.md](../performance-budget.md) (initial pass, reviewed over time).
 
 - Game frame times are measured by our own Windows-only module of the sampler (`spikes/sampler`), reading Windows present events (ETW, PresentMon-style) without touching the game process. It needs admin rights while running and is a test-PC tool, never shipped.
-- Minimum spec: limit cores and RAM on Thomas's PC, with Wilds' official minimum spec (cited from Capcom's page) as the baseline.
+- Minimum spec: limit cores and RAM on the maintainer's PC, with Wilds' official minimum spec (cited from Capcom's page) as the baseline.
 
 **Still open:**
 
@@ -39,7 +39,7 @@ Done means:
 - [ ] The type-data route is chosen (A, B, C or D, or the MHDB last resort), with the reason written down.
 - [ ] Open questions 1 to 6 and 8 are answered, or re-stated with what is still missing (the coordinator moves answers to `closed-questions.md`).
 - [ ] The licence review states what a Nexus release may include and whether the project must go open source.
-- [ ] The UI toolkit (pure Rust, Tauri or Electron) is chosen from numbers measured with Wilds running, against the performance budget drafted with Thomas.
+- [ ] The UI toolkit (pure Rust, Tauri or Electron) is chosen from numbers measured with Wilds running, against the performance budget drafted with the maintainer.
 - [ ] `docs/PLAN.md` is updated with the results, so the Phase 2 plan can be written from them.
 - [ ] `README.md` is updated at close-out (status and version badges, roadmap progress).
 - [ ] No save, decrypted dump or extracted Capcom data is in git.
@@ -48,8 +48,8 @@ Done means:
 
 - `docs/PLAN.md` sections 3 (verified findings), 4 (design decisions) and 9 (risks).
 - `CLAUDE.md` standing rules, `docs/open-questions.md`, `docs/closed-questions.md`, and `docs/research.md` (the MHWeditor licence entry and the save format facts already known).
-- Thomas's PC with Wilds installed, a copy of his save, and the Steam library found through `libraryfolders.vdf`.
-- Thomas's yes for each tool in section 5.
+- The maintainer's PC with Wilds installed, a copy of the maintainer's save, and the Steam library found through `libraryfolders.vdf`.
+- The maintainer's yes for each tool in section 5.
 - A draft performance budget (open question 9) before step 6 is judged.
 - Nothing is assumed about Wilds data beyond what `PLAN.md` marks as verified. Anything else a step finds is recorded as new evidence; game facts are never filled in from memory.
 
@@ -60,10 +60,10 @@ There is no product architecture in this phase. Each step is listed with how it 
 
 - **Step 1, licence review (cloud, Stage 1):** no ordering needed to start. Its verdicts can change the route chosen in step 3 (fallback C) and the open-source question.
 - **Step 2, clean-room study (cloud, Stage 1):** no ordering needed to start. Its notes in `research.md` are the only input to the code in step 4.
-- **Step 3, type data (PC, Stage 2):** starts after Thomas approves its tool. Steps 4 and 5 wait for its result.
+- **Step 3, type data (PC, Stage 2):** starts after the maintainer approves its tool. Steps 4 and 5 wait for its result.
 - **Step 4, ID matching and talismans (PC, Stage 3):** needs step 3's type data and step 2's notes.
 - **Step 5, extraction test (PC, Stage 3):** needs step 3's result. Independent of step 4, so the two can run in the same stage.
-- **Step 6, UI comparison (PC, Stage 3):** independent of the data steps. Needs [performance-budget.md](../performance-budget.md) and Thomas's PC with Wilds running.
+- **Step 6, UI comparison (PC, Stage 3):** independent of the data steps. Needs [performance-budget.md](../performance-budget.md) and the maintainer's PC with Wilds running.
 - **Step 7, close-out (cloud, Stage 4):** needs steps 1 to 6.
 
 Clean-room rule: the thread for step 2 studies MHWeditor and writes facts in its own words, and never writes code. The thread for step 4 writes code from `research.md` only and does not open MHWeditor. They must be different sessions.
@@ -118,14 +118,14 @@ Spikes mostly produce documents. Code is throwaway and the file list is indicati
 ### 3.3 Data formats
 Results only: markdown in `docs/research.md`. Raw output (type data, extracted files, parse dumps) goes to the permanent PC work folder, outside any git checkout, and is never committed or attached to a PR.
 
-**Proposed permanent PC work folder (Thomas to approve or change):** `E:\mhbis`, a short path to avoid the "path too long" clone problem.
+**Proposed permanent PC work folder (the maintainer to approve or change):** `E:\mhbis`, a short path to avoid the "path too long" clone problem.
 
 - `E:\mhbis\repo`: the git checkout.
 - `E:\mhbis\copies`: save copies.
 - `E:\mhbis\out`: spike output, never committed.
 - `E:\mhbis\bench`: UI benchmark results.
 
-It is not cleaned without Thomas's say-so. Dev and test builds use a data directory separate from his installed app.
+It is not cleaned without the maintainer's say-so. Dev and test builds use a data directory separate from the maintainer's installed app.
 
 ### 3.4 Performance impact
 No product impact. Step 6 measures, with Wilds running and without:
@@ -145,16 +145,16 @@ Each step is one thread, one PR and one test round. Spike PRs are doc PRs (resul
 |---|-------|------|--------|-------------|-------------------|---------------------------------|------------|
 | 1 | 1 | Licence review: type-data asset licence, c-ola upstream, `mhdb-wilds-data` (GPL-3.0), MHDB data, what Nexus requires of open source, THIRD-PARTY-NOTICES.md decision | Licence thread | Cloud | PR: `research.md` section | 1 thread, 1 cloud round | none |
 | 2 | 1 | Clean-room study of the MHWeditor save format, in own words, with credit | Study thread (never writes code) | Cloud | PR: `research.md` section | 1 thread, 1 cloud round | none |
-| 3 | 2 | Type-data spike: routes A, B, C, D in order, stopping at the first that passes; MHDB as last resort | Type-data thread | PC (cloud prep for the report) | PR: `research.md` section; code on branch only | 1 to 2 threads, 1 to 2 PC rounds | Thomas's yes on its tool; step 1 informs route C |
+| 3 | 2 | Type-data spike: routes A, B, C, D in order, stopping at the first that passes; MHDB as last resort | Type-data thread | PC (cloud prep for the report) | PR: `research.md` section; code on branch only | 1 to 2 threads, 1 to 2 PC rounds | The maintainer's yes on its tool; step 1 informs route C |
 | 4 | 3 | Save-ID to data-ID matching and owned talismans on a save copy | Save thread | PC | PR: `research.md` section | 1 thread, 1 PC round | 2, 3 |
-| 5 | 3 | Extraction test on Thomas's install, all weapons | Extraction thread | PC | PR: `research.md` section (counts, coverage table, what stays hand-written) | 1 to 2 threads, 1 to 2 PC rounds | 3 |
+| 5 | 3 | Extraction test on the maintainer's install, all weapons | Extraction thread | PC | PR: `research.md` section (counts, coverage table, what stays hand-written) | 1 to 2 threads, 1 to 2 PC rounds | 3 |
 | 6 | 3 | UI comparison: pure Rust vs Tauri vs Electron, with Wilds running, plus the frame-time module | UI bench thread (plus a second thread for the frame-time module) | PC | PR: `research.md` section with numbers | 2 to 3 threads, 1 to 2 PC rounds | performance budget (drafted), our sampler tool |
 | 7 | 4 | Close-out: update `PLAN.md`, record licence and toolkit decisions, update `README.md` (status and version badges, roadmap progress; no screenshot yet, there is no window) | Docs thread | Cloud | PR: `PLAN.md` | 1 thread, 1 cloud round | 1 to 6 |
 
-Total estimate: 8 to 11 threads and 7 to 10 test rounds, 3 to 6 of them on the PC. At most 2 or 3 threads run at once. Estimates are guesses and will be compared with the time log. Step 3 is the largest unknown; if it needs more than 2 threads, stop and report to Thomas rather than continue (Opus on high may then be worth suggesting).
+Total estimate: 8 to 11 threads and 7 to 10 test rounds, 3 to 6 of them on the PC. At most 2 or 3 threads run at once. Estimates are guesses and will be compared with the time log. Step 3 is the largest unknown; if it needs more than 2 threads, stop and report to the maintainer rather than continue (Opus on high may then be worth suggesting).
 
-## 5. Tools (need Thomas's yes)
-All rows approved by Thomas on 2026-10-27. All tools are our own Rust unless stated.
+## 5. Tools (need the maintainer's yes)
+All rows approved by the maintainer on 2026-10-27. All tools are our own Rust unless stated.
 
 | Tool | Step | Why (plain words) | Built or third-party | Licence |
 |------|------|-------------------|----------------------|---------|
@@ -218,7 +218,7 @@ Each result is recorded in `docs/research.md`.
 
 - Pass: a candidate meets the performance budget with Wilds running (cold start, idle RAM, idle CPU, GPU) and does not stutter the game during its background job.
 - Decision rule: pure Rust if it meets the budget; otherwise the lightest option that does.
-- Numbers come from Thomas's PC with Wilds running, at least 3 runs each, median recorded, taken with our own sampler.
+- Numbers come from the maintainer's PC with Wilds running, at least 3 runs each, median recorded, taken with our own sampler.
 - Pass: the frame-time module reports the game's frame-time statistics (median, 99th percentile, worst frame) with and without each candidate's background job.
 - Pass: the module never opens or touches the game process.
 
@@ -229,7 +229,7 @@ Each result is recorded in `docs/research.md`.
 - Pass: every answered open question is flagged for the coordinator to move.
 
 ### 6.3 Test round checklist
-Queued, one at a time. There is no app in this phase, so each item says what the spike report should show for Thomas's current save.
+Queued, one at a time. There is no app in this phase, so each item says what the spike report should show for the maintainer's current save.
 
 **Step 3**
 
@@ -261,17 +261,17 @@ Steps 1, 2 and 7 are cloud-only and checked in the cloud: the PR contains only d
 
 ## 7. Risks and open questions
 
-- **Route A fails (the hardest step).** Notice: nothing recovered, or names do not match. Fallback: B, then C, then D, then MHDB labelled older and unsupported. Report to Thomas before spending more than 2 threads.
+- **Route A fails (the hardest step).** Notice: nothing recovered, or names do not match. Fallback: B, then C, then D, then MHDB labelled older and unsupported. Report to the maintainer before spending more than 2 threads.
 - **Types recovered, but game updates change them.** Notice: a later build differs. Fallback: record the build ID with each result; the Phase 2 extractor must tolerate change visibly.
 - **Fixed IDs do not match game data IDs.** Notice: match rate under 99%. Fallback: a mapping table, name-based matching or route D; the plan records the cost.
-- **Owned talismans not in the save or not decodable.** Fallback: the user enters talismans by hand, or they are optional; a product decision for Thomas.
+- **Owned talismans not in the save or not decodable.** Fallback: the user enters talismans by hand, or they are optional; a product decision for the maintainer.
 - **The game files lack Artian tables, motion values or skill numbers.** Fallback: hand-written tables from cited sources, or dropped features; the results feed Phases 4 and 8.
-- **ETW access or an ETW crate's licence blocks the frame-time module.** Notice: step 1 licence verdict, or no events with admin rights. Fallback: judge stutter by eye while Thomas plays, and record that.
-- **Licence blocks route C or forces open source.** Fallback: routes A, B or D, or the project goes open source, which Thomas has said is acceptable if needed.
-- **All UI candidates miss the budget.** Fallback: pure Rust with the lightest toolkit, and the numbers shown to Thomas.
+- **ETW access or an ETW crate's licence blocks the frame-time module.** Notice: step 1 licence verdict, or no events with admin rights. Fallback: judge stutter by eye while the maintainer plays, and record that.
+- **Licence blocks route C or forces open source.** Fallback: routes A, B or D, or the project goes open source, which the maintainer has said is acceptable if needed.
+- **All UI candidates miss the budget.** Fallback: pure Rust with the lightest toolkit, and the numbers shown to the maintainer.
 - **Install is modded.** Notice: mod markers in the install folder. Fallback: read original packs only and report the markers.
 - **Personal data leaks into reports.** Notice: any hunter ID in output. Fallback: reports print counts and names only; the checklist checks it.
-- **Questions for Thomas** are the open items in the box at the top. New questions go to `docs/open-questions.md` via the coordinator.
+- **Questions for the maintainer** are the open items in the box at the top. New questions go to `docs/open-questions.md` via the coordinator.
 
 ## 8. Versioning and changelog
 Version 0.1.0 is declared when the phase closes (step 7). There is no product and no changelog before Phase 2 (the changelog starts at 0.2.0 per the standing rules). Steps do not bump the version.
@@ -279,20 +279,20 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 ## 9. Review log
 | Date | Reviewer | Edit or decision |
 |------|----------|------------------|
-| 2026-10-27 13:05 UTC | Thomas | Approved Phase 1. |
-| 2026-10-27 | Thomas | Answers: all tools approved, own sampler, `E:\mhbis`, spikes-archive branch, performance budget added. |
-| 2026-10-27 | Thomas | Readability review: steps renumbered in run order, every step in Architecture, lists instead of paragraphs, fixed per-file blocks, plain-words tool reasons, "how to read" box. Plan writing rules added to the template. |
+| 2026-10-27 13:05 UTC | The maintainer | Approved Phase 1. |
+| 2026-10-27 | The maintainer | Answers: all tools approved, own sampler, `E:\mhbis`, spikes-archive branch, performance budget added. |
+| 2026-10-27 | The maintainer | Readability review: steps renumbered in run order, every step in Architecture, lists instead of paragraphs, fixed per-file blocks, plain-words tool reasons, "how to read" box. Plan writing rules added to the template. |
 
 ## 10. Time log
 | Event | Date and time |
 |-------|---------------|
-| Phase approved by Thomas | 2026-10-27 13:05 UTC |
-| Step 1 (licence review) PR #2 merged | 2026-10-27 13:08 UTC (docs only; merged after cloud check, no separate pass from Thomas) |
-| Step 2 (clean-room study) PR #3 merged | 2026-10-27 13:09 UTC (docs only; merged after cloud check, no separate pass from Thomas) |
+| Phase approved by the maintainer | 2026-10-27 13:05 UTC |
+| Step 1 (licence review) PR #2 merged | 2026-10-27 13:08 UTC (docs only; merged after cloud check, no separate pass from the maintainer) |
+| Step 2 (clean-room study) PR #3 merged | 2026-10-27 13:09 UTC (docs only; merged after cloud check, no separate pass from the maintainer) |
 | Step 2 addendum: key-setup re-study PR #7 merged | 2026-10-27 13:32 UTC (added after step 3 found a gap in the decryption notes; docs only, cloud check) |
-| Step 3 PR #6 merged | 2026-10-27 13:42 UTC (Thomas passed 13:40 UTC; save half only, data-file sample moved to step 5) |
-| Step 4 (ID matching, talismans) PR #10 merged | 2026-10-27 14:06 UTC (Thomas passed 14:05 UTC; partial: by-name check moves to Phase 3, talisman skills undecoded) |
-| Step 5 (extraction test) PR #8 merged | 2026-10-27 14:00 UTC (Thomas passed 13:58 UTC; partial: located but not decoded, route B schemas needed in Phase 3; motion values not found) |
+| Step 3 PR #6 merged | 2026-10-27 13:42 UTC (the maintainer passed 13:40 UTC; save half only, data-file sample moved to step 5) |
+| Step 4 (ID matching, talismans) PR #10 merged | 2026-10-27 14:06 UTC (the maintainer passed 14:05 UTC; partial: by-name check moves to Phase 3, talisman skills undecoded) |
+| Step 5 (extraction test) PR #8 merged | 2026-10-27 14:00 UTC (the maintainer passed 13:58 UTC; partial: located but not decoded, route B schemas needed in Phase 3; motion values not found) |
 | Step 6 (UI comparison) PR merged | |
 | Step 7 (close-out) PR merged | |
 | Phase finished | |

@@ -187,7 +187,7 @@ They re-encrypt by reversing every step above. We are read-only on the game, so 
 
 Question: can the game `.exe` on disk give us the names behind the save's hashes (route A), well enough to parse a save into named classes?
 
-**Result: route A passes for the save. The "sample of game data files" half of the criterion is not done (it needs step 5's pack reader).** Chosen route: **A**. B, C and D were not needed for the save. Status of everything below: **verified** on Thomas's PC (real exe, a copy of the real save).
+**Result: route A passes for the save. The "sample of game data files" half of the criterion is not done (it needs step 5's pack reader).** Chosen route: **A**. B, C and D were not needed for the save. Status of everything below: **verified** on the maintainer's PC (real exe, a copy of the real save).
 
 Method: our own throwaway Rust tool (`spikes/typedump`, PR #5, never merged; ran against the real files). It reads `MonsterHunterWilds.exe` on disk (read-only, about 2 s for 546 MB, never launched), hashes every printable-ASCII string of 3 to 200 characters with murmur3 (seed `0xFFFFFFFF`) and matches the hashes found in the save. The install is modded (`dinput8.dll`, `reframework`, `pak_mods`, a Fluffy Mod Manager marker); the `.exe` on disk was used as is. Outputs stay in `E:\mhbis\out` (not in git).
 
@@ -247,8 +247,8 @@ Question: can a scheduled cloud session read new comments (Posts tab) and bug re
 - **Notifications:** Nexus turned off comment notifications for *tracked* mods ([Notifications update](https://www.nexusmods.com/news/14927)). I found nothing confirming email or RSS for comments or bug reports on a mod you author. **Open:** check the author's own Notification settings once the page exists.
 
 ### Options, safest first
-1. **Thomas checks the Nexus site / his own notification settings and forwards anything.** Zero risk, no secrets. Ask Thomas to look at his author notification settings once the page is live.
-2. **Official API, if comments/bugs appear in it (or v2 has them):** a scheduled session with a Personal API key stored as an environment secret, one call a day, honest headers. Needs the key from Thomas and the host allowed in the cloud network policy.
+1. **The maintainer checks the Nexus site / the maintainer's own notification settings and forwards anything.** Zero risk, no secrets. Ask the maintainer to look at the author notification settings once the page is live.
+2. **Official API, if comments/bugs appear in it (or v2 has them):** a scheduled session with a Personal API key stored as an environment secret, one call a day, honest headers. Needs the key from the maintainer and the host allowed in the cloud network policy.
 3. **Reading the web pages with a headless browser:** works technically, but fragile, against robots.txt for AI crawlers, and needs a browser plus network access. Not recommended.
 
 ### Open
@@ -258,7 +258,7 @@ Question: can a scheduled cloud session read new comments (Posts tab) and bug re
 
 Question: where do the owned gear, items and talismans sit in the save, and do the save's fixed IDs match the game data files?
 
-**Result: partial.** The save's structure is mapped (**verified** on a copy of Thomas's save from 2026-10-20, on his PC). ID matching is only shown **by range and by internal consistency**, not by name: names live in text files that nothing has read yet. Talismans: one candidate location found, **not confirmed**. Code: throwaway `spikes/savecheck` on branch `spike/step4-savecheck` (never merged; ran against the real save copy; the live save folder is refused by the code). Output below is structure and counts only; no hunter data was printed or saved to git.
+**Result: partial.** The save's structure is mapped (**verified** on a copy of the maintainer's save from 2026-10-20, on the maintainer's PC). ID matching is only shown **by range and by internal consistency**, not by name: names live in text files that nothing has read yet. Talismans: one candidate location found, **not confirmed**. Code: throwaway `spikes/savecheck` on branch `spike/step4-savecheck` (never merged; ran against the real save copy; the live save folder is refused by the code). Output below is structure and counts only; no hunter data was printed or saved to git.
 
 ### Slots and equipment box (verified)
 - The save root (`app.savedata.cUserSaveData`) holds `_Data`, an array of **3** character slots (`cUserSaveParam`, 118 fields each). Field names resolve from exe strings (all but 7 of the slot's fields).
@@ -292,10 +292,10 @@ Weapon created/checked flags exist per weapon type (14 types, 128 bits each), ar
 - Kills and story flags to unlocked monsters (`_EnemyReport` has 300 `cBossReportParam`; not examined), mission completion.
 - Unresolved field names stay as hashes: 7 of 118 slot fields and all 12 `cEquipWork` fields (so the entry layout above is inferred from values alone).
 
-### Test round: checked against Thomas's real game (2026-10-27)
-Thomas checked the reader's counts against his real game, as of the 2026-10-20 save copy (passed 14:05 UTC, 2026-10-27):
+### Test round: checked against the maintainer's real game (2026-10-27)
+The maintainer checked the reader's counts against the maintainer's real game, as of the 2026-10-20 save copy (passed 14:05 UTC, 2026-10-27):
 
-| Item | Reader found | Thomas |
+| Item | Reader found | The maintainer |
 |------|--------------|--------|
 | Character slots in use | 1 of 3 (slot 1) | right |
 | Light bowguns crafted | about 14 | right |
@@ -304,7 +304,7 @@ Thomas checked the reader's counts against his real game, as of the 2026-10-20 s
 | Talismans owned | 1 | right |
 | Nothing from the save in git | confirmed by the thread | right |
 
-This confirms the box counts and the ID ranges against his game. It does not close the by-name check, which moves to Phase 3 (needs the text files). The one talisman entry is confirmed as a count only; its skills are still undecoded.
+This confirms the box counts and the ID ranges against the maintainer's game. It does not close the by-name check, which moves to Phase 3 (needs the text files). The one talisman entry is confirmed as a count only; its skills are still undecoded.
 
 ### Decision this supports
 The reader can already list gear, items and crafted flags by id from the save. The final ID mapping needs a text-file reader (names) and a data-row decoder; both belong to Phase 3.
@@ -313,7 +313,7 @@ The reader can already list gear, items and crafted flags by id from the save. T
 
 Question: can we read the game's own packs, find the files for skills, weapons, armor, decorations, charms, Artian tables, hitzones, drops and motion values, and say which of them are decoded?
 
-**Result: partial.** Pack reading and file naming work (**verified** on Thomas's PC, real install, original packs only). Most categories have located data files; none is decoded into named fields yet (that needs a schema for the data files, see "Not done"). Motion values are not located. Code: throwaway `spikes/extract` on branch `spike/step5-extract` (never merged; ran against the real files). Nothing extracted is in git; outputs are in `E:\mhbis\out` only.
+**Result: partial.** Pack reading and file naming work (**verified** on the maintainer's PC, real install, original packs only). Most categories have located data files; none is decoded into named fields yet (that needs a schema for the data files, see "Not done"). Motion values are not located. Code: throwaway `spikes/extract` on branch `spike/step5-extract` (never merged; ran against the real files). Nothing extracted is in git; outputs are in `E:\mhbis\out` only.
 
 ### Pack reader (verified)
 - Install found through Steam's `libraryfolders.vdf` (library on `E:`), build ID 25921695. Only the original `re_*.pak` files are read: 32 packs (base, 15 patches, `sub_000` and its patches, the DLC pack). The mod pak in `pak_mods` is never opened. Mod markers present: `dinput8.dll`, `reframework`, `pak_mods`, a Fluffy Mod Manager marker file.
