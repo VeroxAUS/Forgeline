@@ -3,7 +3,7 @@
 Questions asked to Thomas and their answers, all answered on 2026-10-27. Open ones are in [open-questions.md](open-questions.md).
 
 ## Repo and files
-- **Repo name and default branch?** Private repo `VeroxAUS/Forgeline` (renamed from `MonsterHunterProgressionTool` on 2026-10-27), default branch `main`.
+- **Repo name and default branch?** Public repo `VeroxAUS/Forgeline` (renamed from `MonsterHunterProgressionTool` on 2026-10-27), default branch `main`.
 - **What goes in the first commit?** PLAN.md, `open-questions.md` (written only by the coordinator, so the questions are backed up and anyone cloning sees them), `closed-questions.md` for answers, and a CLAUDE.md that exactly copies the project instructions. All documentation lives in `docs/`.
 - **Should `reference/dumpsave.rs` go in the repo?** No. It is derived from MHWeditor and comes from a local save. Anyone working on the project provides their own local saves.
 
