@@ -305,4 +305,22 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 | CLAUDE.md sync PR #20 merged | 2026-10-27 15:21:21 UTC (docs only; keeps `CLAUDE.md` an exact copy of the project instructions) |
 | Phase finished | 2026-10-27 15:11:17 UTC (close-out PR #18 merged) |
 
+### Actual time per step
+Estimated hours were not made for Phase 1 (the plan estimated threads and test rounds only). Actual hours run from the first thread start to the merge, using the merge time from the GitHub API. The API does not hold thread start times, so every start below is approximate and says what it is based on (the plan approval at 13:05 UTC, the merge of the step it waited for, or the time its PR was opened).
+
+| Step | Estimated hours | Actual hours (first thread start to merge) | Note |
+|------|-----------------|--------------------------------------------|------|
+| 1 Licence review | not made | about 0 h 03 min | Start approximate: plan approval 13:05 UTC. Merged 13:08:12 UTC (PR #2 opened 13:07:21). |
+| 2 Clean-room study | not made | about 0 h 04 min | Start approximate: plan approval 13:05 UTC. Merged 13:09:17 UTC (PR #3 opened 13:08:23). |
+| 2 addendum (key-setup re-study) | not made | at least 0 h 01 min | Start unknown; only the PR times are known (opened 13:31:31, merged 13:32:00 UTC). Real time is longer. |
+| 3 Type data | not made | about 0 h 33 min | Start approximate: right after step 2 merged (13:10 UTC); includes the wait for the tool approval. PR #6 opened 13:28:30, merged 13:42:56 UTC. |
+| 5 Extraction test | not made | about 0 h 17 min | Start approximate: step 3 merge (about 13:43 UTC). PR #8 opened 13:54:53, merged 14:00:01 UTC. |
+| 4 ID matching, talismans | not made | about 0 h 24 min | Start approximate: step 3 merge (about 13:43 UTC). PR #10 opened 14:01:37, merged 14:06:46 UTC. |
+| 6 UI comparison | not made | about 1 h 15 min | Start approximate: step 3 merge (about 13:43 UTC), an upper bound because the benchmark waited for the sampler and frame-time module. PR #15 opened 14:56:57, merged 14:58:32 UTC. |
+| 7 Close-out | not made | about 0 h 06 min | Start approximate: about 15:05 UTC, after the spike PRs were closed. PR #18 opened 15:07:42, merged 15:11:17 UTC. |
+| Plan page builder (not a numbered step) | not made | about 0 h 07 min | Start approximate: PR #12 opened 14:14:02; merged 14:20:36 UTC. Lower bound. |
+| Licence (not a numbered step) | not made | about 0 h 16 min | Start approximate: PR #14 opened 14:46:29; merged 15:02:04 UTC. Lower bound. |
+
+Total: 2 h 06 min from approval to finish; the step durations overlap, so they do not add up to it.
+
 Elapsed from approval to finish: 2 h 06 min (13:05 to 15:11 UTC). Compare with the estimates in section 4: the plan estimated 8 to 11 threads and 7 to 10 test rounds, not hours, so there is no time estimate to compare against; the work was done in about two hours.

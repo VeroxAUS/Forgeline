@@ -92,6 +92,14 @@ Version bump per step (0.N.x for additions, x.x.1 for fixes) and the changelog l
 | Step 2 PR merged | |
 | Phase finished | |
 
+### Actual time per step
+Filled at close-out. Estimated hours are copied from the section 4 estimate (write "not made" if the plan had none). Actual hours run from the first thread start (or the earlier of thread start and the first PR commit) to the PR merge, taken from the thread start and the `merged_at` time in the GitHub API. Mark a start time that cannot be pinned down as approximate, and say what it is based on.
+
+| Step | Estimated hours | Actual hours (first thread start to merge) | Note |
+|------|-----------------|--------------------------------------------|------|
+| 1 | | | |
+| 2 | | | |
+
 Elapsed from approval to finish: `<hours>`. Compare with the estimates in section 4.
 
 ## Plan writing rules (check before publishing)
@@ -104,5 +112,5 @@ Elapsed from approval to finish: `<hours>`. Compare with the estimates in sectio
 7. The final step is a close-out that includes the `README.md` update and banner label (section 4), and the done checklist lists each item.
 8. Check the rendered page against this list before publishing the PR and the Artifact. Republish the same Artifact link when the plan changes.
 9. Publish plan pages only via `tools/plan-page` (see its README), never with a hand-built page, so every republish looks identical.
-10. Before the close-out PR merges, the time log has no placeholders left: every row is filled (merge times to the second where the API gives them), the rows are in time order, "Phase finished" has its time, and the elapsed time is written out with a one-line comparison against the section 4 estimate. The coordinator checks this at close-out.
-11. The estimates section gives rough wall-clock hours per step and in total (allowing for parallel stages), alongside threads and test rounds, with a plausible range, the earlier phase it is calibrated on, and the least certain step.
+10. Before the close-out PR merges, the time log has no placeholders left: every row is filled (merge times to the second where the API gives them), the rows are in time order, "Phase finished" has its time, the "Actual time per step" table has an actual for every step (estimated hours copied from section 4, approximate starts marked), and the elapsed time is written out with a one-line comparison against the section 4 estimate. The coordinator checks this at close-out.
+11. The estimates section gives rough wall-clock hours per step and in total (allowing for parallel stages), alongside threads and test rounds, with a plausible range, the earlier phase it is calibrated on, and the least certain step. The same hours go in the "Actual time per step" table of the time log as the estimated hours.

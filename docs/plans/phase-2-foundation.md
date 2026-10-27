@@ -585,4 +585,22 @@ Steps 1, 3, 10 and 11 are cloud-only and checked in the cloud.
 | Step 11 PR merged | |
 | Phase finished | |
 
+### Actual time per step
+Filled at close-out; see the template for how actual hours are measured.
+
+| Step | Estimated hours | Actual hours (first thread start to merge) | Note |
+|------|-----------------|--------------------------------------------|------|
+| 1 | 1 | | |
+| 2 | 1.5 | | |
+| 3 | 1 | | |
+| 4 | 2 | | |
+| 5 | 3 | | |
+| 6 | 2 | | |
+| 7 | 1.5 | | |
+| 8 | 2 | | |
+| 9 | 2 | | |
+| 10 | 0.5 | | |
+| 11 | 0.75 | | |
+| Total (with parallel stages) | about 13 | | range 10 to 18 |
+
 Elapsed from approval to finish: `<hours>`. Compare with the estimates in section 4.
