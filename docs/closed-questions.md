@@ -107,3 +107,8 @@ All answered 2026-10-27, in the order they were asked.
 ### Plan page builder (2026-10-27)
 - **Is a small Rust tool OK to build plan pages, so every published plan page looks the same?** Yes (tool approved, `tools/plan-page`, PR #12).
 - **What is the block at the start of the plan?** It is the "How to read this plan" box (run order, decisions made, what is still open), required by plan-writing rule 6. The maintainer said it is fine and to keep it as it is; PR #12 merged on that pass.
+
+### Licence and donations (2026-10-27)
+- **Barring all competing forks?** No, the maintainer finds it too harsh. This rules out PolyForm Shield as recommended; MPL-2.0 is being considered instead.
+- **Must forks rename?** No. "Based on Forgeline" is fine.
+- **Tip link?** Yes: a voluntary Ko-fi tip jar with no perks, linked from GitHub only and nothing on the Nexus page, to stay clear of Nexus's donation rules.
