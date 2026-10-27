@@ -143,13 +143,13 @@ Files are listed by step. Every source file starts with the MPL-2.0 Exhibit A no
 - **Purpose:** format check, clippy with warnings denied, tests, and the RAM check, on every PR.
 - **Inputs and outputs:** in, the PR. Out, a pass or fail per job. Jobs run on `ubuntu-latest` and `windows-latest`.
 - **Depends on:** the workspace and `crates/forgeline-core/tests/repo_hygiene.rs`.
-- **Notes:** the RAM job builds the release binary on Windows and runs `forgeline --headless-check <fixture>`, which loads the fixture data, builds a `Snapshot` and prints peak private bytes (no window, because hosted runners have no GPU). It fails the job above the limit in section 3.4. This checks the data and engine side only; the GL window cost is read on the PC (step 11).
+- **Notes:** the RAM job builds the release binary on Windows and runs `forgeline --headless-check <fixture>`, which loads the fixture data, builds a `Snapshot` and prints peak private bytes (no window, because hosted runners have no GPU). It fails the job above the limit in section 3.4 and also writes a results file (`bench/results/*.json`, section 3.3) that the job uploads as a build artifact. This checks the data and engine side only; the GL window cost is read on the PC (step 11).
 
 #### `crates/forgeline-core/tests/repo_hygiene.rs` (step 1)
 - **Purpose:** keep personal data and Capcom data out of git, and keep source files uniform.
 - **Inputs and outputs:** in, the list of tracked files. Out, a test failure naming the offending file.
 - **Depends on:** nothing.
-- **Notes:** fails on tracked files matching save, pak, dump or extracted-data patterns (`*.bin` outside the fixtures folder, `*.pak`, `*.user.3`, `*.msg.*`, `*dump*`), on a source file without the MPL-2.0 notice, and on any commit in the PR range whose author or committer email is not the VeroxAUS noreply, Claude's noreply or GitHub's. Fixtures are allowed only under `fixtures/` and only when listed in `fixtures/README.md` as synthetic.
+- **Notes:** fails on tracked files matching save, pak, dump or extracted-data patterns (`*.bin` outside the fixtures folder, `*.pak`, `*.user.3`, `*.msg.*`, `*dump*`), on a source file without the MPL-2.0 notice, and on any commit in the PR range whose author or committer email is not the VeroxAUS noreply, Claude's noreply or GitHub's. It also checks each file in `bench/results/` against the results schema and fails on a path, user name, hunter ID or game-data content. Fixtures are allowed only under `fixtures/` and only when listed in `fixtures/README.md` as synthetic.
 
 #### `CHANGELOG.md` (steps 1, 13)
 - **Purpose:** the changelog, from this phase on.
@@ -315,15 +315,15 @@ Files are listed by step. Every source file starts with the MPL-2.0 Exhibit A no
 
 #### `tools/bench/src/main.rs` (steps 10, 11)
 - **Purpose:** repeatable numbers: cold start to the last view, idle RAM (working set and private bytes), idle CPU over 60 s, recompute time after a save change, and the game's frame times.
-- **Inputs and outputs:** in, the app path, a data directory and a scenario. Out, a results file in `E:\mhbis\bench` with median of 3 runs.
+- **Inputs and outputs:** in, the app path, a data directory and a scenario. Out, one machine-readable results file per measurement (`bench/results/<date>-<scenario>.json`, schema in section 3.3) with the median of 3 runs and every raw run, plus a short text summary in `E:\mhbis\bench`.
 - **Depends on:** the app's trace output (below).
-- **Notes:** ported from the archived Phase 1 `spikes/sampler` in step 10, now our own product-side tool; step 11 adds the app trace points. The Windows frame-time module needs administrator rights and never touches the game process. The app prints two timestamps when `FORGELINE_TRACE=1` is set: "first view drawn" and "snapshot ready after save change". Tests copy a fixture or a save copy over a copy of the save in a scratch folder, never the live one.
+- **Notes:** ported from the archived Phase 1 `spikes/sampler` in step 10, now our own product-side tool; step 11 adds the app trace points. The Windows frame-time module needs administrator rights and never touches the game process. The app prints two timestamps when `FORGELINE_TRACE=1` is set: "first view drawn" and "snapshot ready after save change". The numbers shown anywhere public (README, the future developer site, `ram-log.md`) are generated from these files, never typed by hand. Tests copy a fixture or a save copy over a copy of the save in a scratch folder, never the live one.
 
 #### `docs/ram-log.md` (steps 1, 11, every later PR)
 - **Purpose:** the running RAM record (section 3.4).
-- **Inputs and outputs:** one line per PR that changes the app: date, PR, private bytes, working set, change from the previous line.
+- **Inputs and outputs:** one line per PR that changes the app: date, PR, private bytes, working set, change from the previous line. Each line is generated from the PR's results file by `tools/bench`, not typed.
 - **Depends on:** nothing.
-- **Notes:** the coordinator adds the line with the test round result.
+- **Notes:** the coordinator commits the generated line with the test round result.
 
 ### 3.3 Data formats
 
@@ -341,6 +341,7 @@ view-cache.json       derived summary for instant start (no raw save, no hunter 
 settings.json         window size and the user's chosen options (nothing else)
 ```
 
+- **Results files (`bench/results/`):** one JSON file per measurement, written by `tools/bench` and the CI headless check, so published numbers come from data. Fields: `schema`, `date` (UTC), `app_version`, `git_commit`, `scenario` (for example `idle`, `cold-start`, `recompute`, `ci-headless`), `machine` (CPU model, GPU model, RAM size, Windows build; no machine name, user name or paths), `conditions` (Wilds running or not, benchmark spot, borderless or windowed, `--data-dir` kind, admin or not), `runs` (every raw value) and `median`. CI results are uploaded as a build artifact and also marked `ci: true`, so they are never mixed up with PC readings. PC results are committed with the test round PR (small text, no save or game data, and the hygiene test checks that no result file holds a path, hunter ID or Capcom data); the maintainer's reading is the one published.
 - **Swap:** staging is renamed over `current/` only after validation passes; the old `current/` is kept as `previous/` until the next successful update, so a bad swap can be rolled back by hand.
 - **Schema versions:** `manifest.json` and `view-cache.json` carry a `schema` number. An unknown number means "ignore the cache and recompute", never a crash.
 - **Nothing here is committed or shipped.** `raw/` holds Capcom data and stays in the user's own data directory. The repo `.gitignore` and the hygiene test keep it out of git; the Nexus package excludes it by construction.
@@ -401,7 +402,7 @@ The last step of every phase is the close-out. Besides updating `PLAN.md`, it up
 | 7 | 3 | UX design: a short UX brief (including the in-game shopping-list overlay in both modes), clickable dark-theme mock-ups of the 3 or 4 main screens and of the overlay over a game-like background in both modes, save-only and auto-detect with live data, plus the live-data warning screen (published as Artifact pages) and a style guide; the widget list the UI footprint check needs | UX design thread | Cloud | PR: `docs/ux/` (brief, mock-ups, style guide) | 1 to 2 threads, 1 to 2 cloud rounds (the maintainer reacts to the mock-ups); about 4 h | 1 |
 | 8 | 4 | Engine: save-folder watcher, background recompute at low priority, view cache, `Snapshot` | Engine thread | Cloud code, PC check | PR: `forgeline-engine` | 1 thread, 1 cloud round, 1 PC round; about 1.5 h | 2, 4 |
 | 9 | 5 | The bare egui window from the debug data viewer, update button and notices | Window thread | Cloud code, PC check | PR: `forgeline-app` | 1 to 2 threads, 1 cloud round, 1 PC round; about 2 h | 6, 7, 8 |
-| 10 | 6 | UI footprint check: port the benchmark harness; four variants (egui wgpu, egui glow with features off, Slint under its royalty-free or MIT-compatible terms, plain Win32 window) render the same small dark sample view built from step 7's widget list, plus an overlay variant (small transparent, click-through, always-on-top window with a hotkey) measured over a running Wilds in borderless windowed mode; private bytes, working set, cold start, the game's frame time and RAM with the overlay visible, and a screenshot of each | UI footprint thread | Cloud code, PC measurement | PR: `tools/bench`, `tools/ui-footprint`, `research.md` section | 1 to 2 threads, 1 cloud round, 1 PC round; about 3.5 h | 7, 9 |
+| 10 | 6 | UI footprint check: port the benchmark harness; four variants (egui wgpu, egui glow with features off, Slint under its royalty-free or MIT-compatible terms, plain Win32 window) render the same small dark sample view built from step 7's widget list, plus an overlay variant (small transparent, click-through, always-on-top window with a hotkey) measured over a running Wilds in borderless windowed mode; private bytes, working set, cold start, the game's frame time and RAM with the overlay visible, and a screenshot of each | UI footprint thread | Cloud code, PC measurement | PR: `tools/bench`, `tools/ui-footprint`, `research.md` section | 1 to 2 threads, 1 cloud round, 1 PC round; about 3.75 h | 7, 9 |
 | 11 | 7 | Measure with Wilds running: cold start to last view, recompute time, idle RAM, CPU and GPU, game frame times; fill `ram-log.md`; confirm the active-slot field | Benchmark thread | PC | PR: `tools/bench`, `research.md` section | 1 thread, 1 to 2 PC rounds; about 1.5 h | 9, 10 |
 | 12 | 8 | Re-review `performance-budget.md` against the Phase 1 and step 11 numbers | Docs thread | Cloud | PR: budget changes | 1 thread, 1 cloud round; about 0.5 h | 11 |
 | 13 | 9 | Close-out: `PLAN.md`, `README.md` (text, badges, roadmap, banner phase label, first screenshot), `CHANGELOG.md` 0.2.0, version bump, plan time log | Docs thread | Cloud | PR: docs and version | 1 thread, 1 cloud round; about 0.75 h | 1 to 12 |
@@ -411,10 +412,10 @@ Total estimate: 14 to 19 threads and 18 to 21 test rounds, 10 to 11 of them on t
 Hours (rough wall-clock from thread start to merge, each including its test round and the wait for the maintainer to pass it):
 
 - **Per step:** the figures in the table above, about 27 h added up (1 + 1.5 + 1 + 4 + 3 + 2 + 4 + 1.5 + 2 + 3.5 + 1.5 + 0.5 + 0.75 = 26.25).
-- **Total with parallel stages:** about 18 h from approval to the last merge. Stage 1 is 1 h, stage 2 is 3 h (steps 2, 3 and 5 overlap, step 5 is the longest), stage 3 is 4 h (steps 4, 6 and 7 overlap, step 7 waits for the maintainer's reaction), stage 4 is 1.5 h, stage 5 is 2 h, stage 6 is 3.5 h, stage 7 is 1.5 h, stage 8 is 0.5 h and stage 9 is 0.75 h.
+- **Total with parallel stages:** about 18 h from approval to the last merge. Stage 1 is 1 h, stage 2 is 3 h (steps 2, 3 and 5 overlap, step 5 is the longest), stage 3 is 4 h (steps 4, 6 and 7 overlap, step 7 waits for the maintainer's reaction), stage 4 is 1.5 h, stage 5 is 2 h, stage 6 is 3.75 h, stage 7 is 1.5 h, stage 8 is 0.5 h and stage 9 is 0.75 h.
 - **Plausible range:** 15 to 24 h. It assumes the maintainer passes each test round within about 15 minutes; a slower reply adds to the total.
 - **Calibration:** Phase 1 took 2 h 06 min for 7 steps (about 18 min a step), but those were docs and throwaway spikes with several threads in parallel. Phase 2 steps are real code with tests, CI and PC rounds, so each is estimated at 3 to 6 times a Phase 1 step.
-- **Least certain:** step 5 (3 h), step 4 (4 h, the quest test depends on getting two good save copies), step 7 (4 h, depends on how many rounds of reaction the mock-ups need), step 10 (3.5 h, new code in four frameworks, one of them unfamiliar) and step 11 (1.5 h, a second round if RAM is over a limit).
+- **Least certain:** step 5 (3 h), step 4 (4 h, the quest test depends on getting two good save copies), step 7 (4 h, depends on how many rounds of reaction the mock-ups need), step 10 (3.75 h, new code in four frameworks, one of them unfamiliar) and step 11 (1.5 h, a second round if RAM is over a limit).
 - **Not counted:** a port of `view.rs` to another UI library, if the maintainer picks one after step 10 (about 2 h and one PC round).
 
 Where the estimate is most likely wrong:
@@ -598,9 +599,9 @@ Queued, one at a time. Steps 2 to 6 use `forgeline-check`; the window exists fro
 - [ ] The harness ran as administrator only for the frame-time part, and stopped the sample apps afterwards.
 
 **Step 11**
-- [ ] The benchmark table shows cold start to last view, private bytes, working set, idle CPU and GPU, and save-change recompute time, median of 3 runs, with Wilds running at the Scarlet Forest base camp.
+- [ ] Every benchmark number comes with a results file (`bench/results/*.json`) and the table is generated from those files. The benchmark table shows cold start to last view, private bytes, working set, idle CPU and GPU, and save-change recompute time, median of 3 runs, with Wilds running at the Scarlet Forest base camp.
 - [ ] The frame-time report (run as administrator) shows the game's median, 99th percentile and worst frame time during idle, a recompute and an update.
-- [ ] `docs/ram-log.md` has the first real reading.
+- [ ] `docs/ram-log.md` has the first real reading, generated from a results file in `bench/results/` that lists date, version, machine and conditions.
 - [ ] The report says whether the `Active` field picked your active slot.
 
 **Look check (every PR that changes the window, from step 9 on)**
@@ -664,6 +665,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 | 2026-10-27 | The maintainer | Approved a new step 10, the UI footprint check (egui wgpu and glow, Slint, plain Win32 window), to see how much of the 127 MB is the graphics stack and how each looks. Later steps renumbered; hours and totals updated. |
 | 2026-10-27 | The maintainer | The README banner still said Phase 1: this PR sets it to Phase 2, and the close-out step and the template now check the README text, badges, roadmap and banner every phase. |
 | 2026-10-27 | The maintainer | Motion values: all four routes approved (effective raw meanwhile, deep game-file search early in Phase 3 for all 14 weapons, training-dummy measurement in Phase 5, credited community data labelled unverified as a fallback). Recorded in `PLAN.md` and `closed-questions.md`. |
+| 2026-10-27 | The maintainer | The measured numbers (RAM, cold start, frame time, test count) will be shown publicly, so they must be real: `tools/bench` and the CI RAM check write a machine-readable results file per measurement (`bench/results/*.json`, section 3.3) and published figures are generated from them. Step 10 grows by 0.25 h; totals still about 18 h. |
 
 ## 10. Time log
 | Event | Date and time |
