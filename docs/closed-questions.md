@@ -124,4 +124,5 @@ All answered 2026-10-27, in the order they were asked.
 ### Phase 1 close-out (2026-10-27)
 - **Does pure-Rust UI pass the Phase 1 comparison against Tauri and Electron (old open question 8)?** Yes. Answered by step 6 and passed by the maintainer (PR #15): egui is the UI toolkit. See the step 6 entry above and `docs/research.md`. Moved here from `open-questions.md` at close-out.
 - **Spike code from the never-merged PRs?** Collected into the `spikes-archive` branch (`spikes/`), one folder per step, with a README; PRs #5, #9, #11 and #16 closed with a pointer. The 129-byte pak table constant from ree-pak-rs (MIT) was redacted from the archive copy.
+- **Does the close-out PR pass, and can the pak table constant go back in the archive?** Yes, the maintainer passed it (PR #18, merged 2026-10-27 15:11:17 UTC): pass; modulus restored with credit; tag v0.1.0. The constant is back in `spikes-archive` with a credit to ree-pak-rs (MIT) and an entry in `THIRD-PARTY-NOTICES.md`. The maintainer also approved adding `CONTRIBUTING.md`, `SECURITY.md`, issue templates and a code of conduct.
 

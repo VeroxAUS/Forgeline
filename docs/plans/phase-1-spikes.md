@@ -299,7 +299,7 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 | Step 6 (UI comparison) PR #15 merged | 2026-10-27 14:58:32 UTC (the maintainer passed; pass: egui chosen; Scarlet Forest base camp is the standard benchmark spot; docs only, merge commit 25c7114) |
 | Licence PR #14 merged (not a numbered step) | 2026-10-27 15:02:04 UTC (the maintainer passed 15:01 UTC; pass: MPL-2.0, no DCO, Ko-fi on GitHub only; docs and LICENSE only, merge commit 054d586) |
 | Step 7 (close-out) PR opened | 2026-10-27 (docs only; also adds `CONTRIBUTING.md`, `SECURITY.md`, issue templates and `CODE_OF_CONDUCT.md`, approved by the maintainer; merge time and pass to be logged by the coordinator) |
-| Step 7 (close-out) PR merged | |
+| Step 7 (close-out) PR #18 merged | 2026-10-27 15:11:17 UTC (the maintainer passed; pass; modulus restored with credit; tag v0.1.0; docs only, squash commit 9a7bd65) |
 | Phase finished | |
 
 Elapsed from approval to finish: `<hours>`. Compare with the estimates in section 4.
