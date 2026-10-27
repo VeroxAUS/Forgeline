@@ -16,6 +16,9 @@ Test PC: Intel Core i7-13700K, NVIDIA RTX 4080, 32 GB RAM. All numbers are measu
 | Extraction (button press) | under 5 min, peak RAM under 1 GB | 10 min, 2 GB |
 | Install size | under 50 MB | 100 MB |
 
+## Standard benchmark spot
+Every measurement with Wilds running uses the same scene: Scarlet Forest main base camp, standing outside the tent, camera still, solo / offline session. See the step 6 entry in [research.md](research.md) for the first results.
+
 ## How the app meets it
 - The app watches the save folder for file changes instead of checking on a timer, so it does nothing until the game saves.
 - It draws only when something changes.
