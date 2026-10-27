@@ -47,3 +47,55 @@ Questions asked to Thomas and their answers, all answered on 2026-10-27. Open on
 - **Extractor scope?** Data for every weapon, low and high rank, from Phase 3.
 - **Optimizer scope?** Every weapon optimized before 1.0.0, refined one at a time with the light bowgun first.
 - **Several test rounds open at once?** No. Queue them so there is one checklist at a time.
+
+## Added later on 2026-10-27 (after the setup batch)
+All answered 2026-10-27, in the order they were asked.
+
+### Plan format and readability
+- **Why were Phase 1 steps out of order, and why were spikes 3 and 4 missing from the architecture section?** Thomas flagged both, plus walls of text in the done list, per-file designs, tool reasons, tests and checklists. Approved seven rules, now in `docs/plans/TEMPLATE.md`: number steps in run order with the same numbers everywhere (parallel steps share a stage); every step appears in every section that covers steps; no packed paragraphs (done list, pass/fail, tests and checklists are one item per line); per-file designs use one fixed block per file; each tool's "why" says the problem, what happens without it and what it touches; a "how to read this plan" box at the top; check the page against the list before publishing. Phase 1 was rewritten from it.
+- **Estimates and time log?** Estimates in threads and test rounds. A time log records the time from Thomas's approval to the finish of each phase and step.
+- **Publish every plan as an artifact too?** Yes. Every plan is pushed to the repo and published as an artifact that Thomas can open, and the same artifact is updated when the plan changes.
+
+### MHWeditor and the licence review
+- **Is the clean-room approach for MHWeditor OK?** Yes. It has no licence at all, so nothing from it enters the repo. One thread studies it and writes facts in its own words to `docs/research.md` with credit. A separate thread writes our Rust code from those notes only. All implementation is our own.
+- **Nexus internet use.** Accepted. Nexus restricts mods that connect to the internet. The MHDB last-resort fallback is the only part that would, so before release it is cleared with Nexus or dropped.
+- **Nexus AI-generated content tag.** Yes, use it.
+
+### Phase 1 approval
+- **Approve the tools in the Phase 1 plan?** All approved. For the measuring method he wanted our own cross-platform tool instead of Windows' built-in counters (see the performance budget section).
+- **PC work folder?** `E:\mhbis`. Ask before cleaning it.
+- **Where does spike code live?** On separate PR branches, never merged to `main`. At the end of Phase 1 they go to a `spikes-archive` branch that is kept for reference and never merged. `main` as the only long-lived branch is a fluid rule: other exceptions are decided per feature.
+- **Phase 1 approved?** Yes, 13:05 UTC. Stage 1 (steps 1 and 2) then started.
+- **Step 3 (type data) test round?** Pass. Route A worked. Stage 3 (steps 4 to 6) started on the PC at Thomas's go.
+
+### Performance budget
+- **Are the budget numbers right?** Yes, as an initial pass. They live in `docs/performance-budget.md` so they can be reviewed and adjusted. Measured on Thomas's PC with Wilds running, median of 3 runs.
+- **Should our tool measure game frame times?** Yes, built by us as a Windows-only module (event tracing, no contact with the game process) of our own cross-platform measuring tool. It needs admin rights, is for the test PC only and is never shipped. It is part of step 6. If a licence or Windows access blocks it, stutter is judged by eye while Thomas plays.
+- **Test PC and minimum spec?** Test PC: RTX 4080, i7-13700K, 32 GB RAM. There is no weaker machine. The minimum spec is worked out near release by limiting cores and RAM on the test PC, with Wilds' official minimum spec (quoted from Capcom, not from memory) as the baseline.
+
+### README, name and repo
+- **Add a README?** Yes. Drafted, then merged.
+- **Install the `beautify-github-readme` skill and run it on the README?** Yes. Saved as a skill, then run on the README.
+- **Skill setup choices.** "Go with yours": refresh the whole README (not images only), pure SVG banner (no AI-generated art, no Capcom art), still banner (no animation).
+- **Banner wording.** Tagline "The best build you can make right now", second line "From your first hunt to endgame". The longer low-rank-to-high-rank line was cut as redundant. Phone layout does not matter.
+- **Badges?** Yes, only things that are true today: pre-alpha, Windows and Steam, Rust, unreleased, licence not decided, local only. More (tests, downloads) come when they exist.
+- **AI disclaimer on the GitHub page too?** Yes, one short line in the README's Disclaimer section, matching the Nexus page.
+- **README update in every phase close-out?** Yes, added to the plan template and to Phase 1's close-out: refresh badges and roadmap, and from Phase 2 swap the placeholder tiles for a real screenshot.
+- **Project name?** Forgeline (picked from a list of themed names). On Nexus: "Forgeline: MH Wilds Build Planner".
+- **Repo rename, About text and topics?** Thomas renamed the repo to `Forgeline` and set the About description. The project instructions and CLAUDE.md were updated to match, and Thomas removed the old repo from the project and renamed the project.
+- **Delete merged branches automatically?** Yes. Thomas enabled "Automatically delete head branches". Sessions get a 403 when deleting branches themselves.
+
+### Public repo, email and history
+- **Is the repo public?** Yes. The instructions and docs were changed from private to public, with a new rule to check every commit for personal and Capcom data before pushing. A check of all 32 commits found no Steam IDs, save data, hunter IDs, character names, Windows user paths, tokens or game files.
+- **Which email for commits?** Thomas's GitHub noreply address, `VeroxAUS <3145728+VeroxAUS@users.noreply.github.com>`, for all commits and set in CLAUDE.md.
+- **Rewrite past commits to remove the two personal email addresses?** Yes. History was rewritten and force-pushed; a search found neither address.
+- **Hidden copies of closed PRs (#1 to #4, #6, #7)?** Option 1: Thomas asks GitHub Support to purge cached views and the `refs/pull/*` refs. (Option 2, recreating the repo, was not chosen.) Support only accepts the request from the repo owner, so the ticket is Thomas's to file.
+
+### Monitoring after release
+- **Daily GitHub issues check?** Yes, once a day at 10:00 Sydney time (follows daylight saving). It summarises new or updated issues for Thomas, and never replies to, labels or closes anything. First run the next morning.
+- **Nexus comments and bug reports?** Researched (see `docs/research.md`, "Nexus monitoring"). Not automatable for now: the API has no comments or bugs endpoint, and reading the pages needs a real browser and goes against Nexus's rules for AI crawlers. Thomas checks his author notification settings once the mod page is live and forwards anything. If Nexus adds comments to its API, it can be automated with an API key from Thomas.
+
+### Research unknowns answered (moved from open-questions.md)
+- **Performance budget: target numbers for cold start, idle RAM, idle CPU and recompute time?** Drafted with Thomas and approved as an initial pass. See `docs/performance-budget.md` and the performance budget section above.
+- **Licences: what MHWeditor and its type data allow, and whether GPL code forces the Nexus release to be open source?** Answered by Phase 1 step 1 (`docs/research.md`, "Phase 1 step 1: licence review"). MHWeditor has no licence, so nothing from it can be used; its type dump comes from other unlicensed work, so community-dump fallback C is not cleared. mhdb-wilds-data code is GPL, so it stays out. Nexus does not force open source as long as we use no GPL code, and we use none. The licence part that remains open (Slint terms, Rust toolchain, mhdb-wilds-data output files, MHDB terms, Nexus rules on an update download) stays in `open-questions.md`.
+- **Type data: can we recover the names behind the save's hashes?** Yes, with route A (our own scan of the game's .exe on disk). Step 3 named 185 of 187 classes and 1,215 of 1,221 class and field pairs (99.5%) on Thomas's real save copy. See `docs/research.md`, "Step 3: type-data spike, route A". Reading a sample of game data files moved to step 5.
