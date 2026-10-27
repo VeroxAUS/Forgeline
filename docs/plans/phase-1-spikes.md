@@ -19,9 +19,11 @@ Each phase plan is written just before its phase, using what earlier phases foun
 - Spike code stays on separate PR branches and is never merged to `main`; at the end of Phase 1 the branches are collected into a `spikes-archive` branch, kept for reference (an approved exception to the main-only rule).
 - The performance budget is in [performance-budget.md](../performance-budget.md) (initial pass, reviewed over time).
 
+- Game frame times are measured by our own Windows-only module of the sampler (`spikes/sampler`), reading Windows present events (ETW, PresentMon-style) without touching the game process. It needs admin rights while running and is a test-PC tool, never shipped.
+- Minimum spec: limit cores and RAM on Thomas's PC, with Wilds' official minimum spec (cited from Capcom's page) as the baseline.
+
 **Still open:**
-- How to measure the game's frame times or stutter without touching the game (step 6). Thomas asked whether our own tool can do it; this is being decided.
-- The minimum spec for other users (to be determined).
+- The minimum spec number itself (decided near release).
 
 ## 1. Goal and done
 Answer the unknowns that decide the architecture, each with a pass or fail result: can we get the game's type data, can we read the save and map its IDs, what the game files hold, what the licences allow, and which UI toolkit is light enough beside Wilds.
@@ -91,9 +93,9 @@ Spikes mostly produce documents. Code is throwaway and the file list is indicati
 
 #### `spikes/sampler/` (step 6, throwaway Rust)
 - **Purpose:** cross-platform sampler for cold start, RAM, CPU and GPU of a process, so the three UI test apps are measured the same way.
-- **Inputs and outputs:** in, a process to launch or attach to, and a sampling window. Out, a results file in `E:\mhbis\bench` with the median of 3 runs.
+- **Inputs and outputs:** in, a process to launch or attach to, and a sampling window. Out, a results file in `E:\mhbis\bench` with the median of 3 runs, including game frame-time statistics from the frame-time module.
 - **Depends on:** `spikes/uibench`.
-- **Notes:** reads process figures only; never touches the game process. Game frame-time measurement is an open item.
+- **Notes:** the cross-platform core reads process figures only. A Windows-only frame-time module listens to Windows present (ETW) events to measure the game's frame times and stutter; it never touches the game process, needs admin rights while running, runs on the test PC only and is never shipped. Any ETW crate's licence is checked in step 1 first.
 
 #### `spikes/uibench/` (step 6, throwaway Rust plus web code)
 - **Purpose:** three equivalent minimal apps for the comparison: a pure-Rust UI, a Tauri app and an Electron app.
@@ -120,7 +122,7 @@ No product impact. Step 6 measures, with Wilds running and without:
 - GPU use
 - whether the background job stutters the game
 
-Pass thresholds come from [performance-budget.md](../performance-budget.md) (initial pass, test PC 13700K / RTX 4080 / 32 GB). Measured with our own cross-platform Rust sampler, median of 3 runs. Open item: how to measure the game's frame times or stutter without touching the game (a Windows-only event-tracing approach versus judging by eye while Thomas plays); undecided, Thomas is asked.
+Pass thresholds come from [performance-budget.md](../performance-budget.md) (initial pass, test PC 13700K / RTX 4080 / 32 GB). Measured with our own cross-platform Rust sampler, median of 3 runs. Game frame times come from the Windows-only frame-time module of `spikes/sampler` (ETW present events, never touching the game process).
 
 ## 4. Steps
 Each step is one thread, one PR and one test round. Spike PRs are doc PRs (results in `research.md`); each PR says whether its code ran against the real files, and spike code stays out of `main` unless approved. PC test rounds are queued one at a time.
@@ -132,10 +134,10 @@ Each step is one thread, one PR and one test round. Spike PRs are doc PRs (resul
 | 3 | 2 | Type-data spike: routes A, B, C, D in order, stopping at the first that passes; MHDB as last resort | Type-data thread | PC (cloud prep for the report) | PR: `research.md` section; code on branch only | 1 to 2 threads, 1 to 2 PC rounds | Thomas's yes on its tool; step 1 informs route C |
 | 4 | 3 | Save-ID to data-ID matching and owned talismans on a save copy | Save thread | PC | PR: `research.md` section | 1 thread, 1 PC round | 2, 3 |
 | 5 | 3 | Extraction test on Thomas's install, all weapons | Extraction thread | PC | PR: `research.md` section (counts, coverage table, what stays hand-written) | 1 to 2 threads, 1 to 2 PC rounds | 3 |
-| 6 | 3 | UI comparison: pure Rust vs Tauri vs Electron, with Wilds running | UI bench thread | PC | PR: `research.md` section with numbers | 1 thread, 1 PC round | performance budget (drafted), our sampler tool |
+| 6 | 3 | UI comparison: pure Rust vs Tauri vs Electron, with Wilds running, plus the frame-time module | UI bench thread (plus a second thread for the frame-time module) | PC | PR: `research.md` section with numbers | 2 to 3 threads, 1 to 2 PC rounds | performance budget (drafted), our sampler tool |
 | 7 | 4 | Close-out: update `PLAN.md`, record licence and toolkit decisions | Docs thread | Cloud | PR: `PLAN.md` | 1 thread, 1 cloud round | 1 to 6 |
 
-Total estimate: 7 to 9 threads and 7 to 9 test rounds, 3 to 5 of them on the PC. At most 2 or 3 threads run at once. Estimates are guesses and will be compared with the time log. Step 3 is the largest unknown; if it needs more than 2 threads, stop and report to Thomas rather than continue (Opus on high may then be worth suggesting).
+Total estimate: 8 to 11 threads and 7 to 10 test rounds, 3 to 6 of them on the PC. At most 2 or 3 threads run at once. Estimates are guesses and will be compared with the time log. Step 3 is the largest unknown; if it needs more than 2 threads, stop and report to Thomas rather than continue (Opus on high may then be worth suggesting).
 
 ## 5. Tools (need Thomas's yes)
 All rows approved by Thomas on 2026-10-27. All tools are our own Rust unless stated.
@@ -147,7 +149,7 @@ All rows approved by Thomas on 2026-10-27. All tools are our own Rust unless sta
 | `spikes/extract` | 5 | Problem: we need to know which stats, tables and drops the game files really hold. This tool pulls only those files out of the packs. Without it, we cannot tell what must be hand-written or dropped. On your PC it reads the install and Steam library read-only and writes to `E:\mhbis\out`; it never unpacks whole packs. | Built | ours |
 | `spikes/uibench` | 6 | Problem: the app must stay light beside Wilds, and we do not know which UI toolkit manages that. These three tiny apps give comparable start-up, RAM, CPU and GPU numbers. Without it, the choice is a guess. On your PC they run while Wilds runs and are stopped afterwards; they use a separate data directory. | Built | ours; UI toolkits (egui or Slint, Tauri, Electron) and their licences recorded |
 | Rust toolchain, `cargo`, GitHub Actions lint and test jobs | all code | Problem: nothing can be built or checked without them. They install on your PC under normal user folders and run on GitHub for tests. | Third-party, standard | MIT/Apache-2.0 (to confirm in step 1) |
-| `spikes/sampler` (cross-platform process sampler) | 6 | Problem: we need repeatable numbers, not impressions, and your preference is our own tools that work on every OS. This samples the three test apps' start-up time, RAM, CPU and GPU. Without it we depend on Windows-only counters. On your PC it only reads process figures and writes to `E:\mhbis\bench`. | Built | ours |
+| `spikes/sampler` (cross-platform process sampler) | 6 | Problem: we need repeatable numbers, not impressions, and your preference is our own tools that work on every OS. This samples the three test apps' start-up time, RAM, CPU and GPU. Without it we depend on Windows-only counters. Its frame-time module reads Windows present events (needs admin while running, test PC only, never shipped) so we can see game stutter without touching the game. On your PC it only reads process and event figures and writes to `E:\mhbis\bench`. | Built | ours; any ETW crate used is licence-checked in step 1 and recorded in THIRD-PARTY-NOTICES.md |
 | Route C only: a community type dump (downloaded data, never run through an injecting tool) | 3 | Problem: if routes A and B fail, a licensed community dump can stand in. Without it we use hash and pattern mapping (route D), which is slower and less exact. Used only if step 1 clears the licence; it is a download, not something that touches the game. | Third-party data | Checked in step 1 before use |
 
 Not proposed: any injecting, hooking or memory-reading tool. The standing rules rule them out.
@@ -196,7 +198,8 @@ Each result is recorded in `docs/research.md`.
 - Pass: a candidate meets the performance budget with Wilds running (cold start, idle RAM, idle CPU, GPU) and does not stutter the game during its background job.
 - Decision rule: pure Rust if it meets the budget; otherwise the lightest option that does.
 - Numbers come from Thomas's PC with Wilds running, at least 3 runs each, median recorded, taken with our own sampler.
-- Open item: how game stutter is judged (frame-time tool or by eye) is undecided.
+- Pass: the frame-time module reports the game's frame-time statistics (median, 99th percentile, worst frame) with and without each candidate's background job.
+- Pass: the module never opens or touches the game process.
 
 **Step 7, close-out**
 - Pass: `PLAN.md` reflects every result and lists the Phase 2 inputs.
@@ -219,6 +222,7 @@ Queued, one at a time. There is no app in this phase, so each item says what the
 - [ ] The report covers every weapon type.
 
 **Step 6**
+- [ ] The frame-time report shows the game's median, 99th percentile and worst frame time with each candidate running (run as admin).
 - [ ] The benchmark table shows cold start, idle RAM, CPU and GPU for each of the three options, with and without Wilds running, median of 3 runs.
 
 **Every PC step**
@@ -233,6 +237,7 @@ Steps 1, 2 and 7 are cloud-only and checked in the cloud: the PR contains only d
 - **Fixed IDs do not match game data IDs.** Notice: match rate under 99%. Fallback: a mapping table, name-based matching or route D; the plan records the cost.
 - **Owned talismans not in the save or not decodable.** Fallback: the user enters talismans by hand, or they are optional; a product decision for Thomas.
 - **The game files lack Artian tables, motion values or skill numbers.** Fallback: hand-written tables from cited sources, or dropped features; the results feed Phases 4 and 8.
+- **ETW access or an ETW crate's licence blocks the frame-time module.** Notice: step 1 licence verdict, or no events with admin rights. Fallback: judge stutter by eye while Thomas plays, and record that.
 - **Licence blocks route C or forces open source.** Fallback: routes A, B or D, or the project goes open source, which Thomas has said is acceptable if needed.
 - **All UI candidates miss the budget.** Fallback: pure Rust with the lightest toolkit, and the numbers shown to Thomas.
 - **Install is modded.** Notice: mod markers in the install folder. Fallback: read original packs only and report the markers.
