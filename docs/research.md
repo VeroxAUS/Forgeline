@@ -358,6 +358,19 @@ Rows are readable as plain numbers: the 228-byte `ArmorSpUpgradeCostData` shows 
 ### Decision this supports
 All needed categories except motion values (and real drop tables) exist in the game files and can be read from the user's own install at update time, without a third-party file list. Phase 3 must plan a hand-written schema per data class; motion values and drop tables need a separate investigation or a cited source.
 
+## Licence options and donations (2026-10-27)
+
+Read from public pages on 2026-10-27. Not legal advice. Full write-up with a comparison table: https://claude.ai/artifact/ShBiYjTMa8jjQU4VNrrSK1
+
+- **Goal:** others may modify parts, fork for themselves and contribute; nobody may republish the whole app or a rewrite as their own without permission.
+- **OSI open source cannot do that.** MIT, Apache-2.0, MPL-2.0, GPL and AGPL all allow republishing the whole codebase. Only source-available licences can restrict it.
+- **Best off-the-shelf match: PolyForm Shield 1.0.0.** Any purpose is permitted except providing a product that competes with the software; the text says goods "compete even when provided free of charge". Personal forks and patches are allowed. PolyForm Noncommercial still allows free noncommercial redistribution, so it does not fit. Commons Clause only blocks selling. CC BY-NC-SA is not meant for software. A custom "ask permission" licence fits exactly but is untested.
+- **Nexus Mods:** the [File Submission Guidelines](https://help.nexusmods.com/article/28-file-submission-guidelines) do not require open source. AI-written code needs the AI-Generated Content tag. Per the [donation guidelines](https://www.nexusmods.com/rust/news/14698), links to Patreon or Ko-fi are fine unless the author monetises modding (files, updates or support for donations, early access, stretch goals, donor requests); then the links must go.
+- **Dependencies:** egui, Tauri, Electron, pulldown-cmark and its dependencies are MIT or Apache-2.0 (see above); fine under any licence if notices are kept. Slint's GPL option and any GPL code would force open source.
+- **AI authorship:** a US Copyright Office report (Jan 2025, read via a [law-firm summary](https://datamatters.sidley.com/2025/02/07/u-s-copyright-office-issues-report-on-artificial-intelligence-and-copyrightability/)) says purely prompt-generated material is not copyrightable, while human selection, arrangement and modification can be. A licence cannot protect uncopyrightable parts.
+- **Donations:** a voluntary tip link with no perks looks lowest risk. Paywalls, early access and perks conflict with Nexus rules. Capcom's fan-content guidelines (Nov 2025, press report only) bar commercial use of fan content generally and say nothing found about tools or donations. Anthropic's consumer terms assign Outputs to the user "if any" and show no restriction found on tips.
+- **Not verified:** Capcom's own page, Nexus staff view on PolyForm Shield, full Patreon, Ko-fi and Anthropic commercial terms, the Copyright Office report text.
+
 ## Step 6: UI toolkit comparison beside Wilds (2026-10-28)
 
 Question: which UI toolkit (pure Rust, Tauri or Electron) is light enough to run beside Wilds, measured against [performance-budget.md](performance-budget.md)?
@@ -402,3 +415,6 @@ Question: which UI toolkit (pure Rust, Tauri or Electron) is light enough to run
 
 ### Decision this supports
 Build the Phase 2 interface in pure Rust (egui with glow is the measured baseline). Re-run `spikes/sampler` against the Phase 2 window to check RAM against the 80 MB target as soon as it holds real data.
+
+### Decision (2026-10-27)
+The maintainer chose **MPL-2.0**, forks allowed with "based on Forgeline" credit, no competing-fork ban, no contributor paperwork, and a Ko-fi tip jar on GitHub only (none on Nexus). Compatibility with our dependencies: MIT, Apache-2.0, Unlicense and MIT OR Apache-2.0 crates can be combined with MPL-2.0 code; only the notices must be kept (`THIRD-PARTY-NOTICES.md`). GPL code (including Slint's GPL option and mhdb-wilds-data's toolkit) is not covered by that and stays out. MPL-2.0 asks for a short notice at the top of each source file (its Exhibit A); add it when code files appear.
