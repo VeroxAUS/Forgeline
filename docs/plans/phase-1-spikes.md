@@ -306,7 +306,7 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 | Phase finished | 2026-10-27 15:11:17 UTC (close-out PR #18 merged) |
 
 ### Actual time per step
-Estimated hours were not made for Phase 1 (the plan estimated threads and test rounds only). Actual hours run from the first thread start to the merge, using the merge time from the GitHub API. The API does not hold thread start times, so every start below is approximate and says what it is based on (the plan approval at 13:05 UTC, the merge of the step it waited for, or the time its PR was opened).
+No hours estimate was made for this phase; the hours estimate rule was added after Phase 1 finished. (The plan estimated threads and test rounds only.) Actual hours run from the first thread start to the merge, using the merge time from the GitHub API. The API does not hold thread start times, so every start below is approximate and says what it is based on (the plan approval at 13:05 UTC, the merge of the step it waited for, or the time its PR was opened).
 
 | Step | Estimated hours | Actual hours (first thread start to merge) | Note |
 |------|-----------------|--------------------------------------------|------|
