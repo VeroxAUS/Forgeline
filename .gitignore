@@ -1,0 +1,25 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Saves, dumps and extracted game data (personal data / Capcom data; never commit)
+*.bin
+*.pak
+*.dump
+dumps/
+extracted/
+extraction/
+savecopy/
+fixtures/private/
+savenamed.json
+dump.bin
+
+# Local data directories for dev and test builds
+.mhbis-data/
+data-cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
