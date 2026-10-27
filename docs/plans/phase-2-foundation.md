@@ -651,6 +651,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
   - Step 12: Changed the performance budget.
   - Step 13: Released 0.2.0.
 - The release and the `v0.2.0` tag are the maintainer's action (box at the top).
+- Each changelog entry ends with "Reviewed and tested by VeroxAUS", and every merged PR gets a "Tested and approved by the maintainer:" comment (project rule, see the template's merge checklist).
 
 ## 9. Review log
 | Date | Reviewer | Edit or decision |
