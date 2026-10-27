@@ -288,18 +288,21 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 ## 10. Time log
 | Event | Date and time |
 |-------|---------------|
-| Phase approved by the maintainer | 2026-10-27 13:05 UTC |
-| Step 1 (licence review) PR #2 merged | 2026-10-27 13:08 UTC (docs only; merged after cloud check, no separate pass from the maintainer) |
-| Step 2 (clean-room study) PR #3 merged | 2026-10-27 13:09 UTC (docs only; merged after cloud check, no separate pass from the maintainer) |
-| Step 2 addendum: key-setup re-study PR #7 merged | 2026-10-27 13:32 UTC (added after step 3 found a gap in the decryption notes; docs only, cloud check) |
-| Step 3 PR #6 merged | 2026-10-27 13:42 UTC (the maintainer passed 13:40 UTC; save half only, data-file sample moved to step 5) |
-| Step 4 (ID matching, talismans) PR #10 merged | 2026-10-27 14:06 UTC (the maintainer passed 14:05 UTC; partial: by-name check moves to Phase 3, talisman skills undecoded) |
-| Step 5 (extraction test) PR #8 merged | 2026-10-27 14:00 UTC (the maintainer passed 13:58 UTC; partial: located but not decoded, route B schemas needed in Phase 3; motion values not found) |
-| Plan page builder (`tools/plan-page`, not a numbered step) PR #12 merged | 2026-10-27 14:20 UTC (the maintainer passed 14:20 UTC: looks fine, keep the How-to-read box; docs tooling, cloud check) |
+| Phase approved by the maintainer | 2026-10-27 13:05 UTC (plan PR #1 merged 13:05:43 UTC) |
+| Step 1 (licence review) PR #2 merged | 2026-10-27 13:08:12 UTC (docs only; merged after cloud check, no separate pass from the maintainer) |
+| Step 2 (clean-room study) PR #3 merged | 2026-10-27 13:09:17 UTC (docs only; merged after cloud check, no separate pass from the maintainer) |
+| Step 2 addendum: key-setup re-study PR #7 merged | 2026-10-27 13:32:00 UTC (added after step 3 found a gap in the decryption notes; docs only, cloud check) |
+| Step 3 PR #6 merged | 2026-10-27 13:42:56 UTC (the maintainer passed 13:40 UTC; save half only, data-file sample moved to step 5) |
+| Step 5 (extraction test) PR #8 merged | 2026-10-27 14:00:01 UTC (the maintainer passed 13:58 UTC; partial: located but not decoded, route B schemas needed in Phase 3; motion values not found) |
+| Step 4 (ID matching, talismans) PR #10 merged | 2026-10-27 14:06:46 UTC (the maintainer passed 14:05 UTC; partial: by-name check moves to Phase 3, talisman skills undecoded) |
+| Plan page builder (`tools/plan-page`, not a numbered step) PR #12 merged | 2026-10-27 14:20:36 UTC (the maintainer passed 14:20 UTC: looks fine, keep the How-to-read box; docs tooling, cloud check) |
+| Time-log follow-up PR #13 merged (plan-page row) | 2026-10-27 14:21:43 UTC (docs only) |
 | Step 6 (UI comparison) PR #15 merged | 2026-10-27 14:58:32 UTC (the maintainer passed; pass: egui chosen; Scarlet Forest base camp is the standard benchmark spot; docs only, merge commit 25c7114) |
 | Licence PR #14 merged (not a numbered step) | 2026-10-27 15:02:04 UTC (the maintainer passed 15:01 UTC; pass: MPL-2.0, no DCO, Ko-fi on GitHub only; docs and LICENSE only, merge commit 054d586) |
-| Step 7 (close-out) PR opened | 2026-10-27 (docs only; also adds `CONTRIBUTING.md`, `SECURITY.md`, issue templates and `CODE_OF_CONDUCT.md`, approved by the maintainer; merge time and pass to be logged by the coordinator) |
-| Step 7 (close-out) PR #18 merged | 2026-10-27 15:11:17 UTC (the maintainer passed; pass; modulus restored with credit; tag v0.1.0; docs only, squash commit 9a7bd65) |
-| Phase finished | |
+| Time-log follow-up PR #17 merged (licence row) | 2026-10-27 15:03:12 UTC (docs only) |
+| Step 7 (close-out) PR #18 merged | 2026-10-27 15:11:17 UTC (the maintainer passed; pass; modulus restored with credit; tag v0.1.0; docs only, squash commit 9a7bd65; also adds `CONTRIBUTING.md`, `SECURITY.md`, issue templates and `CODE_OF_CONDUCT.md`) |
+| Time-log follow-up PR #19 merged (close-out row) | 2026-10-27 15:12:55 UTC (docs only) |
+| CLAUDE.md sync PR #20 merged | 2026-10-27 15:21:21 UTC (docs only; keeps `CLAUDE.md` an exact copy of the project instructions) |
+| Phase finished | 2026-10-27 15:11:17 UTC (close-out PR #18 merged) |
 
-Elapsed from approval to finish: `<hours>`. Compare with the estimates in section 4.
+Elapsed from approval to finish: 2 h 06 min (13:05 to 15:11 UTC). Compare with the estimates in section 4: the plan estimated 8 to 11 threads and 7 to 10 test rounds, not hours, so there is no time estimate to compare against; the work was done in about two hours.
