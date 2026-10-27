@@ -4,153 +4,247 @@ Target version: 0.1.0 · Status: draft (awaiting Thomas's review; nothing starts
 
 Each phase plan is written just before its phase, using what earlier phases found. Thomas reviews and approves it before any work starts. Estimates are in threads and test rounds, not hours; real durations go in the time log (section 10).
 
+## How to read this plan
+
+**Run order** (steps are numbered in the order they run; parallel steps share a stage):
+- **Stage 1** (cloud, parallel, start straight away): step 1 licence review, step 2 clean-room study of the MHWeditor save format.
+- **Stage 2** (PC): step 3 type-data spike.
+- **Stage 3** (PC): step 4 ID matching and talismans, step 5 extraction test, step 6 UI comparison. Steps 4 and 5 need step 3. Step 6 needs only the performance budget and can start earlier if Thomas prefers.
+- **Stage 4** (cloud): step 7 close-out.
+
+**Decisions needed from Thomas:**
+- Approve each tool in section 5, row by row.
+- Approve or change the permanent PC work folder `C:\mhbis` (section 3.3).
+- Say when the performance budget will be drafted; step 6 cannot be judged without it.
+- Say whether spike code may stay on a PR branch only, or may live in `spikes/` on `main`.
+- Choose for step 6: Windows built-in counters, or our own small sampler.
+
 ## 1. Goal and done
-Answer the unknowns that decide the architecture, each with a pass or fail result: can we get the game's type data, can we read the save and map its IDs, what the game files hold, what the licences allow, and which UI toolkit is light enough beside Wilds. Spikes produce findings in `docs/research.md`, not product code. Any spike code is throwaway, lives only on its PR branch (or under `spikes/`, never reused as the foundation without a rewrite in Phase 2), and is never merged to `main` unless Thomas says so.
+Answer the unknowns that decide the architecture, each with a pass or fail result: can we get the game's type data, can we read the save and map its IDs, what the game files hold, what the licences allow, and which UI toolkit is light enough beside Wilds.
+
+Spikes produce findings in `docs/research.md`, not product code. Spike code is throwaway: it lives only on its PR branch (or under `spikes/`, if Thomas allows), and Phase 2 rewrites anything it keeps. It is never merged to `main` unless Thomas says so.
 
 Done means:
-- [ ] Each of the six spikes has a recorded result (pass, partial, fail) in `docs/research.md`, with evidence and a status of verified, reported or open.
-- [ ] The type-data route is chosen (A, B, C or D, or MHDB last resort) and the reason is written down.
-- [ ] Open questions 1 to 6 and 8 in `open-questions.md` are answered, or re-stated with what is still missing (coordinator moves answers to `closed-questions.md`).
+- [ ] Each of the seven steps has a recorded result in `docs/research.md` (pass, partial or fail), with evidence and a status of verified, reported or open.
+- [ ] The type-data route is chosen (A, B, C or D, or the MHDB last resort), with the reason written down.
+- [ ] Open questions 1 to 6 and 8 are answered, or re-stated with what is still missing (the coordinator moves answers to `closed-questions.md`).
 - [ ] The licence review states what a Nexus release may include and whether the project must go open source.
-- [ ] The UI toolkit decision (pure Rust, Tauri or Electron) is made from measured numbers with Wilds running, against the performance budget drafted with Thomas.
-- [ ] `PLAN.md` is updated with the results, and the Phase 2 plan can be written from them.
-- [ ] No save, decrypted dump or extracted Capcom data is in git (checked by the test round).
+- [ ] The UI toolkit (pure Rust, Tauri or Electron) is chosen from numbers measured with Wilds running, against the performance budget drafted with Thomas.
+- [ ] `docs/PLAN.md` is updated with the results, so the Phase 2 plan can be written from them.
+- [ ] No save, decrypted dump or extracted Capcom data is in git.
 
 ## 2. Inputs and dependencies
-- `docs/PLAN.md` sections 3 (verified findings), 4 (design decisions), 9 (risks); `CLAUDE.md` standing rules; `docs/open-questions.md`; `docs/closed-questions.md`; `docs/research.md` (MHWeditor licence entry and save format facts already known).
+- `docs/PLAN.md` sections 3 (verified findings), 4 (design decisions) and 9 (risks).
+- `CLAUDE.md` standing rules, `docs/open-questions.md`, `docs/closed-questions.md`, and `docs/research.md` (the MHWeditor licence entry and the save format facts already known).
 - Thomas's PC with Wilds installed, a copy of his save, and the Steam library found through `libraryfolders.vdf`.
-- Thomas's yes for each tool in section 5, and a draft performance budget (open question 9) before spike 6 is judged.
-- Nothing is assumed about Wilds data beyond what `PLAN.md` marks as verified. Anything else a spike finds is recorded as new evidence; game facts are never filled in from memory.
+- Thomas's yes for each tool in section 5.
+- A draft performance budget (open question 9) before step 6 is judged.
+- Nothing is assumed about Wilds data beyond what `PLAN.md` marks as verified. Anything else a step finds is recorded as new evidence; game facts are never filled in from memory.
 
 ## 3. Design
 
 ### 3.1 Architecture
-There is no product architecture in this phase. The spikes are independent except for these orderings:
+There is no product architecture in this phase. Each step is listed with how it relates to the others.
 
-1. **Spike 1 (type data) runs first.** Spikes 3 and 4 need its result.
-2. **Spike 2 (clean-room study)** runs in the cloud and feeds spike 3 with notes only.
-3. **Spike 5 (licence review)** runs in the cloud in parallel with everything. Its results can change the route chosen in spike 1 (fallback C) and the plan for open source.
-4. **Spike 6 (UI comparison)** is independent of the data spikes, but needs the performance budget and Thomas's PC with Wilds running.
+- **Step 1, licence review (cloud, Stage 1):** no ordering needed to start. Its verdicts can change the route chosen in step 3 (fallback C) and the open-source question.
+- **Step 2, clean-room study (cloud, Stage 1):** no ordering needed to start. Its notes in `research.md` are the only input to the code in step 4.
+- **Step 3, type data (PC, Stage 2):** starts after Thomas approves its tool. Steps 4 and 5 wait for its result.
+- **Step 4, ID matching and talismans (PC, Stage 3):** needs step 3's type data and step 2's notes.
+- **Step 5, extraction test (PC, Stage 3):** needs step 3's result. Independent of step 4, so the two can run in the same stage.
+- **Step 6, UI comparison (PC, Stage 3):** independent of the data steps. Needs the performance budget and Thomas's PC with Wilds running.
+- **Step 7, close-out (cloud, Stage 4):** needs steps 1 to 6.
 
-Clean-room rule: the thread that studies MHWeditor (spike 2) writes facts in its own words to `research.md` and never writes code. The thread that writes spike code (spikes 3 and 4) works from `research.md` only and does not open MHWeditor. Threads must be different sessions.
+Clean-room rule: the thread for step 2 studies MHWeditor and writes facts in its own words, and never writes code. The thread for step 4 writes code from `research.md` only and does not open MHWeditor. They must be different sessions.
 
-Spike code on the PC is read-only on the game: it opens copies of the save and reads the game files from the install without writing to the install or Steam folders. Heavy work is user-triggered and runs at low priority.
+PC safety: spike code reads copies of the save and reads the game files from the install. It never writes to the save, the install or the Steam folders, never launches the game for its own purposes, and never injects, hooks or reads game memory. Heavy work is started by hand and runs at low priority.
 
 ### 3.2 Per-file design
-Spikes mostly produce documents. Where code is needed it is throwaway and the file list is indicative; if a spike keeps something, the Phase 2 plan redesigns it properly.
+Spikes mostly produce documents. Code is throwaway and the file list is indicative; Phase 2 redesigns anything it keeps.
 
-`docs/research.md` (changed by every spike)
-- **Purpose:** the single record of results. One section per spike with: question, method, result (pass, partial or fail), evidence (counts, names of classes and fields, never raw dumps), status, and the decision it supports.
-- **Notes:** no Capcom data, no hunter IDs, no secrets. Field and class names and counts are fine; full dumps are not.
+#### `docs/research.md` (steps 1 to 7)
+- **Purpose:** the single record of results, one section per step.
+- **Inputs and outputs:** in, each step's findings. Out, per step: question, method, result (pass, partial or fail), evidence (counts, class and field names, never raw dumps), status (verified, reported or open), and the decision it supports.
+- **Depends on:** nothing.
+- **Notes:** no Capcom data, no hunter IDs, no secrets.
 
-`spikes/typedump/` (spike 1, throwaway, Rust)
-- **Purpose:** try route A: read the game `.exe` on disk and recover the class, field and enum information the save and game files are described by.
-- **Public API:** `fn main(exe_path, out_dir)`, writes a summary (counts, a small sample) and the recovered type data to a local, git-ignored folder.
+#### `spikes/typedump/` (step 3, throwaway Rust)
+- **Purpose:** try route A: read the game `.exe` on disk and recover the class, field and enum information that the save and game files are described by.
+- **Inputs and outputs:** in, the path to the `.exe` and an output folder. Out, a short summary (counts and a small sample) plus the recovered type data in a local, git-ignored folder.
 - **Depends on:** nothing in the repo.
-- **Notes:** static reading only; never launches the game, never injects or reads game memory. Output goes outside git. Success is judged in section 6.
+- **Notes:** static reading only. Output stays outside git. Success is judged in section 6.2.
 
-`spikes/savecheck/` (spikes 2 and 3, throwaway, Rust, written from `research.md` notes only)
-- **Purpose:** decrypt a copy of the save using the Steam ID, parse it with the type data from spike 1, and test ID matching and talisman location.
-- **Public API:** `fn main(save_copy_path, steam_id, type_data_path)` printing counts and match rates only.
-- **Depends on:** `spikes/typedump` output, `research.md` notes.
-- **Notes:** takes a copy path and refuses the live `win64_save` folder. Prints no hunter IDs.
+#### `spikes/savecheck/` (step 4, throwaway Rust, written from `research.md` notes only)
+- **Purpose:** decrypt a copy of the save with the Steam ID, parse it with step 3's type data, and test ID matching and talisman location.
+- **Inputs and outputs:** in, a save copy path, the Steam ID and the type data path. Out, counts and match rates only.
+- **Depends on:** `spikes/typedump` output, step 2's notes in `research.md`.
+- **Notes:** takes a copy and refuses the live `win64_save` folder. Prints no hunter IDs.
 
-`spikes/extract/` (spike 4, throwaway, Rust)
-- **Purpose:** locate and read the specific files for skills, weapons, armor, decorations, charms, Artian tables, hitzones, drops and motion values from the install's packs, extracting only those files.
-- **Public API:** `fn main(game_dir, out_dir, categories)`.
-- **Depends on:** spike 1 result.
-- **Notes:** reads pack indexes and individual entries; never copies or unpacks whole packs (the main one is about 41 GB). Reads original packs only; mod markers (`dinput8.dll`, manager files) are noted, not used. Output stays outside git.
+#### `spikes/extract/` (step 5, throwaway Rust)
+- **Purpose:** find and read only the files for skills, weapons, armor, decorations, charms, Artian tables, hitzones, drops and motion values.
+- **Inputs and outputs:** in, the game folder, an output folder and the categories to read. Out, per category a count and a status, plus the extracted files in a local, git-ignored folder.
+- **Depends on:** step 3's result.
+- **Notes:** reads pack indexes and single entries, never whole packs (the main one is about 41 GB). Reads original packs only. Mod markers such as `dinput8.dll` are reported, not used.
 
-`spikes/uibench/` (spike 6, throwaway, Rust plus web code for the HTML/JS candidates)
-- **Purpose:** three equivalent minimal apps showing a table of a few hundred rows with a dark theme and a button that triggers a background job: a pure-Rust UI, a Tauri app and an Electron app.
-- **Notes:** no network listener, no telemetry. Same content in all three so the numbers are comparable.
+#### `spikes/uibench/` (step 6, throwaway Rust plus web code)
+- **Purpose:** three equivalent minimal apps for the comparison: a pure-Rust UI, a Tauri app and an Electron app.
+- **Inputs and outputs:** in, none. Out, a window with a dark-themed table of a few hundred rows and a button that starts a background job; the numbers come from the measurement in section 3.4.
+- **Depends on:** nothing in the repo.
+- **Notes:** same content in all three so the numbers compare. No network listener, no telemetry.
 
 ### 3.3 Data formats
-Results only: markdown in `docs/research.md`. Raw spike output (type data, extracted files, parse dumps) is written to the permanent PC work folder (proposed below), outside any git checkout, and never committed or attached to a PR.
+Results only: markdown in `docs/research.md`. Raw output (type data, extracted files, parse dumps) goes to the permanent PC work folder, outside any git checkout, and is never committed or attached to a PR.
 
-**Proposed permanent PC work folder (for Thomas to approve or change):** `C:\mhbis` (short path to avoid the "path too long" clone problem). Proposed layout: `C:\mhbis\repo` (git checkout), `C:\mhbis\copies` (save copies), `C:\mhbis\out` (spike output, never committed), `C:\mhbis\bench` (UI benchmark results). It is not cleaned without Thomas's say-so. Dev and test builds use a data directory separate from his installed app.
+**Proposed permanent PC work folder (Thomas to approve or change):** `C:\mhbis`, a short path to avoid the "path too long" clone problem.
+- `C:\mhbis\repo`: the git checkout.
+- `C:\mhbis\copies`: save copies.
+- `C:\mhbis\out`: spike output, never committed.
+- `C:\mhbis\bench`: UI benchmark results.
+
+It is not cleaned without Thomas's say-so. Dev and test builds use a data directory separate from his installed app.
 
 ### 3.4 Performance impact
-No product impact. For spike 6 the measurements are: cold start to first usable window, idle RAM, idle CPU over a fixed window, and GPU use, each taken with Wilds running and without. Pass thresholds come from the performance budget drafted with Thomas (open question 9). Until that exists, spike 6 records numbers and compares the three options relative to each other. The budget draft is an input Thomas needs to review before the spike is judged.
+No product impact. Step 6 measures, with Wilds running and without:
+- cold start to first usable window
+- idle RAM
+- idle CPU over a fixed window
+- GPU use
+- whether the background job stutters the game
+
+Pass thresholds come from the performance budget drafted with Thomas (open question 9). Until it exists, step 6 only records numbers and compares the three options with each other.
 
 ## 4. Steps
-Each step is one thread, one PR and one test round. Spike PRs are doc PRs (results in `research.md`); the PR says whether the code was run against the real files, and spike code stays out of `main` unless approved. Test rounds for PC spikes are queued one at a time.
+Each step is one thread, one PR and one test round. Spike PRs are doc PRs (results in `research.md`); each PR says whether its code ran against the real files, and spike code stays out of `main` unless approved. PC test rounds are queued one at a time.
 
-| # | Step | Thread | Cloud or PC | Output (PR / doc) | Estimate (threads, test rounds) | Depends on |
-|---|------|--------|-------------|-------------------|---------------------------------|------------|
-| 5 | Licence review: type-data asset licence, c-ola upstream, `mhdb-wilds-data` (GPL-3.0), MHDB data, what Nexus requires of open source, THIRD-PARTY-NOTICES.md decision | Licence thread (cloud) | Cloud | PR: `research.md` section | 1 thread, 1 cloud test round | none, runs in parallel from the start |
-| 2 | Clean-room study of the MHWeditor save format, in own words, with credit | Study thread (cloud, never writes code) | Cloud | PR: `research.md` section | 1 thread, 1 cloud test round | none, parallel |
-| 1 | Type-data spike: routes A, B, C, D in order, stopping at the first that passes; MHDB last resort | Type-data thread (PC, plus cloud prep for the report) | PC | PR: `research.md` section; spike code on branch only | 1 to 2 threads, 1 to 2 PC test rounds | Thomas's yes on tools; step 5 informs route C |
-| 3 | Save-ID to data-ID matching and owned talismans on a save copy | Save thread (PC) | PC | PR: `research.md` section | 1 thread, 1 PC test round | 1, 2 |
-| 4 | Extraction test on Thomas's install: skills, weapons, armor, decorations, charms, Artian tables, hitzones, drops, motion values, all weapons | Extraction thread (PC) | PC | PR: `research.md` section (counts, coverage table, what stays hand-written) | 1 to 2 threads, 1 to 2 PC test rounds | 1 |
-| 6 | UI comparison: pure-Rust UI vs Tauri vs Electron, with Wilds running | UI bench thread (PC) | PC | PR: `research.md` section with numbers | 1 thread, 1 PC test round | performance budget draft, Thomas's yes on tools |
-| 7 | Close-out: update `PLAN.md`, move answered questions (coordinator), record licence and toolkit decisions | Docs thread (cloud) | Cloud | PR: `PLAN.md` | 1 thread, 1 cloud test round | 1 to 6 |
+| # | Stage | Step | Thread | Cloud or PC | Output (PR / doc) | Estimate (threads, test rounds) | Depends on |
+|---|-------|------|--------|-------------|-------------------|---------------------------------|------------|
+| 1 | 1 | Licence review: type-data asset licence, c-ola upstream, `mhdb-wilds-data` (GPL-3.0), MHDB data, what Nexus requires of open source, THIRD-PARTY-NOTICES.md decision | Licence thread | Cloud | PR: `research.md` section | 1 thread, 1 cloud round | none |
+| 2 | 1 | Clean-room study of the MHWeditor save format, in own words, with credit | Study thread (never writes code) | Cloud | PR: `research.md` section | 1 thread, 1 cloud round | none |
+| 3 | 2 | Type-data spike: routes A, B, C, D in order, stopping at the first that passes; MHDB as last resort | Type-data thread | PC (cloud prep for the report) | PR: `research.md` section; code on branch only | 1 to 2 threads, 1 to 2 PC rounds | Thomas's yes on its tool; step 1 informs route C |
+| 4 | 3 | Save-ID to data-ID matching and owned talismans on a save copy | Save thread | PC | PR: `research.md` section | 1 thread, 1 PC round | 2, 3 |
+| 5 | 3 | Extraction test on Thomas's install, all weapons | Extraction thread | PC | PR: `research.md` section (counts, coverage table, what stays hand-written) | 1 to 2 threads, 1 to 2 PC rounds | 3 |
+| 6 | 3 | UI comparison: pure Rust vs Tauri vs Electron, with Wilds running | UI bench thread | PC | PR: `research.md` section with numbers | 1 thread, 1 PC round | performance budget, Thomas's yes on tools |
+| 7 | 4 | Close-out: update `PLAN.md`, record licence and toolkit decisions | Docs thread | Cloud | PR: `PLAN.md` | 1 thread, 1 cloud round | 1 to 6 |
 
-Total estimate: 7 to 9 threads, 7 to 9 test rounds (3 to 5 on the PC). At most 2 or 3 threads run at once; steps 2 and 5 run together, then step 1 starts, then 3, 4 and 6 follow as their inputs arrive. Estimates are guesses and will be compared with the time log. The type-data spike is the largest unknown; if it needs more than 2 threads, stop and report to Thomas rather than continue (Opus on high may then be worth suggesting).
+Total estimate: 7 to 9 threads and 7 to 9 test rounds, 3 to 5 of them on the PC. At most 2 or 3 threads run at once. Estimates are guesses and will be compared with the time log. Step 3 is the largest unknown; if it needs more than 2 threads, stop and report to Thomas rather than continue (Opus on high may then be worth suggesting).
 
 ## 5. Tools (need Thomas's yes)
 Nothing below is created or run until Thomas says yes to that row. All tools are our own Rust unless stated.
 
-| Tool | Why | Built or third-party | Licence |
-|------|-----|----------------------|---------|
-| `spikes/typedump` (static `.exe` reader) | Route A for type data (spike 1) | Built, own Rust | ours; any crate used is recorded in THIRD-PARTY-NOTICES.md |
-| `spikes/savecheck` (save decrypt, parse, ID match, talisman search) | Spike 3 | Built, own Rust, from `research.md` notes only | ours |
-| `spikes/extract` (pack index reader, per-file extraction) | Spike 4 | Built, own Rust | ours |
-| `spikes/uibench` (three equivalent minimal apps) | Spike 6 | Built, own Rust and web code | ours; UI toolkits (egui or Slint, Tauri, Electron) and their licences recorded |
-| Rust toolchain, `cargo`, GitHub Actions lint and test jobs | Building and CI | Third-party (standard) | MIT/Apache-2.0 (to confirm in step 5) |
-| A process-measurement method for spike 6 (Windows Performance Monitor or Task Manager counters, or a small own Rust sampler) | Cold start, RAM, CPU, GPU numbers | Decision for Thomas: built (own sampler) or built-in Windows tools | Windows tool or ours |
-| Route C only: a community type dump, downloaded, never run through an injecting tool | Fallback C if A and B fail and the licence allows | Third-party data | Checked in step 5 before use |
+| Tool | Step | Why (plain words) | Built or third-party | Licence |
+|------|------|-------------------|----------------------|---------|
+| `spikes/typedump` | 3 | Problem: the save and game files are described by type data we do not have and cannot copy from MHWeditor. This tool reads the game's `.exe` from disk to rebuild it ourselves. Without it we fall back to a hand-written schema, a community dump or guessing. On your PC it only reads the `.exe`; it writes to `C:\mhbis\out`. | Built | ours; any crate used goes in THIRD-PARTY-NOTICES.md |
+| `spikes/savecheck` | 4 | Problem: we do not know whether the IDs in the save match the game data, or where owned talismans are. This tool decrypts a copy of your save and checks both. Without it, the optimizer could name the wrong gear. On your PC it reads a save copy in `C:\mhbis\copies` only, never the live save. | Built, from `research.md` notes only | ours |
+| `spikes/extract` | 5 | Problem: we need to know which stats, tables and drops the game files really hold. This tool pulls only those files out of the packs. Without it, we cannot tell what must be hand-written or dropped. On your PC it reads the install and Steam library read-only and writes to `C:\mhbis\out`; it never unpacks whole packs. | Built | ours |
+| `spikes/uibench` | 6 | Problem: the app must stay light beside Wilds, and we do not know which UI toolkit manages that. These three tiny apps give comparable start-up, RAM, CPU and GPU numbers. Without it, the choice is a guess. On your PC they run while Wilds runs and are stopped afterwards; they use a separate data directory. | Built | ours; UI toolkits (egui or Slint, Tauri, Electron) and their licences recorded |
+| Rust toolchain, `cargo`, GitHub Actions lint and test jobs | all code | Problem: nothing can be built or checked without them. They install on your PC under normal user folders and run on GitHub for tests. | Third-party, standard | MIT/Apache-2.0 (to confirm in step 1) |
+| Measurement method for step 6: Windows built-in counters, or our own small sampler | 6 | Problem: we need numbers, not impressions. Built-in counters need no new tool; our own sampler is more repeatable but is one more tool. Your choice. It only reads process figures. | Windows tool or built | Windows or ours |
+| Route C only: a community type dump (downloaded data, never run through an injecting tool) | 3 | Problem: if routes A and B fail, a licensed community dump can stand in. Without it we use hash and pattern mapping (route D), which is slower and less exact. Used only if step 1 clears the licence; it is a download, not something that touches the game. | Third-party data | Checked in step 1 before use |
 
-Not proposed: any injecting, hooking or memory-reading tool. Those are ruled out by the standing rules.
+Not proposed: any injecting, hooking or memory-reading tool. The standing rules rule them out.
 
 ## 6. Tests
-**Automated** (GitHub Actions, fixture saves and fixture data only): spike code is throwaway, so automated tests are limited to lint and a check that no save, dump or extracted-data file is tracked in git (a `.gitignore` and a CI file-pattern check). Spike code that touches the reader or extractor is declared untested against the real files in the PR until the PC round runs.
 
-**Pass or fail criteria per spike** (each recorded in `research.md`):
-1. **Type data.** Pass: the recovered type data lets us parse a copy of the save into named classes and fields for the classes we need (the save root, equipment, items, enemy report, story, mission, workshop), with names matching the ones already seen in the format facts, and parse a sample of game data files. Partial: only a subset of classes is recovered (route B can complete it). Fail: route A recovers nothing usable; move to B, then C (only if licence allows), then D, then MHDB. The result states which route was chosen and why.
-2. **Clean-room study.** Pass: `research.md` holds the save container layout, the encryption and key derivation, and the structure facts needed by spike 3, in own words with credit, with no copied code or type dumps. Fail: key facts are missing and need another source.
-3. **ID matching and talismans.** Pass: at least 99% of the fixed IDs in the save for weapons, armor, decorations and items resolve to the same entries in the game data (checked by names), or a deterministic mapping rule is found. For talismans: pass if owned talismans are found in the save and their skills decoded, fail if no record exists (then the plan states how the app treats talismans). Partial results list which categories match.
-4. **Extraction.** Pass per category: skills, weapons, armor, decorations, charms, Artian tables, hitzones, drops and motion values are each found in the files, counts are plausible against the MHDB cross-check (MHDB is only a cross-check), and all weapon types are covered. For each category the result is **found and decoded**, **found but not decoded** or **not in the files**, and the note says what stays hand-written. A category that is not in the files means the corresponding product feature is marked at risk in the plan.
-5. **Licences.** Pass: each of the five items has a verdict (may use, may use with conditions, may not use) with the licence text cited, plus a clear statement on whether a Nexus release forces open source. Items that need a lawyer or the author are marked open rather than guessed.
-6. **UI comparison.** Pass: a candidate meets the performance budget with Wilds running (cold start, idle RAM, idle CPU, GPU) and does not stutter the game during its background job. Decision rule: choose pure Rust if it meets the budget; otherwise the lightest option that does. Numbers are measured on Thomas's PC with Wilds running, repeated at least 3 times, with the median recorded.
+### 6.1 Automated
+GitHub Actions, fixture saves and fixture data only. Spike code is throwaway, so automated tests are minimal:
+- Lint on any Rust spike code.
+- A check that no save, dump or extracted-data file is tracked in git (`.gitignore` plus a file-pattern check in CI).
+- Spike code that touches the reader or extractor is declared untested against the real files in its PR until the PC round runs.
 
-**Test round checklist** (queued, one at a time). Each item says what the app should show for Thomas's current save. No app exists in this phase, so the "app" here is the spike output:
-- [ ] Step 1 (PC): the type-data summary lists the classes needed for the save and counts of fields and enums, and says which route succeeded.
-- [ ] Step 3 (PC): with your current save copy, the report shows 3 character slots, one marked active, the active slot's equipment box count, and an ID match rate per category with the names of unmatched IDs (names only).
-- [ ] Step 3 (PC): the report says whether owned talismans were found and how many, with skill names, and no hunter IDs.
-- [ ] Step 4 (PC): the extraction report lists, per category, the number of entries found and its status (found and decoded, found but not decoded, not in files), for all weapon types.
-- [ ] Step 6 (PC): the UI benchmark table shows cold start, idle RAM, CPU and GPU for each of the three options, with and without Wilds running, with the median of 3 runs.
-- [ ] Every step: no save, dump or extracted Capcom data appears in git or in the PR; the PC thread reports it did not write to the save, the game install or the Steam folders.
+### 6.2 Pass or fail criteria
+Each result is recorded in `docs/research.md`.
+
+**Step 1, licence review**
+- Pass: each of the five items has a verdict (may use, may use with conditions, may not use) with the licence text cited.
+- Pass: a clear statement on whether a Nexus release forces open source.
+- Items needing the author or a lawyer are marked open, not guessed.
+
+**Step 2, clean-room study**
+- Pass: `research.md` holds the save container layout, the encryption and key derivation, and the structure facts step 4 needs.
+- Pass: it is in our own words with credit, with no copied code or type dumps.
+- Fail: key facts are missing and need another source.
+
+**Step 3, type data**
+- Pass: the recovered type data lets us parse a save copy into named classes and fields for the classes we need (save root, equipment, items, enemy report, story, mission, workshop), with names matching the format facts already known.
+- Pass: it can also parse a sample of game data files.
+- Partial: only some classes are recovered (route B can complete the rest).
+- Fail: route A recovers nothing usable; move to B, then C (only if the licence allows), then D, then MHDB.
+- The result states which route was chosen and why.
+
+**Step 4, ID matching and talismans**
+- Pass: at least 99% of the save's fixed IDs for weapons, armor, decorations and items resolve to the same entries in the game data (checked by name), or a deterministic mapping rule is found.
+- Talismans: pass if owned talismans are found in the save and their skills decoded; fail if no record exists (the plan then states how the app treats talismans).
+- Partial results list which categories match.
+
+**Step 5, extraction test**
+- Each of these categories gets one status: skills, weapons, armor, decorations, charms, Artian tables, hitzones, drops and motion values.
+- Statuses: found and decoded, found but not decoded, or not in the files.
+- Counts are plausible against the MHDB cross-check (a cross-check only).
+- All weapon types are covered.
+- The report says what stays hand-written, and marks product features at risk where a category is not in the files.
+
+**Step 6, UI comparison**
+- Pass: a candidate meets the performance budget with Wilds running (cold start, idle RAM, idle CPU, GPU) and does not stutter the game during its background job.
+- Decision rule: pure Rust if it meets the budget; otherwise the lightest option that does.
+- Numbers come from Thomas's PC with Wilds running, at least 3 runs each, median recorded.
+
+**Step 7, close-out**
+- Pass: `PLAN.md` reflects every result and lists the Phase 2 inputs.
+- Pass: every answered open question is flagged for the coordinator to move.
+
+### 6.3 Test round checklist
+Queued, one at a time. There is no app in this phase, so each item says what the spike report should show for Thomas's current save.
+
+**Step 3**
+- [ ] The type-data summary lists the classes needed for the save, with counts of fields and enums.
+- [ ] The summary says which route (A, B, C or D) succeeded.
+
+**Step 4**
+- [ ] With your save copy, the report shows 3 character slots, one marked active, and the active slot's equipment box count.
+- [ ] The report gives an ID match rate per category, with names of unmatched IDs (names only).
+- [ ] The report says whether owned talismans were found and how many, with skill names and no hunter IDs.
+
+**Step 5**
+- [ ] The extraction report lists, per category, the number of entries found and its status.
+- [ ] The report covers every weapon type.
+
+**Step 6**
+- [ ] The benchmark table shows cold start, idle RAM, CPU and GPU for each of the three options, with and without Wilds running, median of 3 runs.
+
+**Every PC step**
+- [ ] No save, dump or extracted Capcom data appears in git or in the PR.
+- [ ] The PC thread reports it did not write to the save, the game install or the Steam folders.
+
+Steps 1, 2 and 7 are cloud-only and checked in the cloud: the PR contains only docs and the `research.md` or `PLAN.md` change, with citations.
 
 ## 7. Risks and open questions
-- **Route A fails (the hardest spike).** Notice: nothing recovered, or names do not match. Fallback: B, then C, then D, then MHDB labelled older and unsupported. Report to Thomas before spending more than 2 threads.
-- **Types recovered but game updates change them.** Notice: spike run on a later build differs. Fallback: record the build ID with each result; the Phase 2 extractor must tolerate change visibly.
-- **Fixed IDs do not match game data IDs.** Notice: match rate under 99%. Fallback: a mapping table, name-based matching, or hash and pattern matching (route D); the plan then records the cost.
-- **Owned talismans not in the save or not decodable.** Fallback: the user enters talismans by hand, or they are treated as optional; recorded as a product decision for Thomas.
-- **The game files do not hold Artian tables, motion values or skill numbers.** Fallback: hand-written tables from cited sources, or dropped features; results feed Phases 4 and 8.
-- **Licence blocks route C or forces open source.** Fallback: routes A, B or D; or the project goes open source, which Thomas has already said is acceptable if needed.
-- **UI candidates all miss the budget.** Fallback: pure Rust with the lightest toolkit anyway, with the numbers shown to Thomas.
-- **Install is modded.** Notice: mod markers in the install folder. Fallback: read original packs only and report the marker.
-- **Leaking personal data in reports.** Notice: any hunter ID in output. Fallback: reports print counts and names only; the checklist item above checks it.
-- **Questions for Thomas (via the coordinator):** (a) approve the tool list in section 5 row by row; (b) approve or change `C:\mhbis`; (c) when the performance budget will be drafted, since spike 6 depends on it; (d) whether spike code may stay on a PR branch only, or may be kept in `spikes/` on `main`; (e) for spike 6, Windows built-in counters or our own small sampler. New questions go to `docs/open-questions.md` via the coordinator.
+- **Route A fails (the hardest step).** Notice: nothing recovered, or names do not match. Fallback: B, then C, then D, then MHDB labelled older and unsupported. Report to Thomas before spending more than 2 threads.
+- **Types recovered, but game updates change them.** Notice: a later build differs. Fallback: record the build ID with each result; the Phase 2 extractor must tolerate change visibly.
+- **Fixed IDs do not match game data IDs.** Notice: match rate under 99%. Fallback: a mapping table, name-based matching or route D; the plan records the cost.
+- **Owned talismans not in the save or not decodable.** Fallback: the user enters talismans by hand, or they are optional; a product decision for Thomas.
+- **The game files lack Artian tables, motion values or skill numbers.** Fallback: hand-written tables from cited sources, or dropped features; the results feed Phases 4 and 8.
+- **Licence blocks route C or forces open source.** Fallback: routes A, B or D, or the project goes open source, which Thomas has said is acceptable if needed.
+- **All UI candidates miss the budget.** Fallback: pure Rust with the lightest toolkit, and the numbers shown to Thomas.
+- **Install is modded.** Notice: mod markers in the install folder. Fallback: read original packs only and report the markers.
+- **Personal data leaks into reports.** Notice: any hunter ID in output. Fallback: reports print counts and names only; the checklist checks it.
+- **Questions for Thomas** are the five decisions in the box at the top. New questions go to `docs/open-questions.md` via the coordinator.
 
 ## 8. Versioning and changelog
-Version 0.1.0 is declared when the phase is closed (step 7). There is no product and no changelog before Phase 2 (changelog starts at 0.2.0 per the standing rules). Spike steps do not bump the version.
+Version 0.1.0 is declared when the phase closes (step 7). There is no product and no changelog before Phase 2 (the changelog starts at 0.2.0 per the standing rules). Steps do not bump the version.
 
 ## 9. Review log
 | Date | Reviewer | Edit or decision |
 |------|----------|------------------|
-| 2026-10-27 | (draft) | Written by a thread for Thomas's review; not yet reviewed |
+| 2026-10-27 | Thomas | Readability review: steps renumbered in run order, every step in Architecture, lists instead of paragraphs, fixed per-file blocks, plain-words tool reasons, "how to read" box. Plan writing rules added to the template. |
 
 ## 10. Time log
 | Event | Date and time |
 |-------|---------------|
 | Phase approved by Thomas | |
-| Step 5 (licence review) PR merged | |
+| Step 1 (licence review) PR merged | |
 | Step 2 (clean-room study) PR merged | |
-| Step 1 (type data) PR merged | |
-| Step 3 (ID matching, talismans) PR merged | |
-| Step 4 (extraction) PR merged | |
+| Step 3 (type data) PR merged | |
+| Step 4 (ID matching, talismans) PR merged | |
+| Step 5 (extraction test) PR merged | |
 | Step 6 (UI comparison) PR merged | |
 | Step 7 (close-out) PR merged | |
 | Phase finished | |
