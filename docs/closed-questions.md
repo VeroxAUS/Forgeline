@@ -19,6 +19,8 @@ Questions asked to Thomas and their answers, all answered on 2026-10-27. Open on
 - **Training dummy checks?** Wait until Phase 5 or later.
 - **Licence review?** Run in the cloud in parallel with the PC spikes, with the results reported in the project chat.
 
+- **Phase 1 step 5 result?** Passed 2026-10-27 as partial: pack reading and naming work, data categories are located but not decoded (route B schemas needed in Phase 3), motion values not found. Thomas noted missing motion values matter little now but must be kept in mind for later simulation ideas (tracked as open question 11).
+
 ## Workflow
 - **Test round timing?** Every PR gets a test round. Later refined: only PRs that change what the app reads or shows run on Thomas's PC; the rest are checked in the cloud and reported the same way. Rounds are queued so Thomas gets one checklist at a time.
 - **Who merges?** The coordinator merges after tests pass (Thomas gave the go) and reports each merge in depth.

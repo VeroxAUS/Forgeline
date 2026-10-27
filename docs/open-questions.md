@@ -14,3 +14,4 @@ Written only by the coordinator. Every question asked to Thomas is recorded here
 8. **UI toolkit.** Does pure-Rust UI pass the Phase 1 comparison against Tauri and Electron (measured with Wilds running)?
 9. **Performance budget.** Target numbers for cold start, idle RAM, idle CPU and recompute time, to be drafted together with Thomas.
 10. **Update validation gate.** How to implement the >95% confidence check (re-scoring old versus new data after skill, set bonus or weight changes)?
+11. **Motion values and base power.** Motion values, and attack and ammo base power (for example bowgun ammo values), were not found in the game files in step 5. The Phase 4 damage formula and any future simulation need them. The Phase 3 and Phase 4 plans must address this early: a cited source, or Phase 5 training-room measurement.
