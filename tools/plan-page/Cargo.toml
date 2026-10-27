@@ -1,0 +1,9 @@
+[package]
+name = "plan-page"
+version = "0.1.0"
+edition = "2021"
+description = "Turns Forgeline plan markdown into one self-contained dark-themed HTML page"
+publish = false
+
+[dependencies]
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
