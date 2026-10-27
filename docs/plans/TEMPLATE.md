@@ -99,3 +99,4 @@ Elapsed from approval to finish: <hours>. Compare with the estimates in section 
 6. A "How to read this plan" box sits at the top with the run order and the decisions needed.
 7. The final step is a close-out that includes the `README.md` update (section 4), and the done checklist lists it.
 8. Check the rendered page against this list before publishing the PR and the Artifact. Republish the same Artifact link when the plan changes.
+9. Publish plan pages only via `tools/plan-page` (see its README), never with a hand-built page, so every republish looks identical.
