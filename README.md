@@ -2,6 +2,15 @@
   <img src="./assets/readme/hero.svg" width="100%" alt="Monster Hunter Wilds Gear Progression Helper: the best build you can make right now. Pre-alpha, phase 1, nothing usable yet.">
 </p>
 
+<p align="center">
+  <img alt="Status: pre-alpha" src="https://img.shields.io/badge/status-pre--alpha-e0a43a?style=flat-square&labelColor=161b22">
+  <img alt="Platform: Windows and Steam" src="https://img.shields.io/badge/platform-Windows%20%7C%20Steam-4fb3a9?style=flat-square&labelColor=161b22">
+  <img alt="Built with Rust" src="https://img.shields.io/badge/built%20with-Rust-e0a43a?style=flat-square&labelColor=161b22">
+  <img alt="Version: unreleased" src="https://img.shields.io/badge/version-unreleased-8b949e?style=flat-square&labelColor=161b22">
+  <img alt="Licence: not decided" src="https://img.shields.io/badge/licence-not%20decided-8b949e?style=flat-square&labelColor=161b22">
+  <img alt="Local only, no telemetry" src="https://img.shields.io/badge/privacy-local%20only%2C%20no%20telemetry-4fb3a9?style=flat-square&labelColor=161b22">
+</p>
+
 A planned Windows and Steam desktop app that reads your Monster Hunter Wilds save and shows the **best build you can make right now**: weapon, armor, decorations, talisman and upgrades. It is meant to follow you through low rank, high rank and endgame.
 
 > **Status: pre-alpha. Nothing is usable yet.** The project is in Phase 1 (spikes): research and throwaway experiments that decide the architecture. There is no release, no installer and no working app. Everything below describes the plan, and every feature is **planned** unless stated otherwise.
