@@ -1,7 +1,5 @@
 /* Forgeline plan page: dark-first, one readable column, boxed run-order, tables scroll inside .tw */
 :root{--bg:#14161a;--fg:#e1e5ea;--mut:#9aa2af;--acc:#e0a458;--line:#2f343d;--code:#1f232a;--box:#1a1f27;color-scheme:dark}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f5f2;--fg:#22252b;--mut:#5d6470;--acc:#8a4f08;--line:#d4d2ca;--code:#ebeae4;--box:#efeee8;color-scheme:light}}
-:root[data-theme="light"]{--bg:#f6f5f2;--fg:#22252b;--mut:#5d6470;--acc:#8a4f08;--line:#d4d2ca;--code:#ebeae4;--box:#efeee8;color-scheme:light}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--fg);font:17px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;padding-block:32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 main{max-width:980px;margin:0 auto;min-width:0}
