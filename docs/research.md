@@ -231,3 +231,25 @@ With those fixes the whole 16.5 MB stream walks to the exact end with no error: 
 
 ### Decision this supports
 Route A is enough to name the save. Phase 2's reader can use the same method at update time (scan the user's exe; nothing shipped). The exe scan takes about 2 s. The class-name rebuild took minutes in the throwaway tool and must be restricted (namespace `app.savedata`, names starting with `c`) to run quickly.
+
+## Nexus monitoring
+
+Question: can a scheduled cloud session read new comments (Posts tab) and bug reports (Bugs tab) on our Nexus mod page? Researched 2026-10-27, read-only, no account made, nothing posted.
+
+### Findings
+- **Official API does not expose comments or bug reports (as far as found).** The public REST v1 API covers mods, files, games and a user's tracked/endorsed mods ([API announcement](https://www.nexusmods.com/news/13921), 2019; docs at https://api-docs.nexusmods.com/). A Nexus forum suggestion dated May 2026 asks for "basic read-only access to recent comments, open bug reports, status, and timestamps" to be added ([thread](https://forums.nexusmods.com/topic/13537574-comments-and-bug-reports-being-available-in-the-api)), which implies it is not there yet. **Unverified:** I could not read the GraphQL v2 schema (https://graphql.nexusmods.com/ refused my fetcher) or the current api-docs page (JS-rendered), so a comments query in v2 is not fully ruled out.
+- **Auth:** a Personal API key (account settings, API Access) works for REST; SSO needs approval from Nexus. Personal keys are tolerated for private/testing use only ([API Acceptable Use Policy](https://help.nexusmods.com/article/114-api-acceptable-use-policy)). Requests must carry honest `Application-Name` / `Application-Version` headers. Storing other users' keys, or using them without the user starting the action, is prohibited.
+- **Rate limits:** 20,000 requests per 24 h, then 500 per hour; remaining count is in response headers ([rate limiting](https://help.nexusmods.com/article/105-api-acceptable-use-policy)). Far more than a daily check needs.
+- **Web pages, logged out:** my fetcher got the mod page shell with "JavaScript is required" and a log-in prompt, no comments, no Cloudflare-style challenge. The mod listing was also empty without JavaScript. So plain HTTP gives no comments; a real browser is needed. I did not test a Wilds page that is live (the one I tried was hidden by its author). The cloud container's network policy blocks `nexusmods.com` outright (proxy 403 on CONNECT), so a scheduled cloud session cannot reach it unless that host is allowed in the environment's network settings.
+- **robots.txt** (https://www.nexusmods.com/robots.txt): `Allow: /` for general crawlers, `Disallow: /ajax/` for everyone, and ClaudeBot, GPTBot, CCBot and similar AI crawlers are disallowed from the whole site; content signal `ai-train=no, use=reference`. A Claude-run reader of the web pages is therefore against the site's stated wishes.
+- **Terms:** the Acceptable Use Policy bans en-masse scraping for rehosting and says Nexus may act on any use it deems detrimental. I did not locate a general Terms of Service clause on automated reading of pages; treat unverified.
+- **Third-party tools exist** that read comments/bugs by driving a headless browser (for example [nexusmods-mcp-server](https://github.com/UberMorgott/nexusmods-mcp-server)); they are unofficial and break when the site changes. Not used or run by us.
+- **Notifications:** Nexus turned off comment notifications for *tracked* mods ([Notifications update](https://www.nexusmods.com/news/14927)). I found nothing confirming email or RSS for comments or bug reports on a mod you author. **Open:** check the author's own Notification settings once the page exists.
+
+### Options, safest first
+1. **Thomas checks the Nexus site / his own notification settings and forwards anything.** Zero risk, no secrets. Ask Thomas to look at his author notification settings once the page is live.
+2. **Official API, if comments/bugs appear in it (or v2 has them):** a scheduled session with a Personal API key stored as an environment secret, one call a day, honest headers. Needs the key from Thomas and the host allowed in the cloud network policy.
+3. **Reading the web pages with a headless browser:** works technically, but fragile, against robots.txt for AI crawlers, and needs a browser plus network access. Not recommended.
+
+### Open
+- Does GraphQL v2 expose comments or bugs? Does Nexus send authors an email for new comments or bug reports?
