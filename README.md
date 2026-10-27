@@ -7,7 +7,7 @@
   <img alt="Platform: Windows and Steam" src="https://img.shields.io/badge/platform-Windows%20%7C%20Steam-4fb3a9?style=flat-square&labelColor=161b22">
   <img alt="Built with Rust" src="https://img.shields.io/badge/built%20with-Rust-e0a43a?style=flat-square&labelColor=161b22">
   <img alt="Version: unreleased" src="https://img.shields.io/badge/version-unreleased-8b949e?style=flat-square&labelColor=161b22">
-  <img alt="Licence: not decided" src="https://img.shields.io/badge/licence-not%20decided-8b949e?style=flat-square&labelColor=161b22">
+  <img alt="Licence: MPL-2.0" src="https://img.shields.io/badge/licence-MPL--2.0-4fb3a9?style=flat-square&labelColor=161b22">
   <img alt="Local only, no telemetry" src="https://img.shields.io/badge/privacy-local%20only%2C%20no%20telemetry-4fb3a9?style=flat-square&labelColor=161b22">
 </p>
 
@@ -98,7 +98,20 @@ Semantic versioning. 1.0.0 is the full release, a major addition bumps the minor
 
 ## Licence
 
-**Not decided yet.** No licence file exists, so for now all rights are reserved. The choice depends on the licence review in [docs/research.md](docs/research.md) and on what a Nexus Mods release requires. If a release requires open source, the project goes open source.
+Forgeline's own code is under the [Mozilla Public License 2.0](LICENSE) (MPL-2.0). In plain words, and not legal advice:
+
+- You can use it, change it and fork it, and send changes back.
+- Forks are welcome, including republishing, as long as they credit **"based on Forgeline"**, keep the copyright notices and licence, and do not present the fork as the official Forgeline.
+- If you change a file that is under MPL-2.0 and share the result, share that file's source under MPL-2.0 too. You can add your own files under other terms.
+- The licence covers our code only. It does not cover Capcom's game data, which is never in this repo, or the third-party code listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+Contributions are accepted under the same licence, with no extra paperwork.
+
+## Support
+
+Forgeline is free. A voluntary tip jar is planned on this GitHub page only (nothing on the Nexus Mods page), with no perks and nothing locked behind it.
+
+<!-- Ko-fi link goes here once the maintainer provides it. -->
 
 ## Disclaimer
 

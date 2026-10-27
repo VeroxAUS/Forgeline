@@ -415,3 +415,6 @@ Question: which UI toolkit (pure Rust, Tauri or Electron) is light enough to run
 
 ### Decision this supports
 Build the Phase 2 interface in pure Rust (egui with glow is the measured baseline). Re-run `spikes/sampler` against the Phase 2 window to check RAM against the 80 MB target as soon as it holds real data.
+
+### Decision (2026-10-27)
+The maintainer chose **MPL-2.0**, forks allowed with "based on Forgeline" credit, no competing-fork ban, no contributor paperwork, and a Ko-fi tip jar on GitHub only (none on Nexus). Compatibility with our dependencies: MIT, Apache-2.0, Unlicense and MIT OR Apache-2.0 crates can be combined with MPL-2.0 code; only the notices must be kept (`THIRD-PARTY-NOTICES.md`). GPL code (including Slint's GPL option and mhdb-wilds-data's toolkit) is not covered by that and stays out. MPL-2.0 asks for a short notice at the top of each source file (its Exhibit A); add it when code files appear.
