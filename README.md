@@ -6,14 +6,14 @@
   <img alt="Status: pre-alpha" src="https://img.shields.io/badge/status-pre--alpha-e0a43a?style=flat-square&labelColor=161b22">
   <img alt="Platform: Windows and Steam" src="https://img.shields.io/badge/platform-Windows%20%7C%20Steam-4fb3a9?style=flat-square&labelColor=161b22">
   <img alt="Built with Rust" src="https://img.shields.io/badge/built%20with-Rust-e0a43a?style=flat-square&labelColor=161b22">
-  <img alt="Version: unreleased" src="https://img.shields.io/badge/version-unreleased-8b949e?style=flat-square&labelColor=161b22">
+  <img alt="Version: 0.1.0" src="https://img.shields.io/badge/version-0.1.0-8b949e?style=flat-square&labelColor=161b22">
   <img alt="Licence: MPL-2.0" src="https://img.shields.io/badge/licence-MPL--2.0-4fb3a9?style=flat-square&labelColor=161b22">
   <img alt="Local only, no telemetry" src="https://img.shields.io/badge/privacy-local%20only%2C%20no%20telemetry-4fb3a9?style=flat-square&labelColor=161b22">
 </p>
 
 A planned Windows and Steam desktop app that reads your Monster Hunter Wilds save and shows the **best build you can make right now**: weapon, armor, decorations, talisman and upgrades. It is meant to follow you through low rank, high rank and endgame.
 
-> **Status: pre-alpha. Nothing is usable yet.** The project is in Phase 1 (spikes): research and throwaway experiments that decide the architecture. There is no release, no installer and no working app. Everything below describes the plan, and every feature is **planned** unless stated otherwise.
+> **Status: pre-alpha. Nothing is usable yet.** Phase 1 (spikes) is done: research and throwaway experiments settled the architecture (pure-Rust egui UI, MPL-2.0 licence, save and game-pack reading proven). Phase 2 (foundation) is next. There is no release, no installer and no working app. Everything below describes the plan, and every feature is **planned** unless stated otherwise.
 
 ## What it will do (planned)
 
@@ -49,15 +49,15 @@ A planned Windows and Steam desktop app that reads your Monster Hunter Wilds sav
 
 - Windows and Steam only.
 - Written in Rust, including our own tools.
-- The UI toolkit is decided in Phase 1: a pure-Rust UI is preferred, and it is compared with Tauri and Electron by measurements taken with Wilds running.
+- The UI is pure Rust with egui, chosen in Phase 1 because it met the performance budget with Wilds running while Tauri and Electron did not.
 - The game install is found through Steam's library list, and the Steam ID comes from the save folder name.
 
 ## Roadmap
 
 The full plan is in [docs/PLAN.md](docs/PLAN.md). Each phase gets its own detailed plan in `docs/plans/`, approved before work starts.
 
-1. **Spikes** (current): type data, save ID matching, licence review, extraction test, UI comparison.
-2. Foundation: save and install discovery, save reader, file watcher, extractor and update button, debug data viewer.
+1. **Spikes** (done, 0.1.0): type data, save ID matching, licence review, extraction test, UI comparison.
+2. Foundation (next): save and install discovery, save reader, file watcher, extractor and update button, debug data viewer.
 3. Data and progression: data model for every weapon, unlock logic.
 4. Light bowgun optimizer.
 5. Calibration.
@@ -73,17 +73,18 @@ After that: the other weapons, then packaging for Nexus Mods.
 |------|----------|
 | [`CLAUDE.md`](CLAUDE.md) | Standing project rules |
 | [`docs/PLAN.md`](docs/PLAN.md) | Overall plan and verified findings |
-| [`docs/plans/`](docs/plans/) | Per-phase plans and the [template](docs/plans/TEMPLATE.md); current: [Phase 1](docs/plans/phase-1-spikes.md) |
+| [`docs/plans/`](docs/plans/) | Per-phase plans and the [template](docs/plans/TEMPLATE.md); [Phase 1](docs/plans/phase-1-spikes.md) (closed) |
 | [`docs/performance-budget.md`](docs/performance-budget.md) | Start-up, memory, CPU and recompute targets |
 | [`docs/research.md`](docs/research.md) | Spike and research results |
 | [`docs/open-questions.md`](docs/open-questions.md) | Unanswered questions |
 | [`docs/closed-questions.md`](docs/closed-questions.md) | Answered questions |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECURITY.md), [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | How to contribute, report problems privately, and behave |
 
-There is no application code on the main branch yet. Phase 1 spike code lives on separate branches and is not merged.
+There is no application code on the main branch yet. Phase 1 spike code is kept for reference on the `spikes-archive` branch and is not merged.
 
 ## Contributing
 
-The project is in an early planning stage. Basics that already apply:
+The project is at an early stage; see [CONTRIBUTING.md](CONTRIBUTING.md). Basics that already apply:
 
 - **Bring your own save.** Anyone working on the project uses their own local saves.
 - **Never commit** saves, decrypted save dumps (they contain hunter IDs), extracted Capcom data, tokens, keys or other personal data.

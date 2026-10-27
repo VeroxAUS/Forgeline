@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/VeroxAUS/Forgeline/security/advisories/new
+    about: Use this for security problems and Code of Conduct reports, not a public issue.

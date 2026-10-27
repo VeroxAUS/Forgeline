@@ -13,3 +13,9 @@ Third-party code used by Forgeline, with its licence. Add a row before any third
 | unicase | 2.10.0 | MIT OR Apache-2.0 | dependency of pulldown-cmark |
 
 Licences read from each crate's `Cargo.toml` in the crates.io registry.
+
+## spikes-archive branch (reference only, not on `main`, not shipped)
+
+| Source | Licence | Use |
+|---|---|---|
+| [eigeen/ree-pak-rs](https://github.com/eigeen/ree-pak-rs) | MIT | The 129-byte pak table modulus constant in `spikes/step5-extract/extract/src/pak.rs` on the `spikes-archive` branch, and the pak format facts behind our own reader. Credit retained. If this constant enters the product, copy the MIT notice here in full. |
