@@ -32,6 +32,7 @@ fn murmur3(data: &[u8], seed: u32) -> u32 {
     h ^ (h >> 16)
 }
 
+#[allow(dead_code)]
 struct Sm(u64);
 impl Sm {
     fn next(&mut self) -> u64 {
@@ -73,48 +74,52 @@ fn ofb(key: [u8; 16], iv: [u8; 16], data: &mut [u8]) {
     }
 }
 
-/// variant bit0: size from raw state (before advance) instead of output; bit1: key uses NOT
-fn decrypt(f: &[u8], steam_id: u64, variant: u32) -> Option<Vec<u8>> {
+fn step(x: u64) -> u64 {
+    let mut z = x.wrapping_add(0x9E3779B97F4A7C15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
+    z ^ (z >> 31)
+}
+
+/// Recipe from docs/research.md step 2 follow-up. Oracle: checked before any AES.
+fn decrypt(f: &[u8], steam_id: u64) -> Option<Vec<u8>> {
     let n = f.len();
     let dec_len = u64::from_le_bytes(f[n - 12..n - 4].try_into().unwrap()) as usize;
-    let enc = &f[0x10..n - 0x80 - 12];
-    let mut g = Sm(0x7A36955255266CED);
-    let potential = dec_len.div_ceil(0x4000);
+    let enc = &f[0x10..n - 4];
+    let mut x = 0x7A36955255266CEDu64;
     let mut sizes = vec![];
-    for _ in 0..potential {
-        let sz = if variant & 1 == 0 { (g.0 & 7) as usize + 1 } else { 0 };
-        let out = g.next();
-        let sz = if variant & 1 == 0 { sz } else { (out & 7) as usize + 1 };
-        sizes.push(sz * 0x4000);
+    for _ in 0..dec_len.div_ceil(0x4000) {
+        sizes.push(((x & 7) as usize + 1) * 0x4000);
+        x = step(x);
     }
-    let key = if variant & 2 == 0 { !steam_id } else { steam_id };
-    g.0 = g.0.wrapping_add(key);
+    x = x.wrapping_add(!steam_id);
+    {
+        let mut t = x;
+        for _ in 0..16 { t = step(t); }
+        let mut m = [0u8; 8];
+        for b in m.iter_mut() { t = step(t); *b = t as u8; }
+        let o: Vec<u8> = enc[..8].iter().zip(m).map(|(a, b)| a ^ b).collect();
+        eprintln!("oracle {:02x?} (want bb39c81702d5495b)", o);
+    }
     let mut out = Vec::new();
     let mut pos = 0usize;
     let mut remaining = dec_len;
     for sz in sizes {
-        if remaining == 0 {
-            break;
-        }
         let mut k = [0u8; 16];
         let mut iv = [0u8; 16];
         for i in 0..16 {
-            let v = g.next();
-            k[i] = v as u8;
-            iv[i] = (v >> 8) as u8;
+            x = step(x);
+            k[i] = x as u8;
+            iv[i] = (x >> 8) as u8;
         }
-        for _ in 0..0x210 {
-            g.next();
-        }
-        if pos + 0x210 + sz > enc.len() {
-            return None;
-        }
-        let mut d = enc[pos + 0x210..pos + 0x210 + sz].to_vec();
+        for _ in 0..0x210 { x = step(x); }
+        let mut d = enc.get(pos + 0x210..pos + 0x210 + sz)?.to_vec();
         ofb(k, iv, &mut d);
         let take = remaining.min(sz);
         out.extend_from_slice(&d[..take]);
-        remaining -= take;
         pos += 0x210 + sz;
+        if remaining <= sz { break; }
+        remaining -= sz;
     }
     Some(out)
 }
@@ -133,6 +138,7 @@ struct W<'a> {
     b: &'a [u8],
     p: usize,
     base: usize,
+    extra: u64,
     classes: BTreeMap<u32, (u64, BTreeMap<u32, (i32, u64)>)>, // class -> (count, field -> (type,count))
 }
 type R<T> = Result<T, String>;
@@ -179,6 +185,9 @@ impl<'a> W<'a> {
                 if t != 16 && [1, 2, 4, 8].contains(&sz) {
                     self.al(sz);
                 }
+                if t == 16 && sz == 16 {
+                    self.al(16); // observed: 16-byte structs are 16-aligned
+                }
                 self.p += sz;
             }
             15 => {
@@ -207,8 +216,14 @@ impl<'a> W<'a> {
                         self.class(depth + 1)?;
                     }
                 } else {
-                    for _ in 0..n {
-                        self.value(mt, depth)?;
+                    if mt == 15 || mt == 17 || mt == -1 {
+                        for _ in 0..n {
+                            self.value(mt, depth)?;
+                        }
+                    } else {
+                        // observed: scalar/struct array elements are packed, no per-element size prefix
+                        if _ms == 16 { self.al(16); }
+                        self.p += n * _ms as usize;
                     }
                 }
                 self.al(4);
@@ -220,7 +235,7 @@ impl<'a> W<'a> {
 }
 
 fn walk(d: &[u8], base: usize) -> (W<'_>, Option<String>) {
-    let mut w = W { b: d, p: 0, base, classes: BTreeMap::new() };
+    let mut w = W { b: d, p: 0, base, extra: 0, classes: BTreeMap::new() };
     let mut err = None;
     while w.p + 7 < d.len() {
         if let Err(e) = w.u32().and_then(|_| w.class(0)) {
@@ -241,55 +256,46 @@ fn main() {
             }
             let f = std::fs::read(&a[2]).unwrap();
             let id: u64 = a[3].parse().unwrap();
-            for v in 0..4 {
-                let Some(d) = decrypt(&f, id, v) else { continue };
-                eprintln!("variant {v}: head {:02x?}", &d[..16.min(d.len())]);
-                if let Some(p) = inflate(&d) {
-                    std::fs::write(&a[4], &p).unwrap();
-                    eprintln!("variant {v} OK");
-                    return;
-                }
-            }
-            eprintln!("no variant inflated");
+            let d = decrypt(&f, id).expect("decrypt");
+            let p = inflate(&d).expect("inflate");
+            std::fs::write(&a[4], &p).unwrap();
+            eprintln!("OK");
         }
-        Some("brute") => {
-            let f = std::fs::read(&a[2]).unwrap();
-            let id: u64 = a[3].parse().unwrap();
-            let n = f.len();
-            let enc = &f[0x10..n - 0x80 - 12];
-            let mut s11 = Sm(0x7A36955255266CED);
-            for _ in 0..11 { s11.next(); }
-            let mut starts = vec![]; { let mut t = Sm(0x7A36955255266CED); for _ in 0..30 { starts.push(t.0); t.next(); } starts.push(0); starts.push(0xBFACF76C3F96); } let _ = s11;
-            let adds = [0u64, id, !id, id.swap_bytes(), (!id).swap_bytes(), id ^ 0x0110000100000000, id & 0xffffffff, !(id & 0xffffffff)];
-            let skips: Vec<usize> = (0..40).chain(520..560).collect();
-            for (si, st) in starts.iter().enumerate() {
-              for (ai, ad) in adds.iter().chain(adds.iter()).enumerate() {
-                for &skip in &skips {
-                  let mut g = Sm(if ai >= 8 { st ^ adds[ai - 8] } else { st.wrapping_add(*ad) });
-                  for _ in 0..skip { g.next(); }
-                  let o: Vec<u64> = (0..64).map(|_| g.next()).collect();
-                  for ko in [0usize, 16, 32, 48] { for kl in 0..4 { for io in [0usize, 16, 32, 48] { for il in 0..4 {
-                    let mut k = [0u8; 16];
-                    let mut iv = [0u8; 16];
-                    for i in 0..16 { k[i] = (o[ko + i] >> (8 * kl)) as u8; iv[i] = (o[io + i] >> (8 * il)) as u8; }
-                    for ofs in [0usize, 0x210] {
-                        for mode in 1..4 {
-                        let mut d = enc[ofs..ofs + 4096].to_vec();
-                        modes(mode, k, iv, &mut d);
-                        for st0 in [0usize, 8, 16, 24] {
-                            let c = u32::from_le_bytes(d[st0 + 12..st0 + 16].try_into().unwrap());
-                            let u = u32::from_le_bytes(d[st0 + 8..st0 + 12].try_into().unwrap());
-                            if u == 1 && c > 1000 && c < 400000 {
-                                println!("HIT start{si} add{ai} skip{skip} ko{ko} kl{kl} io{io} il{il} ofs{ofs:x} st{st0} c{c} mode{mode}");
-                            }
-                        }
-                        }
-                    }
-                  }}}}
-                }
-              }
+        Some("names") => {
+            // names <exe tsv> <classes tsv> <out tsv>: rebuild dotted class names as namespace + "." + short name
+            let rd = |p: &str| std::fs::read_to_string(p).unwrap();
+            let tsv = rd(&a[2]);
+            let want: std::collections::HashSet<u32> =
+                rd(&a[3]).lines().filter_map(|l| u32::from_str_radix(l.split('\t').next()?, 16).ok()).collect();
+            let ident = |s: &str| s.len() <= 80 && s.chars().next().map_or(false, |c| c.is_ascii_alphabetic() || c == '_') && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_');
+            let mut ns: Vec<&str> = vec![];
+            let mut nm: Vec<&str> = vec![];
+            for l in tsv.lines() {
+                let Some((_, n)) = l.split_once('\t') else { continue };
+                if (n.starts_with("app.") || n.starts_with("via.") || n == "app" || n == "via") && n.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '.') { ns.push(n); }
+                if ident(n) { nm.push(n); }
             }
-            eprintln!("brute done");
+            eprintln!("{} namespaces, {} names", ns.len(), nm.len());
+            let mut out = String::new();
+            let mut buf = Vec::new();
+            for n in &ns {
+                for m in &nm {
+                    buf.clear();
+                    buf.extend_from_slice(n.as_bytes());
+                    buf.push(b'.');
+                    buf.extend_from_slice(m.as_bytes());
+                    let h = murmur3(&buf, 0xFFFFFFFF);
+                    if want.contains(&h) { out.push_str(&format!("{h:08x}	{n}.{m}
+")); }
+                }
+            }
+            // also plain strings (no namespace)
+            for m in tsv.lines().filter_map(|l| l.split_once('\t')) {
+                let h = u32::from_str_radix(m.0, 16).unwrap();
+                if want.contains(&h) { out.push_str(&format!("{h:08x}	{}
+", m.1)); }
+            }
+            std::fs::write(&a[4], out).unwrap();
         }
         Some("classes") => {
             // classes <payload> <exe hashes tsv>
@@ -307,13 +313,13 @@ fn main() {
             let mut best = None;
             for base in 0..8 {
                 let (w, e) = walk(&p, base);
-                eprintln!("base {base}: {} classes, err {:?}, pos {}/{}", w.classes.len(), e, w.p, p.len());
+                eprintln!("base {base}: {} classes, err {:?}, pos {}/{} extra {}", w.classes.len(), e, w.p, p.len(), w.extra);
                 if e.is_none() {
                     best = Some(base);
                     for (h, (c, fs)) in &w.classes {
                         let nm = names.get(h).map(|s| s.as_str()).unwrap_or("?");
                         let known = fs.keys().filter(|k| names.contains_key(k)).count();
-                        println!("{h:08x}\t{c}\t{nm}\tfields {} named {}", fs.len(), known);
+                        println!("{h:08x}	{c}	{nm}	fields {} named {}", fs.len(), known);
                     }
                     break;
                 }
@@ -350,7 +356,7 @@ fn main() {
                 }
             }
             eprintln!("scanned {total} bytes, {} distinct strings", out.len());
-            let s: String = out.iter().map(|(h, n)| format!("{h:08x}\t{n}\n")).collect();
+            let s: String = out.iter().map(|(h, n)| format!("{h:08x}	{n}\n")).collect();
             std::fs::write(&a[3], s).unwrap();
         }
         _ => eprintln!("usage: typedump walk|classes|exe ..."),
