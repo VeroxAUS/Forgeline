@@ -109,9 +109,7 @@ Contributions are accepted under the same licence, with no extra paperwork.
 
 ## Support
 
-Forgeline is free. A voluntary tip jar is planned on this GitHub page only (nothing on the Nexus Mods page), with no perks and nothing locked behind it.
-
-<!-- Ko-fi link goes here once the maintainer provides it. -->
+Forgeline is free. If you want to, you can leave an optional tip on [Ko-fi](https://ko-fi.com/veroxaus). It is a tip with no perks: nothing is locked behind it, and every feature and update stays free. The tip link lives on this GitHub page only, not on the Nexus Mods page.
 
 ## Disclaimer
 
