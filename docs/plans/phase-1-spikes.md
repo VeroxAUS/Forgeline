@@ -12,17 +12,21 @@ Each phase plan is written just before its phase, using what earlier phases foun
 - **Stage 3** (PC): step 4 ID matching and talismans, step 5 extraction test, step 6 UI comparison. Steps 4 and 5 need step 3. Step 6 needs only the performance budget and can start earlier if Thomas prefers.
 - **Stage 4** (cloud): step 7 close-out.
 
-**Decisions needed from Thomas:**
-- Approve each tool in section 5, row by row.
-- Approve or change the permanent PC work folder `C:\mhbis` (section 3.3).
-- Say when the performance budget will be drafted; step 6 cannot be judged without it.
-- Say whether spike code may stay on a PR branch only, or may live in `spikes/` on `main`.
-- Choose for step 6: Windows built-in counters, or our own small sampler.
+**Decisions made by Thomas (2026-10-27):**
+- All tools in section 5 are approved.
+- Step 6 measurement is our own cross-platform Rust sampler, not Windows built-ins.
+- PC work folder is `E:\mhbis`.
+- Spike code stays on separate PR branches and is never merged to `main`; at the end of Phase 1 the branches are collected into a `spikes-archive` branch, kept for reference (an approved exception to the main-only rule).
+- The performance budget is in [performance-budget.md](../performance-budget.md) (initial pass, reviewed over time).
+
+**Still open:**
+- How to measure the game's frame times or stutter without touching the game (step 6). Thomas asked whether our own tool can do it; this is being decided.
+- The minimum spec for other users (to be determined).
 
 ## 1. Goal and done
 Answer the unknowns that decide the architecture, each with a pass or fail result: can we get the game's type data, can we read the save and map its IDs, what the game files hold, what the licences allow, and which UI toolkit is light enough beside Wilds.
 
-Spikes produce findings in `docs/research.md`, not product code. Spike code is throwaway: it lives only on its PR branch (or under `spikes/`, if Thomas allows), and Phase 2 rewrites anything it keeps. It is never merged to `main` unless Thomas says so.
+Spikes produce findings in `docs/research.md`, not product code. Spike code is throwaway: it lives only on its own PR branch and is never merged to `main`. When Phase 1 is done the branches are collected into a `spikes-archive` branch kept for reference. Phase 2 rewrites anything it keeps.
 
 Done means:
 - [ ] Each of the seven steps has a recorded result in `docs/research.md` (pass, partial or fail), with evidence and a status of verified, reported or open.
@@ -51,7 +55,7 @@ There is no product architecture in this phase. Each step is listed with how it 
 - **Step 3, type data (PC, Stage 2):** starts after Thomas approves its tool. Steps 4 and 5 wait for its result.
 - **Step 4, ID matching and talismans (PC, Stage 3):** needs step 3's type data and step 2's notes.
 - **Step 5, extraction test (PC, Stage 3):** needs step 3's result. Independent of step 4, so the two can run in the same stage.
-- **Step 6, UI comparison (PC, Stage 3):** independent of the data steps. Needs the performance budget and Thomas's PC with Wilds running.
+- **Step 6, UI comparison (PC, Stage 3):** independent of the data steps. Needs [performance-budget.md](../performance-budget.md) and Thomas's PC with Wilds running.
 - **Step 7, close-out (cloud, Stage 4):** needs steps 1 to 6.
 
 Clean-room rule: the thread for step 2 studies MHWeditor and writes facts in its own words, and never writes code. The thread for step 4 writes code from `research.md` only and does not open MHWeditor. They must be different sessions.
@@ -85,6 +89,12 @@ Spikes mostly produce documents. Code is throwaway and the file list is indicati
 - **Depends on:** step 3's result.
 - **Notes:** reads pack indexes and single entries, never whole packs (the main one is about 41 GB). Reads original packs only. Mod markers such as `dinput8.dll` are reported, not used.
 
+#### `spikes/sampler/` (step 6, throwaway Rust)
+- **Purpose:** cross-platform sampler for cold start, RAM, CPU and GPU of a process, so the three UI test apps are measured the same way.
+- **Inputs and outputs:** in, a process to launch or attach to, and a sampling window. Out, a results file in `E:\mhbis\bench` with the median of 3 runs.
+- **Depends on:** `spikes/uibench`.
+- **Notes:** reads process figures only; never touches the game process. Game frame-time measurement is an open item.
+
 #### `spikes/uibench/` (step 6, throwaway Rust plus web code)
 - **Purpose:** three equivalent minimal apps for the comparison: a pure-Rust UI, a Tauri app and an Electron app.
 - **Inputs and outputs:** in, none. Out, a window with a dark-themed table of a few hundred rows and a button that starts a background job; the numbers come from the measurement in section 3.4.
@@ -94,11 +104,11 @@ Spikes mostly produce documents. Code is throwaway and the file list is indicati
 ### 3.3 Data formats
 Results only: markdown in `docs/research.md`. Raw output (type data, extracted files, parse dumps) goes to the permanent PC work folder, outside any git checkout, and is never committed or attached to a PR.
 
-**Proposed permanent PC work folder (Thomas to approve or change):** `C:\mhbis`, a short path to avoid the "path too long" clone problem.
-- `C:\mhbis\repo`: the git checkout.
-- `C:\mhbis\copies`: save copies.
-- `C:\mhbis\out`: spike output, never committed.
-- `C:\mhbis\bench`: UI benchmark results.
+**Proposed permanent PC work folder (Thomas to approve or change):** `E:\mhbis`, a short path to avoid the "path too long" clone problem.
+- `E:\mhbis\repo`: the git checkout.
+- `E:\mhbis\copies`: save copies.
+- `E:\mhbis\out`: spike output, never committed.
+- `E:\mhbis\bench`: UI benchmark results.
 
 It is not cleaned without Thomas's say-so. Dev and test builds use a data directory separate from his installed app.
 
@@ -110,7 +120,7 @@ No product impact. Step 6 measures, with Wilds running and without:
 - GPU use
 - whether the background job stutters the game
 
-Pass thresholds come from the performance budget drafted with Thomas (open question 9). Until it exists, step 6 only records numbers and compares the three options with each other.
+Pass thresholds come from [performance-budget.md](../performance-budget.md) (initial pass, test PC 13700K / RTX 4080 / 32 GB). Measured with our own cross-platform Rust sampler, median of 3 runs. Open item: how to measure the game's frame times or stutter without touching the game (a Windows-only event-tracing approach versus judging by eye while Thomas plays); undecided, Thomas is asked.
 
 ## 4. Steps
 Each step is one thread, one PR and one test round. Spike PRs are doc PRs (results in `research.md`); each PR says whether its code ran against the real files, and spike code stays out of `main` unless approved. PC test rounds are queued one at a time.
@@ -122,22 +132,22 @@ Each step is one thread, one PR and one test round. Spike PRs are doc PRs (resul
 | 3 | 2 | Type-data spike: routes A, B, C, D in order, stopping at the first that passes; MHDB as last resort | Type-data thread | PC (cloud prep for the report) | PR: `research.md` section; code on branch only | 1 to 2 threads, 1 to 2 PC rounds | Thomas's yes on its tool; step 1 informs route C |
 | 4 | 3 | Save-ID to data-ID matching and owned talismans on a save copy | Save thread | PC | PR: `research.md` section | 1 thread, 1 PC round | 2, 3 |
 | 5 | 3 | Extraction test on Thomas's install, all weapons | Extraction thread | PC | PR: `research.md` section (counts, coverage table, what stays hand-written) | 1 to 2 threads, 1 to 2 PC rounds | 3 |
-| 6 | 3 | UI comparison: pure Rust vs Tauri vs Electron, with Wilds running | UI bench thread | PC | PR: `research.md` section with numbers | 1 thread, 1 PC round | performance budget, Thomas's yes on tools |
+| 6 | 3 | UI comparison: pure Rust vs Tauri vs Electron, with Wilds running | UI bench thread | PC | PR: `research.md` section with numbers | 1 thread, 1 PC round | performance budget (drafted), our sampler tool |
 | 7 | 4 | Close-out: update `PLAN.md`, record licence and toolkit decisions | Docs thread | Cloud | PR: `PLAN.md` | 1 thread, 1 cloud round | 1 to 6 |
 
 Total estimate: 7 to 9 threads and 7 to 9 test rounds, 3 to 5 of them on the PC. At most 2 or 3 threads run at once. Estimates are guesses and will be compared with the time log. Step 3 is the largest unknown; if it needs more than 2 threads, stop and report to Thomas rather than continue (Opus on high may then be worth suggesting).
 
 ## 5. Tools (need Thomas's yes)
-Nothing below is created or run until Thomas says yes to that row. All tools are our own Rust unless stated.
+All rows approved by Thomas on 2026-10-27. All tools are our own Rust unless stated.
 
 | Tool | Step | Why (plain words) | Built or third-party | Licence |
 |------|------|-------------------|----------------------|---------|
-| `spikes/typedump` | 3 | Problem: the save and game files are described by type data we do not have and cannot copy from MHWeditor. This tool reads the game's `.exe` from disk to rebuild it ourselves. Without it we fall back to a hand-written schema, a community dump or guessing. On your PC it only reads the `.exe`; it writes to `C:\mhbis\out`. | Built | ours; any crate used goes in THIRD-PARTY-NOTICES.md |
-| `spikes/savecheck` | 4 | Problem: we do not know whether the IDs in the save match the game data, or where owned talismans are. This tool decrypts a copy of your save and checks both. Without it, the optimizer could name the wrong gear. On your PC it reads a save copy in `C:\mhbis\copies` only, never the live save. | Built, from `research.md` notes only | ours |
-| `spikes/extract` | 5 | Problem: we need to know which stats, tables and drops the game files really hold. This tool pulls only those files out of the packs. Without it, we cannot tell what must be hand-written or dropped. On your PC it reads the install and Steam library read-only and writes to `C:\mhbis\out`; it never unpacks whole packs. | Built | ours |
+| `spikes/typedump` | 3 | Problem: the save and game files are described by type data we do not have and cannot copy from MHWeditor. This tool reads the game's `.exe` from disk to rebuild it ourselves. Without it we fall back to a hand-written schema, a community dump or guessing. On your PC it only reads the `.exe`; it writes to `E:\mhbis\out`. | Built | ours; any crate used goes in THIRD-PARTY-NOTICES.md |
+| `spikes/savecheck` | 4 | Problem: we do not know whether the IDs in the save match the game data, or where owned talismans are. This tool decrypts a copy of your save and checks both. Without it, the optimizer could name the wrong gear. On your PC it reads a save copy in `E:\mhbis\copies` only, never the live save. | Built, from `research.md` notes only | ours |
+| `spikes/extract` | 5 | Problem: we need to know which stats, tables and drops the game files really hold. This tool pulls only those files out of the packs. Without it, we cannot tell what must be hand-written or dropped. On your PC it reads the install and Steam library read-only and writes to `E:\mhbis\out`; it never unpacks whole packs. | Built | ours |
 | `spikes/uibench` | 6 | Problem: the app must stay light beside Wilds, and we do not know which UI toolkit manages that. These three tiny apps give comparable start-up, RAM, CPU and GPU numbers. Without it, the choice is a guess. On your PC they run while Wilds runs and are stopped afterwards; they use a separate data directory. | Built | ours; UI toolkits (egui or Slint, Tauri, Electron) and their licences recorded |
 | Rust toolchain, `cargo`, GitHub Actions lint and test jobs | all code | Problem: nothing can be built or checked without them. They install on your PC under normal user folders and run on GitHub for tests. | Third-party, standard | MIT/Apache-2.0 (to confirm in step 1) |
-| Measurement method for step 6: Windows built-in counters, or our own small sampler | 6 | Problem: we need numbers, not impressions. Built-in counters need no new tool; our own sampler is more repeatable but is one more tool. Your choice. It only reads process figures. | Windows tool or built | Windows or ours |
+| `spikes/sampler` (cross-platform process sampler) | 6 | Problem: we need repeatable numbers, not impressions, and your preference is our own tools that work on every OS. This samples the three test apps' start-up time, RAM, CPU and GPU. Without it we depend on Windows-only counters. On your PC it only reads process figures and writes to `E:\mhbis\bench`. | Built | ours |
 | Route C only: a community type dump (downloaded data, never run through an injecting tool) | 3 | Problem: if routes A and B fail, a licensed community dump can stand in. Without it we use hash and pattern mapping (route D), which is slower and less exact. Used only if step 1 clears the licence; it is a download, not something that touches the game. | Third-party data | Checked in step 1 before use |
 
 Not proposed: any injecting, hooking or memory-reading tool. The standing rules rule them out.
@@ -185,7 +195,8 @@ Each result is recorded in `docs/research.md`.
 **Step 6, UI comparison**
 - Pass: a candidate meets the performance budget with Wilds running (cold start, idle RAM, idle CPU, GPU) and does not stutter the game during its background job.
 - Decision rule: pure Rust if it meets the budget; otherwise the lightest option that does.
-- Numbers come from Thomas's PC with Wilds running, at least 3 runs each, median recorded.
+- Numbers come from Thomas's PC with Wilds running, at least 3 runs each, median recorded, taken with our own sampler.
+- Open item: how game stutter is judged (frame-time tool or by eye) is undecided.
 
 **Step 7, close-out**
 - Pass: `PLAN.md` reflects every result and lists the Phase 2 inputs.
@@ -226,7 +237,7 @@ Steps 1, 2 and 7 are cloud-only and checked in the cloud: the PR contains only d
 - **All UI candidates miss the budget.** Fallback: pure Rust with the lightest toolkit, and the numbers shown to Thomas.
 - **Install is modded.** Notice: mod markers in the install folder. Fallback: read original packs only and report the markers.
 - **Personal data leaks into reports.** Notice: any hunter ID in output. Fallback: reports print counts and names only; the checklist checks it.
-- **Questions for Thomas** are the five decisions in the box at the top. New questions go to `docs/open-questions.md` via the coordinator.
+- **Questions for Thomas** are the open items in the box at the top. New questions go to `docs/open-questions.md` via the coordinator.
 
 ## 8. Versioning and changelog
 Version 0.1.0 is declared when the phase closes (step 7). There is no product and no changelog before Phase 2 (the changelog starts at 0.2.0 per the standing rules). Steps do not bump the version.
@@ -234,6 +245,7 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 ## 9. Review log
 | Date | Reviewer | Edit or decision |
 |------|----------|------------------|
+| 2026-10-27 | Thomas | Answers: all tools approved, own sampler, `E:\mhbis`, spikes-archive branch, performance budget added. |
 | 2026-10-27 | Thomas | Readability review: steps renumbered in run order, every step in Architecture, lists instead of paragraphs, fixed per-file blocks, plain-words tool reasons, "how to read" box. Plan writing rules added to the template. |
 
 ## 10. Time log
