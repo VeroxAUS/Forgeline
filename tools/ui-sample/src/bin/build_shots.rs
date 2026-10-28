@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-//! Renders the element 4 build card without a window: `build_shots [out dir] [pixels per point]`.
+//! Renders the element 4 and 5 build card and skills strip without a window: `build_shots [out dir] [pixels per point]`.
 //! Writes the first frame (icons still loading), the ready frame, the recomputing state and a
 //! larger window.
 
@@ -38,6 +38,67 @@ fn main() -> std::io::Result<()> {
     app.shell.status = Status::Recomputing;
     save("build-recomputing.png", h.frame(&mut app, size, ppp))?;
     app.shell.status = Status::Synced;
+    // Element 5: the same strip with no skills, for the empty state.
+    let skills = std::mem::take(&mut app.data.skills);
+    save("skills-empty.png", h.frame(&mut app, size, ppp))?;
+    // Endgame: a long list, at the base size and a larger one.
+    use ui_sample::build_card::{sample_endgame_skills, Skill};
+    app.data.skills = sample_endgame_skills();
+    save("skills-endgame.png", h.frame(&mut app, size, ppp))?;
+    save(
+        "skills-endgame-large.png",
+        h.frame(&mut app, Vec2::new(1400.0, 900.0), ppp),
+    )?;
+    // More than fits: four low-weight extras, so the cut and the "+N more on Why" line show.
+    for (name, level, max) in [
+        ("Wide range", 1, 5),
+        ("Free meal", 1, 3),
+        ("Botanist", 1, 4),
+        ("Speed eating", 2, 3),
+    ] {
+        app.data.skills.push(Skill {
+            weight: Some(3),
+            ..Skill::normal(name, level, max)
+        });
+    }
+    save("skills-26.png", h.frame(&mut app, size, ppp))?;
+    app.data.skills = sample_endgame_skills();
+    app.data.skills.truncate(4 + 10);
+    save("skills-14.png", h.frame(&mut app, size, ppp))?;
+    // Research: builds shaped like the real endgame builds found in public guides (counts only).
+    use ui_sample::build_card::{sample_shaped_skills, PinnedStyle};
+    println!("shape            style     size        shown/total");
+    for (label, n, sets, groups) in [
+        ("typical-16", 12, 2, 2),
+        ("gogma-22", 19, 2, 1),
+        ("big-24", 20, 2, 2),
+    ] {
+        for style in [
+            PinnedStyle::Auto,
+            PinnedStyle::Tiers,
+            PinnedStyle::Summary,
+            PinnedStyle::OneLine,
+        ] {
+            for (sz_label, sz) in [("1000x700", size), ("1920x1080", Vec2::new(1920.0, 1080.0))] {
+                app.data.skills = sample_shaped_skills(n, sets, groups);
+                app.data.pinned_style = style;
+                let f = h.frame(&mut app, sz, if sz == size { ppp } else { 1.0 });
+                println!(
+                    "{label:<16} {style:<9?} {sz_label:<11} {}/{}",
+                    app.skills_shown(),
+                    app.data.skills.len()
+                );
+                if label != "big-24" || style == PinnedStyle::Auto {
+                    save(
+                        &format!("shape-{label}-{style:?}-{sz_label}.png").to_lowercase(),
+                        f,
+                    )?;
+                }
+            }
+        }
+    }
+    app.data.pinned_style = PinnedStyle::default();
+    app.data.skills = skills;
     save(
         "build-large.png",
         h.frame(&mut app, Vec2::new(1400.0, 900.0), ppp),

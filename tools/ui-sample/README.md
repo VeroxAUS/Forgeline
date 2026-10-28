@@ -73,3 +73,13 @@ The window repaints only on input. The rail, the Solo and Multiplayer switch, th
 
 - Fonts are Inter and JetBrains Mono (OFL), about 1.7 MB as bundled. The real app would subset them; that is a later element.
 - It is excluded from the workspace and has its own CI job, so it adds nothing to the app binary or its RAM check.
+
+## Element 5: the skills strip
+
+`src/build_card.rs` (`skills`): the build's skill totals as a side strip level with the weapon label. Each skill is a name, its level in mono at the right, and one round dot per possible level (accent when earned, outlined when not). All dots share one outer size and a fixed pitch, snapped to whole pixels, so they line up down the strip. Hover says `Name, level N of M`. In a window too narrow for the side strip it drops under the charm row; with no skills it shows a faint line. Sample data only, same label as the card.
+
+Screenshots are in [docs/ux/samples/skills/](../../docs/ux/samples/skills/). `build_shots` writes them too (`skills-empty.png` along with the build set).
+
+Long lists (endgame builds): normal skills switch to one-line rows with the dots in a fixed column, and what still does not fit is left out, least important first (must-haves, set and group skills never; optimizer weight when there is one, else lowest level), with a clickable `+N more on Why` line. Set and group skills are pinned at the top with a `SET` or `GROUP` tag and one line per tier (reached tiers green, the next muted with the pieces it still needs, full text in the tooltip); the tier text is invented sample text. `sample_endgame_skills()` is a 22-skill sample.
+
+Set and group skill drawing is automatic (`PinnedStyle::Auto`): full tiers while everything fits, then name plus one summary line, then one row each. In a window at least about 1245 points wide (16:9 at the design height) the strip gets a second column. `sample_shaped_skills` builds the sample shapes used for the research in `docs/research.md` (counts only).

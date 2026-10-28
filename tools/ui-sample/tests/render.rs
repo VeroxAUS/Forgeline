@@ -175,6 +175,8 @@ fn build_card_shows_icons_once_loaded_and_keeps_the_build_while_recomputing() {
         weapon: None,
         armour: Default::default(),
         charm: None,
+        skills: Vec::new(),
+        pinned_style: Default::default(),
     };
     assert_ne!(ready.rgba, h.frame(&mut app, size, 1.0).rgba);
     let big = h.frame(&mut app, Vec2::new(1400.0, 900.0), 1.0);
@@ -215,4 +217,79 @@ fn larger_window_scales_the_content() {
     assert_eq!(h.ctx().zoom_factor(), 1.0);
     h.frame(&mut app, Vec2::new(2000.0, 1400.0), 1.0);
     assert!((h.ctx().zoom_factor() - 2.0).abs() < 0.01);
+}
+
+#[test]
+fn skills_strip_draws_in_a_side_strip_or_under_the_card() {
+    use egui::Vec2;
+    use std::{sync::Arc, time::Duration};
+    use ui_sample::build_card::{BuildCard, Headless, Skill};
+    use ui_sample::icons::SampleSource;
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    h.frame(&mut app, Vec2::new(1000.0, 700.0), 1.0);
+    assert!(app.cache.wait_idle(Duration::from_secs(5)));
+    let with = h.frame(&mut app, Vec2::new(1000.0, 700.0), 1.0);
+
+    // Changing one skill's level changes the picture; a build with none shows the empty line.
+    app.data.skills[0].level -= 1;
+    assert_ne!(
+        with.rgba,
+        h.frame(&mut app, Vec2::new(1000.0, 700.0), 1.0).rgba
+    );
+    app.data.skills.clear();
+    assert_ne!(
+        with.rgba,
+        h.frame(&mut app, Vec2::new(1000.0, 700.0), 1.0).rgba
+    );
+
+    // A window too narrow for the side strip puts it under the card and still draws.
+    app.data.skills =
+        vec![Skill::normal("A skill with a name far too long to fit its column", 2, 7); 3];
+    let narrow = h.frame(&mut app, Vec2::new(800.0, 900.0), 1.0);
+    assert_eq!((narrow.width, narrow.height), (800, 900));
+}
+
+#[test]
+fn long_builds_collapse_set_and_group_skills_and_use_a_second_column_when_wide() {
+    use egui::Vec2;
+    use std::{sync::Arc, time::Duration};
+    use ui_sample::build_card::{sample_shaped_skills, BuildCard, Headless, PinnedStyle};
+    use ui_sample::icons::SampleSource;
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    // 19 normal skills plus 3 set and group skills: the shape of a Gogma endgame build.
+    app.data.skills = sample_shaped_skills(19, 2, 1);
+    let base = Vec2::new(1000.0, 700.0);
+    let wide = Vec2::new(1920.0, 1080.0);
+
+    app.data.pinned_style = PinnedStyle::Tiers;
+    h.frame(&mut app, base, 1.0);
+    assert!(
+        app.skills_shown() < 22,
+        "full tiers leave some out at the base size"
+    );
+    h.frame(&mut app, wide, 1.0);
+    assert_eq!(app.skills_shown(), 22, "a wide window has a second column");
+
+    // Auto collapses the set and group rows just enough that everything shows.
+    app.data.pinned_style = PinnedStyle::Auto;
+    h.frame(&mut app, base, 1.0);
+    assert_eq!(app.skills_shown(), 22);
+
+    // A short list keeps its tiers: the Auto frame equals the full-tiers frame.
+    app.data.skills = sample_shaped_skills(8, 1, 1);
+    let auto = h.frame(&mut app, base, 1.0);
+    app.data.pinned_style = PinnedStyle::Tiers;
+    assert_eq!(auto.rgba, h.frame(&mut app, base, 1.0).rgba);
 }
