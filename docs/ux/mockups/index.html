@@ -343,13 +343,23 @@ body[data-look^=modern] .card{padding:10px 0;min-height:60px;grid-template-colum
 <span>Critical Eye 3</span><div class="bar"><span style="width:55%"></span></div><span class="n hi">&minus;38</span>
 <span>Earplugs 2</span><div class="bar ok"><span style="width:0%"></span></div><span class="n">must-have</span>
 <span>Tremor Resistance 1</span><div class="bar ok"><span style="width:0%"></span></div><span class="n">must-have</span></div></div></div>
-<div class="vw" id="w4"><div class="iconnote">Option: where the best build flips, as a table of uptime against weak-spot rate. Modelled.</div>
-<div class="panel"><table class="hm"><tr><th>uptime / weak-spot</th><th>30%</th><th>50%</th><th>70%</th></tr>
+<div class="vw" id="w4"><div class="iconnote">Option: answer "does this stay the best build?" in words first, with sliders and the table as support. Modelled.</div>
+<div class="panel"><p style="font-size:19px;line-height:1.4;margin:0 0 12px;font-weight:400">This build stays the best unless you spend <b class="hi" style="font-family:inherit;font-weight:600">less than about 45% of the fight attacking</b>, or hit weak spots <b class="hi" style="font-family:inherit;font-weight:600">less than about 25% of the time</b>. <span style="color:var(--dim)">If it does flip, Safe gives you 60 more defence for about 26 less effective raw.</span></p>
+<span class="pill">modelled, not measured</span>
+<div class="cols" style="margin-top:16px">
+<div><b>Uptime</b><br><small style="color:var(--dim)">How much of the fight you are attacking, not dodging or repositioning.</small><div class="sr" style="grid-template-columns:1fr 48px"><input type="range" id="su" min="20" max="100" value="60"><span class="n" id="suv">60%</span></div></div>
+<div><b>Weak-spot rate</b><br><small style="color:var(--dim)">How often your hits land on a weak point.</small><div class="sr" style="grid-template-columns:1fr 48px"><input type="range" id="sw" min="10" max="90" value="50"><span class="n" id="swv">50%</span></div></div>
+</div>
+<div class="tiles" style="margin-top:16px">
+<div class="tile"><small>Best build at these settings</small><b id="so" style="font-size:24px">Best</b><em id="sd"></em></div>
+<div class="tile"><small>Best, effective raw</small><b id="sb">412</b></div>
+<div class="tile"><small>Safe, effective raw</small><b id="ss">386</b><em>+60 defence</em></div></div>
+<details><summary style="cursor:pointer;color:var(--dim);font-size:13px">Show the table instead</summary>
+<p style="color:var(--dim);font-size:13px;margin:8px 0">Each cell names the build that comes out ahead for that uptime (rows) and weak-spot rate (columns).</p><table class="hm"><tr><th>uptime / weak-spot</th><th>30%</th><th>50%</th><th>70%</th></tr>
 <tr><th>30%</th><td>Safe</td><td>Safe</td><td>Safe</td></tr>
 <tr><th>45%</th><td>Safe</td><td>Safe</td><td class="w">Best</td></tr>
 <tr><th>60%</th><td class="w">Best</td><td class="w cur">Best</td><td class="w">Best</td></tr>
-<tr><th>80%</th><td class="w">Best</td><td class="w">Best</td><td class="w">Best</td></tr></table>
-<div class="hmleg"><span><i class="w"></i>Best is ahead</span><span><i></i>Safe is ahead</span><span><i class="c"></i>your current assumptions</span></div></div></div>
+<tr><th>80%</th><td class="w">Best</td><td class="w">Best</td><td class="w">Best</td></tr></table><div class="hmleg"><span><i class="w"></i>Best is ahead</span><span><i></i>Safe is ahead</span><span><i class="c"></i>your current assumptions</span></div></details></div></div>
 <div class="vw" id="w5"><div class="iconnote">Option: a short plain-language summary on top of the numbers.</div>
 <div class="panel"><b>In short</b><p style="margin:8px 0">This build is chosen because it gives the most damage you can make now while keeping the two must-haves (Earplugs and Tremor Resistance). It gives up about 60 defence compared with the Safe build.</p><p style="margin:0;color:var(--dim)">It would change if the attack buff is up less than about 45% of the time. <span class="pill">modelled</span></p></div></div>
 <div class="vw" id="w3"><div class="iconnote">Option: why the build changed since the last save.</div>
@@ -499,6 +509,14 @@ modern1:"Modern Dark A, matched to your screenshots (teal dot): near-monochrome 
 modern2:"Modern Dark B, same layout with an amber dot instead of teal, to tie the app to the game side without using its art."};
 document.querySelectorAll('#lk button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#lk button').forEach(function(x){x.classList.toggle('on',x===b)});document.body.dataset.look=b.dataset.l;document.getElementById('lknote').textContent=LN[b.dataset.l];};});
 document.getElementById('lknote').textContent=LN.current;
+
+function sens(){var u=+document.getElementById('su').value,w=+document.getElementById('sw').value;
+var best=412+2.2*(u-60)+1.0*(w-50),diff=26+1.73*(u-60)+1.0*(w-50),safe=best-diff;
+document.getElementById('suv').textContent=u+'%';document.getElementById('swv').textContent=w+'%';
+document.getElementById('sb').textContent=Math.round(best);document.getElementById('ss').textContent=Math.round(safe);
+var bw=diff>0;document.getElementById('so').textContent=bw?'Best':'Safe';
+document.getElementById('sd').textContent=bw?'ahead by '+Math.round(diff)+' raw':'ahead by '+Math.round(-diff)+' raw, and +60 defence';}
+document.getElementById('su').oninput=sens;document.getElementById('sw').oninput=sens;sens();
 </script>
 </body>
 </html>
