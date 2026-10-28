@@ -123,3 +123,13 @@ cargo run --release --bin shopping_shots -- <out dir> 2               # screensh
 ```
 
 Screenshots are in [docs/ux/samples/shopping/](../../docs/ux/samples/shopping/).
+
+## Element 11: the Customise drawer
+
+`src/build_card/customise.rs`: a `Customise` button at the top right of Build opens a 320 point drawer over the right side, under the headline, so the damage and toughness words stay in view while a slider moves. It holds saved presets (Baseline plus up to five of the user's, named, deleted or updated in place), two assumption sliders (time attacking, weak-spot hits, with the plausible range shaded) and a weight slider per comfort or defence skill on a 34 point row grid. Every slider shows its baseline as a tick; a reset mark appears only on a changed row and its space is always kept. A recompute starts when a slider is let go, never while it moves, and shows the non-blocking `UPDATING` note. Arrow keys move a focused slider; Esc closes. Damage is calculated, so it has no slider. Sample values only (the researched baseline is the Phase 4 research round); presets live in memory here and go to the config file in the real app.
+
+```
+cargo run --release --bin customise_shots -- <out dir> 2              # screenshots, no GPU
+```
+
+Screenshots are in [docs/ux/samples/customise/](../../docs/ux/samples/customise/).
