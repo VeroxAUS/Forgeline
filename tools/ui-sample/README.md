@@ -93,3 +93,13 @@ cargo run --release --bin headline_shots -- <out dir> 2              # screensho
 ```
 
 Screenshots are in [docs/ux/samples/headline/](../../docs/ux/samples/headline/).
+
+## Element 7: must-have chips
+
+`src/build_card.rs` (`MustHave`, `chips`, `popup`): the skills the user insists on, as one row of chips above the equipment on the Build screen. Every chip is the same size (160 by 24 points) on a fixed grid snapped to whole pixels, each a name and the lowest level wanted. When the row is full the last cell becomes `+N more`. `+ Add` on the label row opens the list of skills not yet chosen; a click on a chip opens its level cells and Remove; `+N more` lists the rest on compact rows. Escape or a click elsewhere closes a popup. A chip the unlocked gear cannot reach gets an amber outline, a line under the title says which, and the tooltip gives the best level. Any change keeps the last build on screen, shows `UPDATING` on the label row and the status line, and ends after a pretend 0.9 s; a repaint is asked for only while that is pending. Must-haves are never cut from the skills strip. Sample data only; the skill list and the out-of-reach levels are invented. The long names in the worst-case shots are taken from a community wiki, not the game files (unverified).
+
+```
+cargo run --release --bin chips_shots -- <out dir> 2                  # screenshots, no GPU
+```
+
+Screenshots are in [docs/ux/samples/chips/](../../docs/ux/samples/chips/).
