@@ -15,7 +15,7 @@
   <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
     <g transform="translate(64 62)">
       <rect width="318" height="38" rx="19" fill="#2a2110" stroke="#e0a43a"/>
-      <text x="159" y="26" text-anchor="middle" font-size="20" font-weight="700" fill="#e0a43a" letter-spacing="1">PRE-ALPHA · PHASE 1</text>
+      <text x="159" y="26" text-anchor="middle" font-size="20" font-weight="700" fill="#e0a43a" letter-spacing="1">PRE-ALPHA · PHASE 2</text>
       <text y="150" font-size="50" font-weight="800" fill="#e6edf3">Forgeline</text>
       <text y="212" font-size="50" font-weight="800" fill="#e0a43a">MH Wilds Build Planner</text>
       <text y="262" font-size="26" fill="#c9d1d9">The best build you can make right now.</text>

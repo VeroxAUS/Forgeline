@@ -1,6 +1,6 @@
 # Forgeline: MH Wilds Build Planner, project plan and handover
 
-Written from the design conversation with the maintainer on 2026-10-27 and updated with every decision made that day. **Phase 1 (spikes) is closed (version 0.1.0); no product code exists yet.** Phase 2 is next. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
+Written from the design conversation with the maintainer on 2026-10-27 and updated with every decision made that day. **Phase 1 (spikes) is closed (version 0.1.0); no product code exists yet.** Phase 2 (foundation) is planned in [plans/phase-2-foundation.md](plans/phase-2-foundation.md), awaiting the maintainer's approval. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
 
 ## 1. Goal
 
@@ -18,7 +18,7 @@ The prototype is the **light bowgun**. The engine is generic and the extractor a
 - A per-monster mode plus a general hunting build. Weapon element and bowgun ammo type (normal, pierce, spread) follow the monster's weaknesses.
 - Alternatives next to the best build: safe, defensive, monster-specific, general hunting, Gogma-specific.
 - Shopping list that updates as the save changes, per monster part ("1/2 parts from this monster"), best place to farm, decoration farming and what to meld for. In depth, within what the data allows.
-- Data updates only when the user presses a button (so a bad update can't break builds). Dark theme only, readable on a second monitor, an equipment-style display with hover details for items and upgrade levels. An in-game overlay is a maybe, deferred.
+- Data updates only when the user presses a button (so a bad update can't break builds). Dark theme only, readable on a second monitor, an equipment-style display with hover details for items and upgrade levels. An in-game shopping-list overlay is planned for Phase 6 (see section 4).
 - Releasable on Nexus, usable by anyone.
 
 ## 3. Verified findings
@@ -82,6 +82,8 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 - **Weapons:** the extractor and data model cover all weapons from Phase 3. Every weapon is optimized before 1.0.0, light bowgun first; each weapon is labelled "tuned" or "generic model" in the app. Which weapon follows the light bowgun is decided later.
 - **Saves:** the app auto-picks the active slot and the Steam ID comes from the folder name.
 - **Licence: MPL-2.0** for our own code (chosen 2026-10-27): forks welcome with "based on Forgeline" credit, no contributor paperwork, optional Ko-fi tip link on GitHub only. A Nexus release does not force open source as long as no GPL code is used (none is).
+- **App shape (approved 2026-10-27):** one main app, Forgeline, with two windows: the desktop window (full planner, from the save and cached game data) and an optional overlay window. `forgeline-update` is a short-lived child process for data updates. `forgeline-live` is a separate, optional program for the overlay (off by default, switched on after a warning, screen capture first then read-only memory, shuts itself off on unknown game versions or bad reads, talks to the app only through a private one-way anonymous pipe, never a listener). It is built after the Phase 6 overlay, as its own step with its own plan for the maintainer to approve. If it is off or broken, the overlay falls back to save data and the desktop window never depends on it. One program with two windows costs far less RAM than two programs. The approved warning text is in `closed-questions.md`.
+- **In-game overlay (approved 2026-10-27):** an optional, small shopping-list panel shown over Wilds mid-hunt (for example "2x plate" and where or how to get it) so the user need not alt-tab. It is our own transparent, click-through, always-on-top window toggled by a hotkey. It never hooks, injects into or draws inside the game, and it works in borderless windowed mode only (exclusive fullscreen hides it). Its design is mocked up in Phase 2 and its cost measured in the Phase 2 UI footprint check; it is built in Phase 6 from the same data as the main window. Whether Wilds' own protections object to another app's overlay window is unverified.
 - **Distribution:** Nexus. Local only (no network listener, telemetry or accounts). Windows and Steam only.
 - **Versioning:** semantic versioning. 1.0.0 is the full release; a major addition bumps x.1.x; a bug fix bumps x.x.1. Changelog from Phase 2.
 
@@ -90,7 +92,7 @@ Community API at `https://wilds.mhdb.io/en/...`, docs at https://docs.wilds.mhdb
 - Runs alongside the game: low idle CPU, memory and GPU, no polling when nothing changed. Heavy work (extraction, optimizer search) runs only on user trigger, off the UI thread at low priority.
 - Snappy: opens fast and shows the last build from cached data immediately; recompute never blocks the UI. Cold start and recompute time are checked on the developer's PC with Wilds running before a feature ships.
 - The **performance budget** (cold start, idle RAM and CPU, recompute time) is in [performance-budget.md](performance-budget.md), an initial pass reviewed over time; the Phase 1 UI comparison measures against it.
-- Read-only on the game. Never write to the save, the install or the Steam folders. Never inject into, hook or read the memory of the running game.
+- Read-only on the game. Never write to the save, the install or the Steam folders. Never inject into, hook or write to the running game; only the optional `forgeline-live` program may read it (see section 4, App shape).
 - No secrets or personal data in git: saves, decrypted dumps (they hold hunter IDs) and extracted Capcom data stay out of the repo and the Nexus package. Contributors provide their own local saves.
 
 ## 6. Phases
@@ -103,11 +105,11 @@ Each phase has a detailed plan in `docs/plans/phase-N-name.md`, written just bef
    - Licence review (cloud, in parallel): MHWeditor and its possible upstream, mhdb-wilds-data (GPL-3.0), MHDB data.
    - Extraction test on the developer's install: skills, weapons, armor, decorations, charms, Artian tables, hitzones, drops, motion values. Then decide what stays hand-written.
    - UI comparison: pure-Rust UI versus Tauri versus Electron, measured with Wilds running.
-2. **Foundation:** finds the save and game install automatically, our save reader, a file watcher, the extractor and the update button. Fixture saves for tests, a debug data viewer shown in a bare window (grown each phase), changelog and versioning.
-3. **Data and progression:** data model for every weapon, low and high rank; unlock logic (kills and story flags to unlocked monsters).
-4. **Light bowgun optimizer:** damage formula, must-haves, presets, per-monster mode, alternative builds, uptime inputs and robustness check. Includes the comfort-skill research round.
-5. **Calibration:** comfort weights from reference builds, plus training-room checks (single shot, one skill at a time, affinity over 100 or more hits, ammo types) and finding out what the training dummy displays. Tests compare **ratios** because the dummy's hitzones are unknown.
-6. **Interface and shopping list:** polish of the bare window, dark theme, equipment-style display with hover details, shopping list.
+2. **Foundation:** includes a UX design step (brief, clickable mock-ups of the main screens, style guide in `docs/ux/`) and a UI footprint check (egui with two renderers, Slint under its royalty-free terms, a plain Win32 window, same sample view, numbers and screenshots); from now on every window follows the mock-ups and style guide. Finds the save and game install automatically, our save reader, a file watcher, the extractor and the update button. Fixture saves for tests, a debug data viewer shown in a bare window (grown each phase), changelog and versioning.
+3. **Data and progression:** also checks whether the game files hold drop and reward tables and part-break sources and their rates (needed for "where and how to get it" on the shopping list and overlay; if they do not, that part is marked open, open question 12). Data model for every weapon, low and high rank; unlock logic (kills and story flags to unlocked monsters). **Early step: a deep game-file search for motion values and attack and ammo base power for all 14 weapons** (not just bowgun ammo), using the Phase 2 pack reader and route B schemas for the action data under `Player/ActionData/Wp*` and related files. Anything not found is recorded as not in the files (question 11).
+4. **Light bowgun optimizer:** until motion values are found, builds are compared by **effective raw** (attack with affinity), which is labelled as such and does not need motion values; it cannot judge trade-offs that depend on specific attacks (for example raw against element). Damage formula, must-haves, presets, per-monster mode, alternative builds, uptime inputs and robustness check. Includes the comfort-skill research round.
+5. **Calibration:** comfort weights from reference builds, plus training-room checks (single shot, one skill at a time, affinity over 100 or more hits, ammo types) and finding out what the training dummy displays. Tests compare **ratios** because the dummy's hitzones are unknown. **Motion values are measured here for all 14 weapons** by hitting the dummy with known gear and working them back out of the damage formula, to verify anything found in the game files. If neither the files nor the dummy give a weapon's values, credited, licence-checked community data is used as a fallback, shown to the user as unverified.
+6. **Interface and shopping list:** includes the in-game shopping-list overlay, built from the same data (mock-up in Phase 2); visual polish on top of the Phase 2 design (mock-ups and style guide in `docs/ux/`): polish of the bare window, dark theme, equipment-style display with hover details, shopping list.
 7. **Farming routes, decorations and melding.**
 8. **Artian and Gogma Artian planner.**
 
@@ -133,14 +135,19 @@ Details and evidence are in [research.md](research.md); the plan and its time lo
 - Data-file decoding needs route B schemas written per class (Phase 3 scope); Phase 2 only needs the pack reader, discovery and the update flow with staging and validation.
 - Open for Phase 3 and 4: by-name ID matching, talisman decoding, unlocked-monster mapping, motion values and ammo base power (question 11).
 
+Live data (after Phase 6, its own plan and approval): the optional `forgeline-live` program for the overlay (current monster and quest, reading the screen first and memory only if needed, read-only).
+
 After that: the other weapons one at a time (each optimized and labelled tuned or generic before 1.0.0), then Nexus packaging.
 
+**Motion values (open question 11), approved by the maintainer 2026-10-27:** four routes, all kept. (1) Compare builds by effective raw meanwhile (Phase 4). (2) Deep game-file search early in Phase 3 for every weapon's motion values and base power. (3) Training-dummy measurement in Phase 5. (4) Credited, licence-checked community data labelled unverified as the fallback. Motion values matter for all 14 weapons, not only the bowguns and bow.
+
 ### TODO tools
-Built when needed, each needing the maintainer's yes at the time: save diff (compare two save copies to map fields to unlocks), fixture save builder, data diff (compare two extractions, feeds the validation gate), build explainer (why the optimizer picked a build), benchmark harness (start-up, RAM, recompute time).
+Built when needed, each needing the maintainer's yes at the time: save diff (compare two save copies to map fields to unlocks; approved 2026-10-27 and built in Phase 2 step 4 for the accepted-quest test), fixture save builder, data diff (compare two extractions, feeds the validation gate), build explainer (why the optimizer picked a build), benchmark harness (start-up, RAM, recompute time).
 
 ## 7. Workflow
 
 - The maintainer talks only to the coordinator; threads report to it and it summarises. It posts short status when a phase finishes, when the maintainer is needed, when it starts a thread, and on errors.
+- Every window follows the Phase 2 mock-ups and style guide (`docs/ux/`), and every test round for a PR that changes the window has a look check next to the performance numbers; the maintainer judges both.
 - Feature and fix threads work in the cloud on their own branch and open a PR. `main` is the only long-lived branch; branches are deleted after merge. Cleanup and docs-only PRs may go straight to `main`.
 - Tests and linters run on GitHub Actions using fixture saves and fixture data; they pass on a machine without Wilds and never touch a real save, install or the live MHDB API. A PR touching the reader or extractor says it is untested against the real files.
 - Every PR gets a test round. Only PRs that change what the app reads or shows run on the developer's PC; the rest are checked in the cloud and reported the same way. Rounds are queued so there is one checklist at a time, each item saying what the app should show for the current save. The coordinator merges once tests pass and reports each merge in detail.

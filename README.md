@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/readme/hero.svg" width="100%" alt="Forgeline, MH Wilds Build Planner: the best build you can make right now. Pre-alpha, phase 1, nothing usable yet.">
+  <img src="./assets/readme/hero.svg" width="100%" alt="Forgeline, MH Wilds Build Planner: the best build you can make right now. Pre-alpha, phase 2 (foundation) in progress, nothing usable yet.">
 </p>
 
 <p align="center">
@@ -13,7 +13,7 @@
 
 A planned Windows and Steam desktop app that reads your Monster Hunter Wilds save and shows the **best build you can make right now**: weapon, armor, decorations, talisman and upgrades. It is meant to follow you through low rank, high rank and endgame.
 
-> **Status: pre-alpha. Nothing is usable yet.** Phase 1 (spikes) is done: research and throwaway experiments settled the architecture (pure-Rust egui UI, MPL-2.0 licence, save and game-pack reading proven). Phase 2 (foundation) is next. There is no release, no installer and no working app. Everything below describes the plan, and every feature is **planned** unless stated otherwise.
+> **Status: pre-alpha. Nothing is usable yet.** Phase 1 (spikes) is done: research and throwaway experiments settled the architecture (pure-Rust egui UI, MPL-2.0 licence, save and game-pack reading proven). Phase 2 (foundation) is in progress, plan in [docs/plans/phase-2-foundation.md](docs/plans/phase-2-foundation.md). There is no release, no installer and no working app. Everything below describes the plan, and every feature is **planned** unless stated otherwise.
 
 ## What it will do (planned)
 
@@ -57,7 +57,7 @@ A planned Windows and Steam desktop app that reads your Monster Hunter Wilds sav
 The full plan is in [docs/PLAN.md](docs/PLAN.md). Each phase gets its own detailed plan in `docs/plans/`, approved before work starts.
 
 1. **Spikes** (done, 0.1.0): type data, save ID matching, licence review, extraction test, UI comparison.
-2. Foundation (next): save and install discovery, save reader, file watcher, extractor and update button, debug data viewer.
+2. Foundation (in progress, target 0.2.0): save and install discovery, save reader, file watcher, extractor and update button, debug data viewer.
 3. Data and progression: data model for every weapon, unlock logic.
 4. Light bowgun optimizer.
 5. Calibration.
@@ -73,7 +73,7 @@ After that: the other weapons, then packaging for Nexus Mods.
 |------|----------|
 | [`CLAUDE.md`](CLAUDE.md) | Standing project rules |
 | [`docs/PLAN.md`](docs/PLAN.md) | Overall plan and verified findings |
-| [`docs/plans/`](docs/plans/) | Per-phase plans and the [template](docs/plans/TEMPLATE.md); [Phase 1](docs/plans/phase-1-spikes.md) (closed) |
+| [`docs/plans/`](docs/plans/) | Per-phase plans and the [template](docs/plans/TEMPLATE.md); [Phase 1](docs/plans/phase-1-spikes.md) (closed), [Phase 2](docs/plans/phase-2-foundation.md) (in progress) |
 | [`docs/performance-budget.md`](docs/performance-budget.md) | Start-up, memory, CPU and recompute targets |
 | [`docs/research.md`](docs/research.md) | Spike and research results |
 | [`docs/open-questions.md`](docs/open-questions.md) | Unanswered questions |

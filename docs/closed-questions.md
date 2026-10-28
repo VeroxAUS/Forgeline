@@ -129,6 +129,37 @@ All answered 2026-10-27, in the order they were asked.
 ### Making the maintainer's reviews visible (2026-10-27)
 - **How should the repo show what the maintainer reviews and tests?** The maintainer liked the wording of the new README "How Forgeline is made" section and chose two options: (1) the coordinator posts a comment on every merged PR that starts "Tested and approved by the maintainer:" and says what was checked, where, the result and the pass time in UTC; (3) each `CHANGELOG.md` entry from 0.2.0 ends with "Reviewed and tested by VeroxAUS". Option 2 (a "tested" line in the PR description) was skipped as redundant. Recorded in `CLAUDE.md` (Test rounds) and the template's merge checklist. Earlier PRs that had a recorded maintainer pass were commented on after the fact, using the pass notes and times from the Phase 1 time log; docs PRs merged without a separate pass got no comment.
 
+### Motion values approach (2026-10-27)
+- **How do we get motion values and base power (open question 11)?** The maintainer approved all four routes: compare builds by effective raw meanwhile (Phase 4); a deep game-file search early in Phase 3 covering every weapon's motion values and attack and ammo base power; training-dummy measurement in Phase 5; credited, licence-checked community data labelled unverified as a fallback. The maintainer pointed out that motion values matter for all 14 weapons, so the "bowgun ammo matters more" argument does not narrow the search. Written into `docs/PLAN.md` (Phases 3, 4 and 5). Question 11 itself stays open in `open-questions.md` until the values are found.
+
+### Hours estimates in plans (2026-10-27)
+- **Should plans include an hours estimate?** Yes, the maintainer said so ("Yeah probably"). Every plan's estimates section now gives rough wall-clock hours per step and in total next to threads and test rounds (`docs/plans/TEMPLATE.md`, rule 11). The Phase 2 plan estimates about 13 h (range 10 to 18 h), calibrated on Phase 1's 2 h 06 min for 7 steps.
+
+### Phase 2 tools (2026-10-27)
+- **Approve the Phase 2 tools?** Yes, the maintainer approved all three: the fixture save builder (`tools/fixture-builder`), `forgeline-check` (counts and names only) and the benchmark harness (`tools/bench`, the Phase 1 sampler ported from `spikes-archive`). Recorded as decision A of the Phase 2 plan (PR #21).
+- **RAM rule for every PR (decision B)?** Yes, approved: a headless CI check on every PR plus a PC reading on every app-changing PR, logged in `docs/ram-log.md`; at most +3 MB private per PR without a written reason; caps of 140 MB private bytes and 80 MB working set.
+- **Update as a short-lived child process (decision C)?** Yes, approved.
+- **Needed-files path list in the repo (decision D)?** Yes, approved (paths only, no game content).
+- **Budget changes (decision E)?** Not decided: deferred to the step 10 budget re-review (see `open-questions.md`).
+
+### Live reading, app shape and tools (2026-10-27)
+- **Allow live reading of the running game for the overlay, and split the app into three programs?** Yes, the maintainer said "yes" to this single decision:
+  1. **Rule change.** The line "Never inject into, hook or read the memory of the running game" is replaced by: "Never inject into, hook or write to the running game. The desktop app and the updater never touch the running game. Live data comes only from forgeline-live, a separate, optional program for the overlay that is off by default and switched on by the user after a warning. It only reads the game: screen capture first, then memory with read-only access. It never writes, injects or hooks. It shuts itself off on unknown game versions or bad reads, and talks to the app only through a private one-way channel."
+  2. **Three programs.** The main app (Forgeline) with the desktop window and the overlay window; `forgeline-update` (the short-lived updater, decision C); `forgeline-live` (optional, separate, off by default).
+  3. **`forgeline-live` approved as a new tool**, to be built after the Phase 6 overlay as its own step with its own plan for the maintainer to approve.
+  4. **The save-diff tool approved**, to test early whether the save records the current quest (Phase 2 step 4).
+- **Live-data warning text (approved as drafted, shown once when live data is switched on, rereadable in settings, "Keep it off" is the highlighted default):**
+
+  > **Turn on live game data?**
+  > With this on, Forgeline's overlay reads information from Monster Hunter Wilds while it runs, such as the monster you're hunting, parts you've broken and your equipped gear, so it can update without waiting for a save.
+  >
+  > - **Read-only:** Forgeline only reads. It never changes the game, your save or anything you do online.
+  > - **Not approved by Capcom:** Capcom hasn't approved or commented on tools like this. No bans for read-only tools are known, but we can't promise there never will be. You use it at your own risk.
+  > - **Patches:** a game patch can stop live data working until Forgeline is updated. The overlay then falls back to save data automatically.
+  > - **Off any time:** you can switch it off in settings, and nothing else in Forgeline depends on it.
+  >
+  > [Keep it off]  [Turn on live data]
+
 
 ### Starter kit for new projects (2026-10-28)
 - **Can the starter-kit template repo be private?** Yes (2026-10-28). It is `VeroxAUS/verox-template`; each new project picks its own visibility.

@@ -305,4 +305,20 @@ Version 0.1.0 is declared when the phase closes (step 7). There is no product an
 | CLAUDE.md sync PR #20 merged | 2026-10-27 15:21:21 UTC (docs only; keeps `CLAUDE.md` an exact copy of the project instructions) |
 | Phase finished | 2026-10-27 15:11:17 UTC (close-out PR #18 merged) |
 
-Elapsed from approval to finish: 2 h 06 min (13:05 to 15:11 UTC). Compare with the estimates in section 4: the plan estimated 8 to 11 threads and 7 to 10 test rounds, not hours, so there is no time estimate to compare against; the work was done in about two hours.
+### Actual time per step
+No hours estimate was made for this phase; the hours estimate rule was added after Phase 1 finished. Durations run from the first thread start to the merge (merge times are in the table above). The API holds no thread start times, so every start is approximate.
+
+| Step | Actual | Start basis |
+|------|--------|-------------|
+| 1 Licence review | 3 min | from plan approval |
+| 2 Clean-room study | 4 min | from plan approval |
+| 2 addendum | at least 1 min | lower bound: PR opened |
+| 3 Type data | 33 min | from the step 2 merge, includes the tool approval wait |
+| 5 Extraction test | 17 min | from the step 3 merge |
+| 4 ID matching, talismans | 24 min | from the step 3 merge |
+| 6 UI comparison | 1 h 15 min | from the step 3 merge, upper bound: it waited on the sampler and frame-time module |
+| 7 Close-out | 6 min | from the spike PRs closing |
+| Plan page builder (not a numbered step) | at least 7 min | lower bound: PR opened |
+| Licence (not a numbered step) | at least 16 min | lower bound: PR opened |
+
+Elapsed from approval to finish: 2 h 06 min (13:05 to 15:11 UTC). Steps overlap, so they do not add up to this. No hours estimate to compare against.

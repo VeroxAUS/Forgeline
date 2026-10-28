@@ -2,7 +2,7 @@
 
 Written only by the coordinator. This file holds research unknowns that the plan still has to answer, plus any question awaiting the maintainer. Every question asked to the maintainer is recorded here; once answered, it moves to [closed-questions.md](closed-questions.md).
 
-Nothing is waiting on the maintainer. Phase 1 is closed; the items below are the research unknowns it left open, with what each still needs and which phase picks it up.
+Waiting on the maintainer: one deferred Phase 2 plan decision below (E) (asked 2026-10-27, PR #21). Phase 1 is closed; the items below are the research unknowns it left open, with what each still needs and which phase picks it up.
 
 ## Open
 
@@ -18,4 +18,8 @@ Numbers are kept stable; answered questions leave a gap (question 8 moved to clo
 9. **Update validation gate.** How to implement the >95% confidence check (re-scoring old versus new data after skill, set bonus or weight changes)?
 10. **Nexus comments and bugs.** Does Nexus's GraphQL v2 expose comments or bug reports, and does Nexus email authors about them? Check the maintainer's author notification settings once the mod page is live (see `docs/research.md`, "Nexus monitoring").
 11. **Motion values and base power.** Motion values, and attack and ammo base power (for example bowgun ammo values), were not found in the game files in step 5. The Phase 4 damage formula and any future simulation need them. The Phase 3 and Phase 4 plans must address this early: a cited source, or Phase 5 training-room measurement.
+12. **Drop, reward and part-break sources.** Do the game files hold drop and reward tables and part-break sources, with rates, so the shopping list and the in-game overlay can say where and how to get a part (carve, part break, reward)? Partly answered (Phase 1 step 5): report-style reward data was located but real per-monster drop tables were not confirmed, and part-break sources were not looked for. The Phase 3 data survey must check it; if the files do not hold it, the "where and how" part is marked open or sourced from a cited, labelled community source. Asked 2026-10-27 with the overlay approval (PR #21).
 
+## Waiting on the maintainer (asked 2026-10-27, Phase 2 plan, PR #21)
+
+E. **Budget changes.** *Deferred by the maintainer (2026-10-27): discuss at step 10 budget re-review, or earlier only if the measurements suggest the budget is impossible to meet. Until then the current budget stands as written, and step 9 reports raw RAM and frame-time numbers without a new pass/fail rule.* Split "Idle RAM" into working set (target 80 MB) and private bytes (hard limit 150 MB); make "no stutter" a number (game median and 99th percentile frame time within 1 ms of the control run); add rows for "last view on screen" and "save change to updated view". Agree in principle?
