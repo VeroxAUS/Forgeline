@@ -206,3 +206,9 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Reopened: style?** Dark and quiet, icons and small visuals do the heavy lifting; try a real in-app sample screen before locking style rules.
 - **Reopened: wording, mock-up lessons?** As recommended: short and plain with one reasoning sentence, and one real egui element at a time instead of full mock-ups.
 - **Reopened: Customise drawer, trade-off wording?** Drawer kept. Toughness word tiers may be too vague, so the presentation is open question 15.
+
+### UX design plan approved (2026-10-28)
+- **Approve the UX design plan (PR #43)?** Yes ("I approve", 2026-10-28 07:09 UTC). Merged at 07:10:30 UTC (cloud, docs only, CI green on Ubuntu and Windows). It replaces Phase 2 step 7 (PR #40 was closed without merging). The maintainer also asked that every new feature gets a fresh thread, and that threads are resolved when their work merges, to keep usage low.
+- **Icons and images?** Read at runtime from the user's own install, never shipped or committed (approved 2026-10-28, UX feedback; recorded here because PR #40 was not merged). Whether the icon files are readable is open question 14.
+- **Shopping list ticking?** Fully save-driven, with no manual tick-off (2026-10-28, UX feedback).
+- **Presets and Safe?** Presets are Solo or Multiplayer; Safe is only an alternative build (2026-10-28).
