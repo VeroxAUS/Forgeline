@@ -3,7 +3,7 @@
 //! The styling lives in `style.css` and is baked into the binary, so every plan page
 //! comes out the same. Raw HTML in the markdown is escaped, never passed through.
 
-use pulldown_cmark::{html, CowStr, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{html, CowStr, Event, Options, Parser, Tag, TagEnd};
 use std::collections::HashMap;
 
 const STYLE: &str = include_str!("style.css");
