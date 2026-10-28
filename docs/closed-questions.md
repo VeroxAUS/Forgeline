@@ -129,3 +129,7 @@ All answered 2026-10-27, in the order they were asked.
 ### Making the maintainer's reviews visible (2026-10-27)
 - **How should the repo show what the maintainer reviews and tests?** The maintainer liked the wording of the new README "How Forgeline is made" section and chose two options: (1) the coordinator posts a comment on every merged PR that starts "Tested and approved by the maintainer:" and says what was checked, where, the result and the pass time in UTC; (3) each `CHANGELOG.md` entry from 0.2.0 ends with "Reviewed and tested by VeroxAUS". Option 2 (a "tested" line in the PR description) was skipped as redundant. Recorded in `CLAUDE.md` (Test rounds) and the template's merge checklist. Earlier PRs that had a recorded maintainer pass were commented on after the fact, using the pass notes and times from the Phase 1 time log; docs PRs merged without a separate pass got no comment.
 
+
+### Starter kit for new projects (2026-10-28)
+- **Can the starter-kit template repo be private?** Yes (2026-10-28). It is `VeroxAUS/verox-template`; each new project picks its own visibility.
+- **Should the kit's plan template improvements be ported to Forgeline?** Yes (2026-10-28): items 1 to 4 (hours in estimates, banner or phase label check, look check, actual-time-per-step table), merged in PR #25. Standing rule: every generic Forgeline rule or fix is mirrored to `verox-template`, and the `new-verox-project` skill is kept up to date.
