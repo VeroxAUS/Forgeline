@@ -272,6 +272,14 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Look check?** Passed, reviewed from screenshots in the cloud; not run on the PC.
 - **Merge PR #61?** Yes ("You can merge", 2026-10-28 10:56 UTC). Merged at 10:56:49 UTC (cloud, CI green on Ubuntu and Windows).
 
+### UX element 9: monster selector (2026-10-28)
+- **Keep the selector hanging from the Monster cell, with no always-visible header control?** Yes (2026-10-28 12:43 UTC). The header has no room beside the switch at 1000 wide. The maintainer added: forgeline-live will pick the monster automatically later (noted in the design plan; the selector stays as the manual override).
+- **Weak-element column?** Empty for now, filled with real icons later (12:43 UTC).
+- **Tempered as a switch?** Yes, and turning it on lists only the monsters that have a Tempered version (12:43 UTC). Implemented before merge.
+- **Roster unverified until the extractor reads the real monster list?** Yes, it will be confirmed with in-game data (12:43 UTC).
+- **Look check?** Passed, reviewed from screenshots in the cloud; not run on the PC.
+- **Merge PR #62?** Yes ("You can merge once it is green", 2026-10-28 12:43 UTC). Merged at 12:50:27 UTC (cloud, CI green on Ubuntu and Windows).
+
 ### Food and item loadouts scope (2026-10-28)
 - **Add food and item loadouts?** Yes. The optimizer weights meals (ration type and guaranteed food skills); feasts, ticket meals and random food skills stay out of the maths. Item loadouts stay generic advice, with community opinions for every stage of the game (early, mid, high rank, endgame) where they exist (2026-10-28 10:47 UTC).
 - **When?** Meal model in Phase 4, "Eat and bring" card in Phase 6, save-aware lines after Phase 3 item mapping; about 14 to 20 h in three PRs ("This seems pretty good", 10:47 UTC).
