@@ -72,6 +72,15 @@ impl Manifest {
         let m: Manifest = serde_json::from_str(text).ok()?;
         (m.schema == SCHEMA).then_some(m)
     }
+
+    /// True if the text is JSON with a schema number that is not ours: a manifest from another
+    /// version of the app, which is not the same as a damaged one.
+    pub fn is_other_schema(text: &str) -> bool {
+        serde_json::from_str::<serde_json::Value>(text)
+            .ok()
+            .and_then(|v| v["schema"].as_u64())
+            .is_some_and(|n| n != u64::from(SCHEMA))
+    }
 }
 
 /// FNV-1a, 64 bit.
