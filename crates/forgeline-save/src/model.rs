@@ -317,3 +317,87 @@ fn read_enemies(enemy: &ClassView, out: &mut SlotSummary) -> Result<(), SaveErro
     }
     Ok(())
 }
+
+/// A structural dump of every in-use equipment box entry, for working out what the fields mean.
+/// Numbers only: scalars up to 4 bytes with their value, 8-byte values as `wide`, strings as
+/// `text`, small arrays with their values. No hunter data lives in an equipment entry.
+pub fn equipment_dump(stream: &[u8]) -> Result<Vec<String>, SaveError> {
+    let stream = Stream::new(stream);
+    let root_hash = name_hash(n::ROOT);
+    let mut lines = Vec::new();
+    for entry in stream.top_level() {
+        let (_, class) = entry?;
+        if class.class_hash()? != root_hash {
+            continue;
+        }
+        let Some(Value::Array(slots)) = class.field(name_hash(n::SLOTS))? else {
+            continue;
+        };
+        for (si, slot) in slots.classes().enumerate() {
+            let Some(Value::Class(equip)) = slot?.field(name_hash(n::EQUIP))? else {
+                continue;
+            };
+            let Some(Value::Array(boxed)) = equip.field(name_hash(n::EQUIP_BOX))? else {
+                continue;
+            };
+            let mut histogram = std::collections::BTreeMap::<i64, usize>::new();
+            let mut shown = Vec::new();
+            for (ei, e) in boxed.classes().enumerate() {
+                let e = e?;
+                let mut cols = Vec::new();
+                let mut first = None;
+                for f in e.fields() {
+                    let f = f?;
+                    cols.push(match f.value {
+                        Value::Scalar(sc) if sc.size <= 4 => {
+                            if first.is_none() {
+                                first = Some(sc.as_i64());
+                            }
+                            match sc.as_f32() {
+                                Some(x) => format!("t{}={x}", sc.code),
+                                None => format!("t{}s{}={}", sc.code, sc.size, sc.as_i64()),
+                            }
+                        }
+                        Value::Scalar(sc) => format!("t{}s{}=wide", sc.code, sc.size),
+                        Value::Str(_) => "text".to_string(),
+                        Value::Struct(b) => format!("struct{}", b.len()),
+                        Value::Class(_) => "class".to_string(),
+                        Value::Array(a) => match a.scalars() {
+                            Ok(v) if a.count <= 8 && a.member_size <= 4 => {
+                                let size = a.member_size;
+                                let signed = matches!(a.member_type, 3 | 5 | 7 | 9);
+                                let vals: Vec<String> = v
+                                    .map(|x| match (signed, size) {
+                                        (true, 1) => (x as u8 as i8).to_string(),
+                                        (true, 2) => (x as u16 as i16).to_string(),
+                                        (true, 4) => (x as u32 as i32).to_string(),
+                                        _ => x.to_string(),
+                                    })
+                                    .collect();
+                                format!("arr[{}]", vals.join(","))
+                            }
+                            _ => format!("arr<{}x{}>", a.count, a.member_size),
+                        },
+                    });
+                }
+                let key = first.unwrap_or(-1);
+                *histogram.entry(key).or_default() += 1;
+                if key != i64::from(EMPTY_CATEGORY) {
+                    shown.push(format!("slot {} entry {ei}: {}", si + 1, cols.join(" ")));
+                }
+            }
+            lines.push(format!(
+                "slot {}: first field over all {} entries: {}",
+                si + 1,
+                boxed.count,
+                histogram
+                    .iter()
+                    .map(|(k, n)| format!("{k} x{n}"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+            lines.extend(shown);
+        }
+    }
+    Ok(lines)
+}
