@@ -13,6 +13,7 @@ forgeline-core = { path = "../../crates/forgeline-core" }
 forgeline-save = { path = "../../crates/forgeline-save" }
 forgeline-update = { path = "../../crates/forgeline-update" }
 forgeline-pak = { path = "../../crates/forgeline-pak" }
+forgeline-engine = { path = "../../crates/forgeline-engine" }
 
 [dev-dependencies]
 forgeline-pak = { path = "../../crates/forgeline-pak", features = ["test-support"] }

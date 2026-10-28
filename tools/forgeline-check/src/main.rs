@@ -9,6 +9,9 @@
 //! `--names`) rebuilds the save's class names from the exe; it only reads the install and prints
 //! counts, pack names and the needed paths.
 //!
+//! `engine` starts the engine against a data folder you name and reports how fast the view appears
+//! (from the cache, then checked) and, with `--watch`, how fast a new save shows up.
+//!
 //! `update` runs the update flow into a separate data folder (never the installed copy's): it reads
 //! the install and the save, writes only that folder, and reports Replaced, Unchanged, Rejected or
 //! Failed. `--simulate-missing` pretends one needed file was not found, to see the gate reject it.
@@ -18,6 +21,7 @@
 //! (the only thing it writes) and reads the copy; it never reads or writes the live save in place
 //! and refuses a work folder inside Steam, the install or a save folder.
 
+mod engine;
 mod pak;
 mod update;
 
@@ -34,7 +38,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::time::Instant;
 
-const USAGE: &str = "usage: forgeline-check discover [--steam-dir <folder>]\n       forgeline-check save [--steam-dir <folder>] [--work-dir <folder>]\n       forgeline-check save --file <copy of the save> --steam-id <id>\n       forgeline-check pak [--steam-dir <folder>] [--names [--file <copy of the save> --steam-id <id>] [--exe <file>] [--names-out <file>]]\n       forgeline-check update --data-dir <folder> [--steam-dir <folder>] [--simulate-missing <needed file path>]\n       add --equip-dump to `save` to list the equipment box entries, or --equip-layout for the fields of the equipment class (numbers only)";
+const USAGE: &str = "usage: forgeline-check discover [--steam-dir <folder>]\n       forgeline-check save [--steam-dir <folder>] [--work-dir <folder>]\n       forgeline-check save --file <copy of the save> --steam-id <id>\n       forgeline-check pak [--steam-dir <folder>] [--names [--file <copy of the save> --steam-id <id>] [--exe <file>] [--names-out <file>]]\n       forgeline-check update --data-dir <folder> [--steam-dir <folder>] [--simulate-missing <needed file path>]\n       forgeline-check engine --data-dir <folder> [--steam-dir <folder>] [--watch <seconds>] [--file <copy of the save> --steam-id <id>]\n       add --equip-dump to `save` to list the equipment box entries, or --equip-layout for the fields of the equipment class (numbers only)";
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
@@ -43,6 +47,7 @@ fn main() -> ExitCode {
         Some("save") => save(args.collect()),
         Some("pak") => pak::run(args.collect()),
         Some("update") => update::run(args.collect()),
+        Some("engine") => engine::run(args.collect()),
         Some("-h" | "--help") => {
             println!("{USAGE}");
             ExitCode::SUCCESS
