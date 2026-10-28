@@ -48,8 +48,9 @@ A Monster Hunter Wilds player who wants the best build they can make right now, 
 - **Unverified:** whether item icons can be found and decoded from the game files, in which format, and what they cost in disk, RAM and start-up. To be checked in a spike before the equipment display (Phase 6). The performance budget applies: icons load lazily, only for visible rows, from a small cache, and never block the first frame.
 
 ## Writing rules for comparisons (maintainer feedback, 2026-10-28)
-- Express trade-offs in player terms, not raw stat deltas. Damage is shown as a percentage of the best build ("about 6% less damage") with a simple comparison bar. Toughness is shown as a relative bar and a plain word (solid, tankier, much tankier).
+- Express trade-offs in player terms, not raw stat deltas. Damage is shown as a plain word ("most", "a bit less") with a simple comparison bar; the percentage is in the hover. Toughness is shown as a relative bar and a plain word (solid, tankier, much tankier).
 - The raw numbers (effective raw, defence) stay available in a hover or the detail view, never as the headline of a comparison.
+- **Simple and to the point (maintainer, 2026-10-28):** lead with the decision or meaning ("Best for most hunts", "About the same damage, much tankier"), not numbers. Call tiny differences "about the same" instead of showing small figures ("3 raw ahead" helps nobody). Use a few plain words (most, a bit less, less; solid, tankier, much tankier; big, small, barely any gain). Percentages and raw stats live in the hover or detail view only.
 - Do not claim things like "survives 2 more hits": monster damage is unverified. Any comparison that comes from the model is labelled "modelled".
 - Headlines are short: a label and a value, or two short lines. No long sentences. The sensitivity table is removed; the "does it stay best" view is two short lines plus two sliders and a readout.
 
