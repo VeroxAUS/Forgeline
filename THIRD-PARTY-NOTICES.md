@@ -108,7 +108,9 @@ No third-party crate beyond those already listed for `forgeline-pak`, `forgeline
 | inotify, inotify-sys | 0.11.5, 0.1.8 | ISC | Linux backend of notify (CI and development only; not used on Windows) |
 | kqueue, kqueue-sys | 1.2.1, 1.1.2 | MIT | macOS and BSD backend of notify (never built for Windows) |
 | mio | 1.2.4 | MIT | event loop used by notify |
-| walkdir, same-file, winapi-util | 2.5.0, 1.0.6, 0.1.11 | Unlicense OR MIT (walkdir, same-file, winapi-util) | dependencies of notify |
+| walkdir, same-file, winapi-util | 2.5.0, 1.0.6, 0.1.11 | Unlicense/MIT, Unlicense/MIT, Unlicense OR MIT | dependencies of notify |
+| windows-link | 0.2.1 | MIT OR Apache-2.0 | dependency of windows-sys 0.61 |
+| wasi | 0.11.1 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | dependency of mio (WebAssembly only, never built for Windows or Linux) |
 | bitflags, libc, log | 2.13.2, 0.2.191, 0.4.34 | MIT OR Apache-2.0 | dependencies of notify |
 | windows-sys | 0.61.2 | MIT OR Apache-2.0 | second version, used by notify and mio on Windows |
 
