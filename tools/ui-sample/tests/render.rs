@@ -177,6 +177,9 @@ fn build_card_shows_icons_once_loaded_and_keeps_the_build_while_recomputing() {
         charm: None,
         skills: Vec::new(),
         pinned_style: Default::default(),
+        damage: BuildData::sample().damage,
+        toughness: BuildData::sample().toughness,
+        headline_style: Default::default(),
     };
     assert_ne!(ready.rgba, h.frame(&mut app, size, 1.0).rgba);
     let big = h.frame(&mut app, Vec2::new(1400.0, 900.0), 1.0);
@@ -292,4 +295,35 @@ fn long_builds_collapse_set_and_group_skills_and_use_a_second_column_when_wide()
     let auto = h.frame(&mut app, base, 1.0);
     app.data.pinned_style = PinnedStyle::Tiers;
     assert_eq!(auto.rgba, h.frame(&mut app, base, 1.0).rgba);
+}
+
+#[test]
+fn headline_options_draw_differently_and_unknown_draws_no_fill() {
+    use egui::Vec2;
+    use std::{sync::Arc, time::Duration};
+    use ui_sample::build_card::{BuildCard, Headless, HeadlineStyle};
+    use ui_sample::icons::SampleSource;
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    let size = Vec2::new(1000.0, 700.0);
+    h.frame(&mut app, size, 1.0);
+    assert!(app.cache.wait_idle(Duration::from_secs(5)));
+    let mut seen = Vec::new();
+    for style in [
+        HeadlineStyle::Word,
+        HeadlineStyle::Compare,
+        HeadlineStyle::Number,
+    ] {
+        app.data.headline_style = style;
+        seen.push(h.frame(&mut app, size, 1.0).rgba);
+    }
+    assert!(seen[0] != seen[1] && seen[1] != seen[2] && seen[0] != seen[2]);
+    app.data.headline_style = HeadlineStyle::Compare;
+    app.data.damage.fill = None;
+    assert_ne!(seen[1], h.frame(&mut app, size, 1.0).rgba);
 }
