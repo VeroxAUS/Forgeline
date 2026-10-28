@@ -289,3 +289,10 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **How does the meal bonus count?** As a separate add-on line that never changes the build score, so a different or skipped meal does not alter it (10:47 UTC).
 - **Meal data from the game files first (Phase 3)?** Yes, checking the game files for meal data is a Phase 3 task ("yes we should check the game files for meal data first as a Phase 3 task", 2026-10-28 10:48 UTC). Tracked as open question 17.
 
+### UX element 10: Shopping list (2026-10-28)
+- **Upgrade view for armour?** Leave it as is until Phase 7 and revisit armour upgrades then (2026-10-28 13:07 UTC). The sample only has a weapon upgrade chain, so for armour the view matches Piece; how Wilds armour upgrades work is unverified. Task added to Phase 7 in `docs/PLAN.md`.
+- **Placeholder item icons?** Yes, until the real icons can be read (13:07 UTC).
+- **How are monsters ordered in the by-monster view?** By the total of missing items, largest first (explained as "biggest gap"), kept as the default (13:08 UTC).
+- **Let the player change the order?** Yes: a toggle between `Most items` (default) and `Finishes pieces` (the monster whose items would complete the most pieces), hidden while a piece filter is set (13:08 UTC). Added before merge.
+- **Look check?** Passed, reviewed from screenshots in the cloud; not run on the PC.
+- **Merge PR #63?** Yes ("Looks good, free to merge.", 2026-10-28 13:13 UTC). Merged at 13:15:34 UTC (cloud, CI green on Ubuntu and Windows).
