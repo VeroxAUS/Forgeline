@@ -200,6 +200,14 @@ Method: our own throwaway Rust tool (`spikes/typedump`, PR #5, never merged; ran
 2. **Arrays of scalars and structs are packed:** after the array header (member type, member size, count, kind) the elements are `count x member size` raw bytes with no per-element size prefix (arrays of 16-byte structs are 16-aligned once, at the start). Arrays of strings and of classes are as in section 4.
 3. Everything else in section 4 held: field and class layout, hashes, the `0xFFEEFFEE` optional marker, top-level entries starting with a 32-bit hash.
 
+### Correction from the reader's first PC round (2026-10-28, step 4 of Phase 2)
+The structure words printed from the real decrypted stream (16,458,692 bytes; no text printed) start: `dbe3f199` (entry hash), `3` (field count), `827fccdc` (class hash of `app.savedata.cUserSaveData`), `695a3627` (hash of `_Data`), `-1` (array), `0x11` (member type: class), `8` (member size), `3` (count), `1` (kind: classes), then immediately `0x76` (118 fields) and `d32f821c` (class hash of the first slot). The first slot's first field is `69dbae94` = `Active` (type 4, size 1), and the second field is a string.
+- **A class array with `kind` 1 has no marker and no per-element hashes in this save.** The elements follow the array header directly. The `0xFFEEFFEE` marker followed by hashes may still occur; the reader takes the hashes only when the marker is there. My first reader assumed one hash per element even without the marker and lost sync at the second field.
+- The class array's member size field holds `8`, not 0.
+- The reference walker of the Phase 1 spike also accepts scalar types with any value size (aligned only when the size is 1, 2, 4 or 8) and arrays of kind 0 whose members are strings, classes or arrays; the reader now does the same.
+- Confirmed by name hash: `Active` (field of the slot) and `_Data` (field of the root) are real names, not invented.
+
+
 With those fixes the whole 16.5 MB stream walks to the exact end with no error: **187 distinct classes**.
 
 ### Names recovered from the exe

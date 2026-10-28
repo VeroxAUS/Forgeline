@@ -5,7 +5,8 @@
 //! Writes the self-describing class stream (`docs/research.md`, Phase 1 step 2 section 4 with the
 //! two corrections from step 3): classes of hashed fields, 4-byte aligned, scalars and enums with a
 //! size prefix, 16-byte structs aligned to 16, scalar and struct arrays packed, class arrays with
-//! the optional `0xFFEEFFEE` marker and one class hash per element.
+//! no marker and no per-element hashes (the real save has none; found on the maintainer's PC in
+//! the first test round of the reader, 2026-10-28).
 
 use crate::crypto::name_hash;
 
@@ -19,8 +20,6 @@ const TYPE_F32: u32 = 11;
 const TYPE_STRING: u32 = 15;
 const TYPE_STRUCT: u32 = 16;
 const TYPE_CLASS: u32 = 17;
-
-const CLASS_ARRAY_MARKER: u32 = 0xFFEE_FFEE;
 
 #[derive(Debug, Clone)]
 pub struct Class {
@@ -152,13 +151,9 @@ impl Out {
                 self.i32(TYPE_ARRAY);
                 self.align(4);
                 self.u32(TYPE_CLASS);
-                self.u32(0); // member size: not known for classes
+                self.u32(8); // member size as seen in the real save
                 self.u32(items.len() as u32);
-                self.u32(1); // kind 1 = classes
-                self.u32(CLASS_ARRAY_MARKER);
-                for c in items {
-                    self.u32(name_hash(&c.name));
-                }
+                self.u32(1); // kind 1 = classes; the elements follow directly
                 for c in items {
                     self.class(c);
                 }
@@ -253,12 +248,6 @@ pub mod tests {
                         let kind = self.u32();
                         if kind == 1 {
                             assert_eq!(member, 17);
-                            let marker =
-                                u32::from_le_bytes(self.s[self.p..self.p + 4].try_into().unwrap());
-                            if marker == CLASS_ARRAY_MARKER {
-                                self.p += 4;
-                            }
-                            self.p += 4 * count;
                             for _ in 0..count {
                                 self.class();
                             }

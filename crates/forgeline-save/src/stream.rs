@@ -24,12 +24,12 @@
 use crate::SaveError;
 
 const TYPE_ARRAY: i32 = -1;
-const TYPE_STRING: u32 = 15;
-const TYPE_STRUCT: u32 = 16;
 const TYPE_CLASS: u32 = 17;
 const CLASS_ARRAY_MARKER: u32 = 0xFFEE_FFEE;
 /// Deepest class nesting accepted; real saves nest a handful of levels.
 const MAX_DEPTH: u32 = 64;
+/// Largest scalar or struct value accepted (the notes' reference walker uses the same limit).
+const MAX_VALUE: usize = 0x10_0000;
 
 type Res<T> = Result<T, SaveError>;
 
@@ -210,7 +210,8 @@ impl<'a> Iterator for Fields<'a> {
 }
 
 /// An array field. For classes (`kind == 1`) the elements are walked with [`ArrayView::classes`];
-/// for values the packed bytes are available with [`ArrayView::raw`].
+/// for plain values the packed bytes are available with [`ArrayView::raw`]. Arrays of strings,
+/// of classes with `kind == 0` and of arrays are lists whose elements are walked one by one.
 #[derive(Debug, Clone, Copy)]
 pub struct ArrayView<'a> {
     buf: &'a [u8],
@@ -218,35 +219,37 @@ pub struct ArrayView<'a> {
     pub member_size: u32,
     pub count: u32,
     pub kind: u32,
-    /// Start of the per-element class hashes (class arrays) or of the packed values.
+    /// Where the per-element class hashes start, when the array has them (class arrays that carry
+    /// the `0xFFEEFFEE` marker; without the marker there are no hashes).
+    hashes_at: Option<usize>,
+    /// Start of the first element or of the packed values.
     data_at: usize,
     depth: u32,
 }
 
 impl<'a> ArrayView<'a> {
-    /// Hashes of the element classes (class arrays only; empty otherwise).
+    /// True when the elements are plain values stored back to back with no per-element prefix.
+    fn packed(&self) -> bool {
+        self.kind != 1 && !matches!(self.member_type as i32, 15 | 17 | TYPE_ARRAY)
+    }
+
+    /// Hashes of the element classes (empty when the array has none).
     pub fn class_hashes(&self) -> impl Iterator<Item = u32> + 'a {
-        let (buf, at) = (self.buf, self.data_at);
-        let n = if self.kind == 1 {
-            self.count as usize
-        } else {
-            0
-        };
-        (0..n).filter_map(move |i| u32_at(buf, at + 4 * i).ok())
+        let (buf, at) = (self.buf, self.hashes_at);
+        let n = if at.is_some() { self.count as usize } else { 0 };
+        (0..n).filter_map(move |i| u32_at(buf, at? + 4 * i).ok())
     }
 
     /// The elements of a class array, one after the other.
     pub fn classes(&self) -> Classes<'a> {
-        let first = self.data_at
-            + if self.kind == 1 {
-                4 * self.count as usize
-            } else {
-                0
-            };
         Classes {
             buf: self.buf,
-            next_at: first,
-            left: if self.kind == 1 { self.count } else { 0 },
+            next_at: self.data_at,
+            left: if self.kind == 1 || self.member_type == TYPE_CLASS {
+                self.count
+            } else {
+                0
+            },
             depth: self.depth,
             pending: None,
             failed: false,
@@ -255,7 +258,7 @@ impl<'a> ArrayView<'a> {
 
     /// The packed bytes of a scalar or struct array.
     pub fn raw(&self) -> Res<&'a [u8]> {
-        if self.kind != 0 || self.member_type == TYPE_STRING {
+        if !self.packed() {
             return bad(self.data_at, "not a packed array");
         }
         let len = (self.count as usize).saturating_mul(self.member_size as usize);
@@ -276,26 +279,24 @@ impl<'a> ArrayView<'a> {
         }))
     }
 
-    /// Where the array ends, which for class arrays means walking every element.
+    /// Where the array ends, which for lists and class arrays means walking every element.
     fn end(&self) -> Res<usize> {
-        match (self.kind, self.member_type) {
-            (1, _) => {
-                let mut pos = self.data_at + 4 * self.count as usize;
-                for _ in 0..self.count {
-                    pos = skip_class(self.buf, pos, self.depth + 1)?;
-                }
-                Ok(pos)
-            }
-            (0, TYPE_STRING) => {
-                let mut pos = self.data_at;
-                for _ in 0..self.count {
-                    pos = skip_string(self.buf, pos)?;
-                }
-                Ok(pos)
-            }
-            (0, _) => Ok(self.data_at + self.raw()?.len()),
-            _ => bad(self.data_at, "unknown array kind"),
+        if self.packed() {
+            return Ok(self.data_at + self.raw()?.len());
         }
+        let mut pos = self.data_at;
+        for _ in 0..self.count {
+            pos = match (self.kind, self.member_type as i32) {
+                (1, _) | (_, 17) => skip_class(self.buf, align(pos, 4), self.depth + 1)?,
+                (_, 15) => skip_string(self.buf, pos)?,
+                _ => {
+                    // An array inside an array: its header follows, aligned.
+                    let (inner, _) = parse_array(self.buf, align(pos, 4), self.depth + 1)?;
+                    inner.end()?
+                }
+            };
+        }
+        Ok(pos)
     }
 }
 
@@ -325,7 +326,7 @@ impl<'a> Iterator for Classes<'a> {
             }
         }
         self.left -= 1;
-        let at = self.next_at;
+        let at = align(self.next_at, 4);
         if u32_at(self.buf, at).is_err() {
             self.failed = true;
             return Some(bad(at, "stream ends early"));
@@ -347,19 +348,27 @@ fn parse_value(buf: &[u8], pos: usize, depth: u32) -> Res<(Value<'_>, Resume<'_>
         1..=14 => {
             let pos = align(pos, 4);
             let size = u32_at(buf, pos)? as usize;
-            if !matches!(size, 1 | 2 | 4 | 8) {
-                return bad(pos, "scalar size is not 1, 2, 4 or 8");
+            if size > MAX_VALUE {
+                return bad(pos, "value size is out of range");
             }
-            let at = align(pos + 4, size);
-            let b = slice(buf, at, size)?;
-            let mut a = [0u8; 8];
-            a[..size].copy_from_slice(b);
-            let s = Scalar {
-                code,
-                size: size as u8,
-                bits: u64::from_le_bytes(a),
+            let at = if matches!(size, 1 | 2 | 4 | 8) {
+                align(pos + 4, size)
+            } else {
+                pos + 4
             };
-            Ok((Value::Scalar(s), Resume::At(at + size)))
+            let b = slice(buf, at, size)?;
+            let v = if size <= 8 {
+                let mut a = [0u8; 8];
+                a[..size].copy_from_slice(b);
+                Value::Scalar(Scalar {
+                    code,
+                    size: size as u8,
+                    bits: u64::from_le_bytes(a),
+                })
+            } else {
+                Value::Struct(b)
+            };
+            Ok((v, Resume::At(at + size)))
         }
         15 => {
             let pos = align(pos, 4);
@@ -370,6 +379,9 @@ fn parse_value(buf: &[u8], pos: usize, depth: u32) -> Res<(Value<'_>, Resume<'_>
         16 => {
             let pos = align(pos, 4);
             let len = u32_at(buf, pos)? as usize;
+            if len > MAX_VALUE {
+                return bad(pos, "value size is out of range");
+            }
             let at = if len == 16 {
                 align(pos + 4, 16)
             } else {
@@ -391,46 +403,53 @@ fn parse_value(buf: &[u8], pos: usize, depth: u32) -> Res<(Value<'_>, Resume<'_>
             Ok((Value::Class(c), Resume::SkipClass(pos)))
         }
         TYPE_ARRAY => {
-            let pos = align(pos, 4);
-            let member_type = u32_at(buf, pos)?;
-            let member_size = u32_at(buf, pos + 4)?;
-            let count = u32_at(buf, pos + 8)?;
-            let kind = u32_at(buf, pos + 12)?;
-            let mut data_at = pos + 16;
-            match kind {
-                1 => {
-                    if member_type != TYPE_CLASS {
-                        return bad(pos, "class array with a member type that is not a class");
-                    }
-                    if u32_at(buf, data_at)? == CLASS_ARRAY_MARKER {
-                        data_at += 4;
-                    }
-                    slice(buf, data_at, (count as usize).saturating_mul(4))?;
-                }
-                0 => {
-                    if member_type == TYPE_STRUCT && member_size == 16 {
-                        data_at = align(data_at, 16);
-                    }
-                }
-                _ => return bad(pos, "unknown array kind"),
-            }
-            let a = ArrayView {
-                buf,
-                member_type,
-                member_size,
-                count,
-                kind,
-                data_at,
-                depth,
-            };
-            if kind == 0 && member_type != TYPE_STRING {
-                let end = data_at + a.raw()?.len();
-                return Ok((Value::Array(a), Resume::At(end)));
-            }
-            Ok((Value::Array(a), Resume::SkipArray(a)))
+            let (a, resume) = parse_array(buf, align(pos, 4), depth)?;
+            Ok((Value::Array(a), resume))
         }
         _ => bad(pos - 4, "unknown type code"),
     }
+}
+
+/// Parses an array from its member-type word (already 4-aligned): member type, member size,
+/// count, kind, then the elements. Kind 1 is an array of classes, with an optional marker and
+/// per-element hashes; every other kind is values, packed unless the members are strings, classes
+/// or arrays, which are walked one by one.
+fn parse_array(buf: &[u8], pos: usize, depth: u32) -> Res<(ArrayView<'_>, Resume<'_>)> {
+    if depth >= MAX_DEPTH {
+        return bad(pos, "arrays nest too deeply");
+    }
+    let member_type = u32_at(buf, pos)?;
+    let member_size = u32_at(buf, pos + 4)?;
+    let count = u32_at(buf, pos + 8)?;
+    let kind = u32_at(buf, pos + 12)?;
+    let mut data_at = pos + 16;
+    let mut hashes_at = None;
+    if kind == 1 {
+        if u32_at(buf, data_at).ok() == Some(CLASS_ARRAY_MARKER) {
+            hashes_at = Some(data_at + 4);
+            data_at += 4 + (count as usize).saturating_mul(4);
+            if data_at > buf.len() {
+                return bad(pos, "stream ends early");
+            }
+        }
+    } else if member_size == 16 && !matches!(member_type as i32, 15 | 17 | TYPE_ARRAY) {
+        data_at = align(data_at, 16);
+    }
+    let a = ArrayView {
+        buf,
+        member_type,
+        member_size,
+        count,
+        kind,
+        hashes_at,
+        data_at,
+        depth,
+    };
+    if a.packed() {
+        let end = data_at + a.raw()?.len();
+        return Ok((a, Resume::At(end)));
+    }
+    Ok((a, Resume::SkipArray(a)))
 }
 
 fn skip_string(buf: &[u8], pos: usize) -> Res<usize> {
@@ -625,5 +644,103 @@ mod tests {
             b.u32(1).u32(2).u32(3).u32(17);
         }
         assert!(Stream::new(&b.0).check().is_err());
+    }
+
+    /// The first words of a real save, as the maintainer's PC printed them (structure only):
+    /// root entry, a three-element class array with no marker and no hashes, and the first
+    /// element's first fields. Rebuilt here with invented values.
+    #[test]
+    fn a_class_array_with_no_marker_and_no_hashes_walks_like_the_real_save() {
+        let mut b = B(Vec::new());
+        // entry hash, 1 field, root class hash; field _Data: array of 3 classes (member size 8).
+        b.u32(0xDBE3_F199).u32(1).u32(0x827F_CCDC);
+        b.u32(0x695A_3627)
+            .u32(-1i32 as u32)
+            .u32(17)
+            .u32(8)
+            .u32(3)
+            .u32(1);
+        for i in 0..3u32 {
+            // class: 2 fields: a u8 (Active) and a string with two characters.
+            b.u32(2).u32(0xD32F_821C);
+            b.u32(0x69DB_AE94).u32(4).u32(1);
+            b.0.push(u8::from(i == 1));
+            b.align(4).u32(0x043F_3BB4).u32(15).u32(2);
+            b.0.extend_from_slice(&[b'o', 0, b'k', 0]);
+            b.align(4);
+        }
+        let s = b.0;
+        assert_eq!(Stream::new(&s).check(), Ok(1));
+        let (_, root) = Stream::new(&s).top_level().next().unwrap().unwrap();
+        let Some(Value::Array(a)) = root.field(0x695A_3627).unwrap() else {
+            panic!("no array")
+        };
+        let active: Vec<u64> = a
+            .classes()
+            .map(|c| {
+                c.unwrap()
+                    .field(0x69DB_AE94)
+                    .unwrap()
+                    .unwrap()
+                    .scalar()
+                    .unwrap()
+                    .as_u64()
+            })
+            .collect();
+        assert_eq!(active, [0, 1, 0]);
+        assert_eq!(a.class_hashes().count(), 0);
+    }
+
+    #[test]
+    fn a_class_array_with_the_marker_has_hashes_that_are_skipped() {
+        let mut b = B(Vec::new());
+        b.u32(0xAAAA_0001).u32(1).u32(0xBBBB_0001);
+        b.u32(0xA).u32(-1i32 as u32).u32(17).u32(8).u32(2).u32(1);
+        b.u32(CLASS_ARRAY_MARKER).u32(0x1111_1111).u32(0x2222_2222);
+        for _ in 0..2 {
+            b.u32(1).u32(0x1111_1111);
+            b.u32(0xB).u32(7).u32(4).u32(5);
+        }
+        let s = b.0;
+        assert_eq!(Stream::new(&s).check(), Ok(1));
+        let (_, root) = Stream::new(&s).top_level().next().unwrap().unwrap();
+        let Some(Value::Array(a)) = root.field(0xA).unwrap() else {
+            panic!("no array")
+        };
+        assert_eq!(
+            a.class_hashes().collect::<Vec<_>>(),
+            [0x1111_1111, 0x2222_2222]
+        );
+        assert_eq!(a.classes().count(), 2);
+    }
+
+    #[test]
+    fn scalars_of_an_odd_size_are_read_as_they_are_stored() {
+        // The reference walker accepts any size for scalar types; only 1, 2, 4 and 8 are aligned.
+        let mut b = B(Vec::new());
+        b.u32(0xAAAA_0002).u32(2).u32(0xBBBB_0002);
+        b.u32(0xA).u32(8).u32(3);
+        b.0.extend_from_slice(&[1, 2, 3]);
+        b.align(4).u32(0xB).u32(8).u32(12);
+        b.0.extend_from_slice(&[9; 12]);
+        b.align(4);
+        let s = b.0;
+        assert_eq!(Stream::new(&s).check(), Ok(1));
+        let (_, c) = Stream::new(&s).top_level().next().unwrap().unwrap();
+        let v = c.field(0xA).unwrap().unwrap().scalar().unwrap();
+        assert_eq!((v.size, v.as_u64()), (3, 0x03_0201));
+    }
+
+    #[test]
+    fn a_list_of_classes_stored_as_values_walks_to_the_end() {
+        // Array kind 0 with member type 17: each element is a class, back to back.
+        let mut b = B(Vec::new());
+        b.u32(0xAAAA_0003).u32(1).u32(0xBBBB_0003);
+        b.u32(0xA).u32(-1i32 as u32).u32(17).u32(0).u32(2).u32(0);
+        for _ in 0..2 {
+            b.u32(1).u32(0xCCCC_0003);
+            b.u32(0xB).u32(7).u32(4).u32(5);
+        }
+        assert_eq!(Stream::new(&b.0).check(), Ok(1));
     }
 }

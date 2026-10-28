@@ -13,7 +13,8 @@
 use forgeline_core::datadir::is_protected;
 use forgeline_core::discovery::{self, DiscoveryEnv, SaveAccount};
 use forgeline_core::memory;
-use forgeline_save::model::{read_save, SaveSummary};
+use forgeline_save::model::{summarize, SaveSummary};
+use forgeline_save::{container, SaveError};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -179,10 +180,26 @@ fn save(args: Vec<String>) -> ExitCode {
     };
     println!("save copy:    {} bytes", bytes.len());
     let started = Instant::now();
-    let summary = match read_save(&bytes, id) {
+    let stream = match container::open(&bytes, id) {
         Ok(s) => s,
         Err(e) => {
             eprintln!("reading failed: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    drop(bytes);
+    let summary = match summarize(&stream) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("reading failed: {e}");
+            if let SaveError::Stream { offset, .. } = e {
+                eprintln!(
+                    "the container opened; the class stream is {} bytes",
+                    stream.len()
+                );
+                eprintln!("words around the failure (u32, hex; text-like words and long runs are masked):");
+                eprintln!("{}", words_around(&stream, offset));
+            }
             return ExitCode::FAILURE;
         }
     };
@@ -307,5 +324,42 @@ fn print_summary(s: &SaveSummary) {
             slot.bosses.len(),
             slot.bosses_with_kills()
         );
+    }
+}
+
+/// Structure words near a failure, for pinning down a layout difference without printing text:
+/// a word whose four bytes are all printable ASCII (or half of a UTF-16 pair) shows as `text`.
+fn words_around(stream: &[u8], offset: usize) -> String {
+    let start = offset.saturating_sub(64) & !3;
+    let end = (offset + 64).min(stream.len()) & !3;
+    let mut out = Vec::new();
+    for at in (start..end).step_by(4) {
+        let w = &stream[at..at + 4];
+        let printable = |b: &u8| (0x20..0x7f).contains(b);
+        let text = w.iter().all(printable)
+            || (w[1] == 0 && w[3] == 0 && printable(&w[0]) && printable(&w[2]));
+        let v = u32::from_le_bytes([w[0], w[1], w[2], w[3]]);
+        out.push(if text {
+            format!("{at}:text")
+        } else {
+            format!("{at}:{v:x}")
+        });
+    }
+    out.join(" ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn words_around_masks_text_and_shows_structure() {
+        let mut s = Vec::new();
+        s.extend_from_slice(&0x1234_u32.to_le_bytes());
+        s.extend_from_slice(b"ABCD");
+        s.extend_from_slice(&[b'h', 0, b'i', 0]);
+        s.extend_from_slice(&0xFFFF_FFFF_u32.to_le_bytes());
+        let out = words_around(&s, 8);
+        assert_eq!(out, "0:1234 4:text 8:text 12:ffffffff");
     }
 }
