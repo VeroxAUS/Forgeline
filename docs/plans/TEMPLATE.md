@@ -2,7 +2,7 @@
 
 Target version: 0.N.0 · Status: draft / approved / in progress / done
 
-Each phase plan is written just before its phase, using what earlier phases found. The maintainer reviews and approves it before any work starts. Estimates are in threads and test rounds, not hours; real durations go in the time log (section 10).
+Each phase plan is written just before its phase, using what earlier phases found. The maintainer reviews and approves it before any work starts. Estimates are in threads, test rounds and hours; real durations go in the time log (section 10).
 
 ## How to read this plan
 A short box at the top, filled in last:
@@ -39,7 +39,7 @@ One fixed block per new or changed file, with the file name as a heading and the
 Files on disk, cache layout, schema versions.
 
 ### 3.4 Performance impact
-Expected cold start, RAM and CPU, checked against the performance budget.
+Expected cold start, RAM and CPU, checked against the performance budget, and the look check against the style guide.
 
 ## 4. Steps
 Each step is one thread, one PR and one test round.
@@ -47,10 +47,11 @@ Each step is one thread, one PR and one test round.
 The last step of every phase is the close-out. Besides updating `PLAN.md`, it updates `README.md`:
 - the status badge and version badge match the phase's target version
 - the roadmap shows this phase's progress
+- the banner or phase label matches the phase
 - placeholder visuals (such as the hero gear tiles) are replaced with a real screenshot of the app showing a build, once a window exists (from Phase 2); until then they stay labelled as placeholders
 
-| # | Step | Thread | Cloud or PC | Output (PR / doc) | Estimate (threads, test rounds) | Depends on |
-|---|------|--------|-------------|-------------------|---------------------------------|------------|
+| # | Step | Thread | Cloud or PC | Output (PR / doc) | Estimate (threads, test rounds, hours) | Depends on |
+|---|------|--------|-------------|-------------------|----------------------------------------|------------|
 
 ## 5. Tools (need the maintainer's yes)
 Why is plain words: the problem the tool solves, what happens without it, and what it touches on the maintainer's PC.
@@ -95,7 +96,12 @@ Version bump per step (0.N.x for additions, x.x.1 for fixes) and the changelog l
 | Step 2 PR merged | |
 | Phase finished | |
 
-Elapsed from approval to finish: `<hours>`. Compare with the estimates in section 4.
+Actual time per step (filled at close-out):
+
+| Step | Estimate (hours) | Actual (hours) |
+|------|------------------|----------------|
+
+Elapsed from approval to finish: `<hours>`; one line comparing it with the section 4 estimate.
 
 ## Plan writing rules (check before publishing)
 1. Number steps in the order they run and use the same numbers in every section. Parallel steps share a stage.
