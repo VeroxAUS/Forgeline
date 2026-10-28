@@ -130,3 +130,10 @@ Element 1 of `docs/ux/design-plan.md`. Standalone crate with its own lockfile. W
 | self_cell (via egui's font crate) | 1.3.0 | Apache-2.0 OR GPL-2.0-only | used under Apache-2.0; no GPL code is used |
 
 The other transitive crates are MIT, Apache-2.0, Zlib, 0BSD or BSD-2-Clause licensed (read from `cargo metadata`). The fonts are not renamed or modified, so OFL reserved-name rules are not triggered.
+
+## tools/ui-sample, Windows only (design tool, not shipped in the app)
+
+| Crate | Version | Licence | Use |
+|---|---|---|---|
+| windows-sys | 0.59.0 | MIT OR Apache-2.0 | puts the icon loading thread in background priority |
+| windows-targets and the `windows_*` import crates | 0.52.6 | MIT OR Apache-2.0 | dependencies of windows-sys |

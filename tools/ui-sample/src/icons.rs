@@ -8,7 +8,7 @@
 //! icon, the tile shows the plain glyph, so nothing shifts when an icon arrives.
 //!
 //! Rules this keeps (CLAUDE.md, design plan principle 7):
-//! - one worker thread, one icon at a time, started on the first request and gone when the cache
+//! - one worker thread in background priority, one icon at a time, started on the first request and gone when the cache
 //!   is dropped; nothing runs while idle and a repaint is requested only when an icon arrives;
 //! - the cache has a hard byte cap and evicts the least recently drawn icon;
 //! - an icon that cannot be read is remembered, not retried every frame;
@@ -46,6 +46,20 @@ const WARN: Color32 = Color32::from_rgb(229, 176, 74);
 const TILE_FILL: Color32 = Color32::from_rgb(40, 29, 22);
 const GRADIENT_TOP: Color32 = Color32::from_rgb(38, 24, 16);
 const TILE: f32 = 34.0;
+
+/// Puts the calling thread in background mode so icon loading never competes with the game.
+/// Windows: lowers CPU, disk and memory priority. Elsewhere there is nothing to do. A failure
+/// is ignored; the thread just keeps normal priority.
+fn lower_priority() {
+    #[cfg(windows)]
+    // SAFETY: both calls take no pointers; the pseudo handle is valid for this thread.
+    unsafe {
+        use windows_sys::Win32::System::Threading::{
+            GetCurrentThread, SetThreadPriority, THREAD_MODE_BACKGROUND_BEGIN,
+        };
+        SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_BEGIN);
+    }
+}
 
 /// A decoded icon: straight RGBA, `width * height * 4` bytes.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -239,6 +253,7 @@ impl IconCache {
             std::thread::Builder::new()
                 .name("forgeline-icons".into())
                 .spawn(move || {
+                    lower_priority();
                     // Blocks until asked; ends when the cache (the sender) is dropped.
                     while let Ok(id) = req_rx.recv() {
                         let raw = source.load(id).map(|r| downscale(r, MAX_EDGE));

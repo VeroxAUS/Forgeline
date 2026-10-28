@@ -36,7 +36,7 @@ Screenshots are in [docs/ux/samples/shell/](../../docs/ux/samples/shell/).
 
 ## Element 3: the icon pipeline
 
-`src/icons.rs`: icons come from an `IconSource`, are decoded and downscaled on one background thread, cached under a 1 MB cap (least recently drawn goes first) and drawn in the 34 pt tile, with the plain glyph while loading and when there is none. A repaint is requested only when an icon arrives. The only source here is synthetic (`SampleSource`); which game files hold the icons is unverified.
+`src/icons.rs`: icons come from an `IconSource`, are decoded and downscaled on one background thread (Windows background priority), cached under a 1 MB cap (least recently drawn goes first) and drawn in the 34 pt tile, with the plain glyph while loading and when there is none. A repaint is requested only when an icon arrives. The only source here is synthetic (`SampleSource`); which game files hold the icons is unverified.
 
 ```
 cargo run --release --bin icons_shots -- <out dir> 2                  # screenshots, no GPU

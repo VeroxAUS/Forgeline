@@ -222,3 +222,9 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Look check?** Passed ("Okay that looks good", 2026-10-28 08:18 UTC), reviewed from screenshots in the cloud; not run on the PC.
 - **Merge PR #51?** Yes ("Merge it", 2026-10-28 08:18 UTC). Merged at 08:18:42 UTC (cloud, CI green on Ubuntu and Windows).
 - **Where are reviews done?** In the project chat, through the coordinator: screenshots go on one Artifact page per review round (2026-10-28).
+
+### UX element 3: icon pipeline (2026-10-28)
+- **Low OS priority for the icon thread?** Yes (2026-10-28 08:30 UTC). It uses one Windows-only dependency, windows-sys, already in the app's tree.
+- **Disk cache for icons?** No: memory only for now, to be revisited only if the performance budget grows and memory needs clearing (2026-10-28 08:30 UTC).
+- **Look check?** Passed ("it looks fine I guess", 2026-10-28 08:31 UTC), reviewed from screenshots in the cloud; not run on the PC.
+
