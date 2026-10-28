@@ -30,10 +30,17 @@ A Monster Hunter Wilds player who wants the best build they can make right now, 
 - Shopping list is driven entirely by the save. No manual tick-off.
 
 ## Build switching, breakdown and tips (maintainer feedback, 2026-10-28)
-- **Toggles on the build screens:** preset (solo, multiplayer, safe), mode (general hunting or per monster, with a monster picker) and alternative (best, safe, defensive, monster-specific, general hunting, Gogma-specific). Changing any of them updates the numbers, the breakdown and the tips at once. The Gogma-specific tab shows as not available until the game data supports it.
+- **Toggles on the build screens:** playstyle (solo, multiplayer; "Safe" is one choice only, under alternative, decided 2026-10-28), mode (general hunting or per monster, with a monster picker) and alternative (best, safe, defensive, monster-specific, general hunting, Gogma-specific). Changing any of them updates the numbers, the breakdown and the tips at once. The Gogma-specific tab shows as not available until the game data supports it.
 - **Build breakdown:** a short summary of what the build is for, and a table of roles (damage, comfort, weak points).
 - **Playstyle tips:** derived only from the build's own skills and the editable assumptions (what each skill rewards, which resistances are low). Anything that depends on uptime or weak-spot rate is labelled "modelled". No rotation or fight simulation (out of scope), and no game facts that are not in extracted data or a cited source.
 - **Data needed:** skill effect text and numbers come from the game files (Phase 3 decoders); until decoded, tips are written from the skill list only. Per-monster tips need monster weak-point data, which is not yet confirmed in the files (open questions 4 and 12).
+
+## Customising a setup (maintainer question, 2026-10-28)
+- A **Customise** drawer opens from Best build. It has three parts: **must-have skill chips** (hard rules; add or remove; a build without them is never shown), **weight sliders** for comfort and defence skills (each shows its researched baseline from the Phase 4 research round; changed ones are highlighted), and **assumption sliders** (uptime, weak-spot rate).
+- **Reset all to baseline** restores the researched defaults. **Save as preset** stores a named custom preset; the "My presets" list switches between the defaults and the user's own.
+- **Recompute never blocks.** On any change the old build stays on screen with a "recomputing, showing the previous build" chip, then the chip turns to "updated just now". Controls stay usable while it runs.
+- Custom settings are stored locally with the other app settings. Nothing leaves the machine.
+- The baselines do not exist until the Phase 4 research round; until then the mock-up values are invented.
 
 ## Icons and images
 - **Decision (maintainer, 2026-10-28):** icons and images are read at runtime from the user's own game install, like the other game data. They are never committed, never shipped and never in the Nexus package. Only the files needed are extracted (never whole packs), into the local cache.

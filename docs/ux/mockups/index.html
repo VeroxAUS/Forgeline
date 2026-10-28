@@ -91,6 +91,13 @@ svg.chart text{fill:var(--dim);font-size:11px}
 .tg .seg{display:inline-flex}.tg .seg button{border-radius:0}.tg .seg button:first-child{border-radius:6px 0 0 6px}.tg .seg button:last-child{border-radius:0 6px 6px 0}
 .tg select{background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font:inherit}
 .tips li{margin-bottom:6px}.tips .m{color:var(--warn);font-size:12px}
+
+.chipx{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--accent);border-radius:99px;padding:3px 6px 3px 12px;margin:0 6px 6px 0}
+.chipx button{background:none;border:0;color:var(--dim);cursor:pointer;font:inherit;font-size:16px;line-height:1}
+.sr{display:grid;grid-template-columns:120px 1fr 64px;gap:8px;align-items:center;margin-top:8px;font-size:14px}
+.sr input[type=range]{width:100%;accent-color:var(--accent)}
+.sr .bl{color:var(--dim);font-size:11px;text-align:right}
+.sr .mod{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -121,12 +128,17 @@ svg.chart text{fill:var(--dim);font-size:11px}
 <div class="status"><span>Save read 12:41</span><span>Game build 12345678</span><span class="chip ok">&#10003; up to date</span><span>Preset: Solo</span><span>Weapon: Light bowgun (generic)</span></div>
 
 <section class="screen on" id="best">
-<div class="iconnote" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">Safe appears twice? Compare two fixes: <span class="seg" id="opt"><button class="on" data-o="A">Option A (recommended)</button><button data-o="B">Option B</button></span><span id="optnote"></span></div>
 <div class="tg" id="toggles">
 <span><label id="plabel">Playstyle</label><span class="seg" id="preset"></span></span>
 <span><label>Mode</label><select id="mode"><option value="gen">General hunting</option><option value="mon">Per monster: Sample Monster A</option><option value="mon2">Per monster: Sample Monster B</option></select></span>
 <span><label>Alternative</label><span class="seg" id="alt"><button class="on" data-a="best">Best</button><button data-a="safe" id="safebtn">Safe</button><button data-a="def">Defensive</button><button data-a="mon">Monster-specific</button><button data-a="gen">General hunting</button><button data-a="gogma">Gogma-specific</button></span></span>
 </div>
+<div id="rc" class="status" style="border:0;margin:0;padding:0 0 8px"><button class="btn sec" id="custbtn">Customise &#9662;</button><span id="rcs" class="chip ok">&#10003; up to date</span><span style="margin-left:auto"><label style="color:var(--dim);font-size:12px">My presets</label> <select id="mypre"><option>Solo (default)</option><option>Multiplayer (default)</option><option>My boss-rush</option></select></span></div>
+<div class="detail" id="cust"><div class="cols">
+<div><b>Must-haves</b> <small style="color:var(--dim)">hard rules: a build without them is never shown</small><div id="chips" style="margin:8px 0"></div><select id="addm"><option value="">+ Add a skill&hellip;</option><option>Guard</option><option>Wind Resistance</option><option>Stun Resistance</option></select></div>
+<div><b>Skill weights</b> <small style="color:var(--dim)">how much a skill is worth; tick marks show the researched baseline</small><div id="sl"></div></div>
+<div><b>Assumptions</b> <small style="color:var(--dim)">used for modelled numbers</small><div id="as"></div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sec" id="reset">Reset all to baseline</button><button class="btn" id="savep">Save as preset&hellip;</button></div></div>
+</div></div>
 <h2 id="bt">Best build you can make now</h2>
 <div class="iconnote">Icon boxes are <b>placeholder glyphs of our own</b>. With the maintainer's yes, the real item icons are read from the user's own game install at update time (see brief). Click a piece for details.</div>
 <div class="tiles">
@@ -301,16 +313,31 @@ document.getElementById('v-note').textContent=a.note;document.getElementById('v-
 document.getElementById('v-tips').innerHTML=a.tips.map(function(t){return '<li>'+t+'</li>'}).join('');
 document.querySelectorAll('#alt button').forEach(function(b){b.classList.toggle('on',b.dataset.a===k)});}
 document.querySelectorAll('#alt button').forEach(function(b){b.onclick=function(){setAlt(b.dataset.a)}});
-var OPT='A';
-function buildPreset(){var p=document.getElementById('preset'),v=OPT==='A'?[['solo','Solo'],['multi','Multiplayer']]:[['solo','Solo'],['multi','Multiplayer'],['cautious','Cautious']];
-p.innerHTML=v.map(function(x,n){return '<button '+(n?'':'class="on" ')+'data-v="'+x[0]+'">'+x[1]+'</button>'}).join('');
-document.getElementById('safebtn').textContent=OPT==='A'?'Safe':'Safe (max defence)';
-document.getElementById('optnote').textContent=OPT==='A'?'Playstyle = Solo or Multiplayer only. "Safe" is one choice, in Alternative; picking it applies the cautious weights.':'"Cautious" is a playstyle that raises comfort and defence weights in every alternative; "Safe (max defence)" is a separate build goal. Two controls, clearer names.';
-p.querySelectorAll('button').forEach(function(b){b.onclick=function(){p.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');};});}
-document.querySelectorAll('#opt button').forEach(function(b){b.onclick=function(){OPT=b.dataset.o;document.querySelectorAll('#opt button').forEach(function(x){x.classList.toggle('on',x===b)});buildPreset();};});
+function buildPreset(){var p=document.getElementById('preset');
+p.innerHTML='<button class="on" data-v="solo">Solo</button><button data-v="multi">Multiplayer</button>';
+p.querySelectorAll('button').forEach(function(b){b.onclick=function(){p.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');recompute();};});}
 buildPreset();
 document.getElementById('mode').onchange=function(){setAlt(this.value==='gen'?'gen':'mon')};
 setAlt('best');
+
+var MH=["Earplugs","Tremor Resistance"];
+var W=[["Attack Boost",70],["Critical Eye",60],["Guard",30],["Stun Resistance",20],["Health Boost",25]];
+var AS=[["Uptime %",60],["Weak-spot rate %",50]];
+var W0=JSON.stringify(W),AS0=JSON.stringify(AS),MH0=JSON.stringify(MH);
+function rerender(){
+document.getElementById('chips').innerHTML=MH.map(function(m,i){return '<span class="chipx">'+m+'<button data-i="'+i+'" title="Remove">&times;</button></span>'}).join('')||'<small style="color:var(--dim)">None</small>';
+document.querySelectorAll('#chips button').forEach(function(b){b.onclick=function(){MH.splice(+b.dataset.i,1);rerender();recompute();}});
+var B=JSON.parse(W0),B2=JSON.parse(AS0);
+function rows(list,base,id){return list.map(function(w,i){var m=w[1]!==base[i][1];return '<div class="sr"><span>'+w[0]+'</span><input type="range" min="0" max="100" value="'+w[1]+'" data-g="'+id+'" data-i="'+i+'"><span class="n '+(m?'mod':'')+'">'+w[1]+(m?'':' <span class="bl">base</span>')+'</span></div>'}).join('');}
+document.getElementById('sl').innerHTML=rows(W,B,'w');document.getElementById('as').innerHTML=rows(AS,B2,'a');
+document.querySelectorAll('#cust input[type=range]').forEach(function(r){r.onchange=function(){(r.dataset.g==='w'?W:AS)[+r.dataset.i][1]=+r.value;rerender();recompute();};});}
+var rt;
+function recompute(){var c=document.getElementById('rcs');c.className='chip warn';c.innerHTML='&#8635; recomputing, showing the previous build';document.getElementById('rc').style.opacity=1;clearTimeout(rt);rt=setTimeout(function(){c.className='chip ok';c.innerHTML='&#10003; updated just now';},1400);}
+document.getElementById('custbtn').onclick=function(){document.getElementById('cust').classList.toggle('on')};
+document.getElementById('addm').onchange=function(){if(this.value){MH.push(this.value);this.value='';rerender();recompute();}};
+document.getElementById('reset').onclick=function(){W=JSON.parse(W0);AS=JSON.parse(AS0);MH=JSON.parse(MH0);rerender();recompute();};
+document.getElementById('savep').onclick=function(){var s=document.getElementById('mypre');var o=document.createElement('option');o.textContent='My preset '+(s.options.length-2);s.appendChild(o);s.value=o.textContent;};
+rerender();
 </script>
 </body>
 </html>
