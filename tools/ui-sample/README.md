@@ -23,6 +23,17 @@ cd tools/ui-sample
 cargo run --release --bin shots -- <out dir> 2     # 2 = pixels per point
 ```
 
+## Element 2: the app shell
+
+`src/shell.rs` is the D3 app shell (left rail, section divider, status line) laid out from the window size, so it resizes. Content is a labelled placeholder until later elements fill it. Ctrl+1 to Ctrl+6 switch section.
+
+```
+cargo run --release --bin shell_shots -- <out dir> 2                  # screenshots, no GPU
+cargo run --release --features window --bin shell_window              # real window (the maintainer's PC)
+```
+
+Screenshots are in [docs/ux/samples/shell/](../../docs/ux/samples/shell/).
+
 ## Run it in a real window (the maintainer's PC)
 
 ```
