@@ -33,6 +33,9 @@ const STATUS_W: f32 = 72.0;
 const DOT_R: f32 = 4.0;
 const DOT_PITCH: f32 = 13.0;
 const SKILL_ROW: f32 = 38.0;
+/// Compact rows (used when the list is long): one line, dots in a fixed column at this offset.
+const COMPACT_ROW: f32 = 22.0;
+const COMPACT_DOTS_X: f32 = 120.0;
 /// Width of the side strip, and the gap between it and the equipment rows.
 const SKILLS_W: f32 = 232.0;
 const SKILLS_GAP: f32 = 32.0;
@@ -174,6 +177,37 @@ impl BuildData {
     }
 }
 
+/// A realistic full endgame build's skills (invented names), most important first: 22 skills,
+/// including set bonus and group skill levels, to see how the strip copes with a long list.
+pub fn sample_endgame_skills() -> Vec<Skill> {
+    [
+        ("Weakness exploit", 5, 5),
+        ("Critical eye", 5, 5),
+        ("Sharpshot", 3, 3),
+        ("Critical boost", 5, 5),
+        ("Marksman", 3, 3),
+        ("Attack boost", 4, 5),
+        ("Ammo saver", 3, 3),
+        ("Evade extender", 3, 3),
+        ("Stamina surge", 3, 3),
+        ("Recovery speed", 3, 3),
+        ("Constitution", 5, 5),
+        ("Rapid fire", 1, 1),
+        ("Quick sheathe", 3, 3),
+        ("Item prolonger", 3, 3),
+        ("Partbreaker", 3, 3),
+        ("Mind's eye", 3, 3),
+        ("Fortify", 1, 1),
+        ("Set bonus Alpha", 1, 2),
+        ("Set bonus Beta", 2, 2),
+        ("Group skill Gamma", 1, 1),
+        ("Group skill Delta", 1, 1),
+        ("Evade window", 5, 5),
+    ]
+    .map(|(name, level, max)| Skill { name, level, max })
+    .to_vec()
+}
+
 /// What a hover rectangle explains.
 #[derive(Clone, Copy)]
 enum Hit {
@@ -285,7 +319,15 @@ fn card(
         right
     };
     if side {
-        skills(p, hits, right - SKILLS_W, right, top, &data.skills);
+        skills(
+            p,
+            hits,
+            right - SKILLS_W,
+            right,
+            top,
+            content.max.y - 16.0,
+            &data.skills,
+        );
     }
     let right = eq_right;
     let mut y = top;
@@ -333,14 +375,30 @@ fn card(
         "No charm",
     );
     if !side {
-        skills(p, hits, left, right, y + 14.0, &data.skills);
+        skills(
+            p,
+            hits,
+            left,
+            right,
+            y + 14.0,
+            content.max.y - 16.0,
+            &data.skills,
+        );
     }
 }
 
 /// The skills strip: a section label with its hairline, then one block per skill (name, level
 /// number at the right, one dot per possible level underneath). Columns follow the width; dots
 /// and numbers sit on the same x in every block and are snapped to whole pixels.
-fn skills(p: &Painter, hits: &mut Vec<(Rect, Hit)>, left: f32, right: f32, y: f32, list: &[Skill]) {
+fn skills(
+    p: &Painter,
+    hits: &mut Vec<(Rect, Hit)>,
+    left: f32,
+    right: f32,
+    y: f32,
+    bottom: f32,
+    list: &[Skill],
+) {
     let mut y = section(p, left, right, y, "SKILLS");
     if list.is_empty() {
         p.text(
@@ -357,26 +415,54 @@ fn skills(p: &Painter, hits: &mut Vec<(Rect, Hit)>, left: f32, right: f32, y: f3
     let cols = (((right - left) / SKILL_COL_MIN_W).floor() as usize).max(1);
     let col_w = (right - left - (cols - 1) as f32 * 24.0) / cols as f32;
     y += 6.0;
-    for (i, k) in list.iter().enumerate() {
+
+    // Density follows the count. Comfortable rows (name over dots) while they fit above
+    // `bottom`; otherwise compact one-line rows with the dots in a fixed column; if even those
+    // do not fit at their tightest, the first ones that do, then a "+N more" line. The list is
+    // already in the order to show (most important first), so the cut drops the least important.
+    let avail = (bottom - y).max(0.0);
+    let per_col = list.len().div_ceil(cols);
+    let comfortable = per_col as f32 * SKILL_ROW <= avail;
+    let pitch = if comfortable { SKILL_ROW } else { COMPACT_ROW };
+    let fit_rows = ((avail / pitch).floor() as usize).max(1);
+    let shown = if per_col <= fit_rows {
+        list.len()
+    } else {
+        (fit_rows.saturating_sub(1) * cols).max(1)
+    };
+    for (i, k) in list.iter().take(shown).enumerate() {
         let x = left + (i % cols) as f32 * (col_w + 24.0);
-        let ry = y + (i / cols) as f32 * SKILL_ROW;
-        // The level number takes the right edge; the name gives way to it with an ellipsis.
+        let ry = y + (i / cols) as f32 * pitch;
+        // Name left, level number at the right edge; the name gives way with an ellipsis.
+        let (name_y, dots_x, dots_y, name_w) = if comfortable {
+            (ry + 9.0, x, ry + 26.0, col_w - 24.0)
+        } else {
+            (
+                ry + COMPACT_ROW / 2.0 - 2.0,
+                x + COMPACT_DOTS_X,
+                ry + COMPACT_ROW / 2.0 - 2.0,
+                COMPACT_DOTS_X - 8.0,
+            )
+        };
         p.text(
-            Pos2::new(x + col_w, ry + 9.0),
+            Pos2::new(x + col_w, name_y),
             Align2::RIGHT_CENTER,
             k.level.to_string(),
             mono(11.5),
             DIM,
         );
         p.text(
-            Pos2::new(x, ry + 9.0),
+            Pos2::new(x, name_y),
             Align2::LEFT_CENTER,
-            fit(p, k.name, col_w - 24.0),
+            fit(p, k.name, name_w),
             font("inter", 12.5),
             FG,
         );
         for d in 0..k.max {
-            let c = Pos2::new(snap(x + DOT_R + f32::from(d) * DOT_PITCH), snap(ry + 26.0));
+            let c = Pos2::new(
+                snap(dots_x + DOT_R + f32::from(d) * DOT_PITCH),
+                snap(dots_y),
+            );
             if d < k.level {
                 p.circle_filled(c, DOT_R, ACCENT);
             } else {
@@ -385,9 +471,19 @@ fn skills(p: &Painter, hits: &mut Vec<(Rect, Hit)>, left: f32, right: f32, y: f3
             }
         }
         hits.push((
-            Rect::from_min_size(Pos2::new(x, ry), Vec2::new(col_w, SKILL_ROW - 4.0)),
+            Rect::from_min_size(Pos2::new(x, ry), Vec2::new(col_w, pitch - 2.0)),
             Hit::Skill(*k),
         ));
+    }
+    if shown < list.len() {
+        let ry = y + (shown / cols) as f32 * pitch;
+        p.text(
+            Pos2::new(left, ry + pitch / 2.0 - 2.0),
+            Align2::LEFT_CENTER,
+            format!("+{} more", list.len() - shown),
+            mono(11.0),
+            DIM,
+        );
     }
 }
 
