@@ -170,7 +170,7 @@ pub fn read_stable(path: &Path) -> Result<(Vec<u8>, Stamp), String> {
         let before = match std::fs::metadata(path) {
             Ok(m) => stamp_of(&m),
             Err(e) => {
-                last = format!("cannot read the save ({})", e.kind());
+                last = read_error(&e);
                 continue;
             }
         };
@@ -178,7 +178,7 @@ pub fn read_stable(path: &Path) -> Result<(Vec<u8>, Stamp), String> {
         match std::fs::File::open(path).and_then(|mut f| f.read_to_end(&mut bytes)) {
             Ok(_) => {}
             Err(e) => {
-                last = format!("cannot read the save ({})", e.kind());
+                last = read_error(&e);
                 continue;
             }
         }
@@ -190,6 +190,16 @@ pub fn read_stable(path: &Path) -> Result<(Vec<u8>, Stamp), String> {
         }
     }
     Err(format!("{last} (the game may be writing it)"))
+}
+
+/// Windows sharing and lock violations (32, 33) mean another program has the file open without
+/// sharing, which for the save means the game is writing it.
+fn read_error(e: &std::io::Error) -> String {
+    if cfg!(windows) && matches!(e.raw_os_error(), Some(32 | 33)) {
+        "the save is locked: the game is writing it".to_string()
+    } else {
+        format!("cannot read the save ({})", e.kind())
+    }
 }
 
 fn data_view(data: &DataDir, found: Option<&Discovered>) -> DataView {
