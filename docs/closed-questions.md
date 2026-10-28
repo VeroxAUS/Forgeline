@@ -217,3 +217,8 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Which style?** D3 (2026-10-28 07:39 UTC): A (Modern Dark) as the base, with C's orange accent, round skill dots, icon tiles, the static header gradient and the tinted rail item. The maintainer first picked "A with C's accents and round skill dots and the icon-led, game-like feel" (D), then asked for D with the gradient (D1), the tinted rail item (D2) and both (D3), and locked in D3. Looked at from screenshots in the cloud.
 - **Keep `tools/ui-sample`?** Yes ("The tool is OK to keep", 2026-10-28). It stays outside the workspace with its own lockfile and CI job, and only the optional `window` feature opens a real window.
 - **Merge the style guide (PR #49)?** Yes ("you are free to merge", 2026-10-28 08:04 UTC). Merged at 08:06:00 UTC (cloud, docs only, CI green on Ubuntu and Windows). The maintainer also asked for it as an Artifact page and for a rewrite of main to drop the old commit name; PR #48 was closed and replaced by #49 on the rewritten main.
+
+### UX element 2: app shell (2026-10-28)
+- **Look check?** Passed ("Okay that looks good", 2026-10-28 08:18 UTC), reviewed from screenshots in the cloud; not run on the PC.
+- **Merge PR #51?** Yes ("Merge it", 2026-10-28 08:18 UTC). Merged at 08:18:42 UTC (cloud, CI green on Ubuntu and Windows).
+- **Where are reviews done?** In the project chat, through the coordinator: screenshots go on one Artifact page per review round (2026-10-28).
