@@ -83,3 +83,13 @@ Screenshots are in [docs/ux/samples/skills/](../../docs/ux/samples/skills/). `bu
 Long lists (endgame builds): normal skills switch to one-line rows with the dots in a fixed column, and what still does not fit is left out, least important first (must-haves, set and group skills never; optimizer weight when there is one, else lowest level), with a clickable `+N more on Why` line. Set and group skills are pinned at the top with a `SET` or `GROUP` tag and one line per tier (reached tiers green, the next muted with the pieces it still needs, full text in the tooltip); the tier text is invented sample text. `sample_endgame_skills()` is a 22-skill sample.
 
 Set and group skill drawing is automatic (`PinnedStyle::Auto`): full tiers while everything fits, then name plus one summary line, then one row each. In a window at least about 1245 points wide (16:9 at the design height) the strip gets a second column. `sample_shaped_skills` builds the sample shapes used for the research in `docs/research.md` (counts only).
+
+## Element 6: headline damage and toughness
+
+`src/build_card.rs` (`Headline`, `HeadlineStyle`): two blocks in the Build header, each label, `MODELLED` tag, headline word, a 6 pt bar and one detail line. The blocks are one skills column wide, so toughness sits over the skills strip and damage ends where the equipment rows end; both are the same size on the same rows. Three display options for open item A: `Word` (word and bar), `Compare` (adds a tick for current gear and the change against it) and `Number` (adds the key number). Unknown values show `UNKNOWN`, an empty bar and the reason. Sample numbers only; the bar scale (share of the best the unlocked pool allows) and the word thresholds are provisional.
+
+```
+cargo run --release --bin headline_shots -- <out dir> 2              # screenshots, no GPU
+```
+
+Screenshots are in [docs/ux/samples/headline/](../../docs/ux/samples/headline/).

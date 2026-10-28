@@ -47,6 +47,12 @@ const SKILL_GAP: f32 = 24.0;
 const EQUIP_MIN_W: f32 = 480.0;
 /// Each strip column is at least this wide (name, dots and level number).
 const SKILL_COL_MIN_W: f32 = 200.0;
+/// Headline block: its width is one skills column, so the toughness block sits over the skills
+/// strip and the damage block ends where the equipment rows end. Its top is under the content
+/// area's top edge.
+const HEAD_W: f32 = SKILLS_W;
+const HEAD_TOP: f32 = 40.0;
+const HEAD_BAR_H: f32 = 6.0;
 const ACCENT: Color32 = Color32::from_rgb(255, 138, 61);
 const BG: Color32 = Color32::from_rgb(10, 10, 11);
 
@@ -174,8 +180,92 @@ impl Skill {
     }
 }
 
+/// Which of the two headline axes a block shows.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Axis {
+    Damage,
+    Toughness,
+}
+
+/// How the headline blocks are drawn (the options compared for open item A in the design plan).
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum HeadlineStyle {
+    /// A plain word and a bar. Nothing else.
+    Word,
+    /// The word, the bar with a tick for the current gear, and the change against it.
+    #[default]
+    Compare,
+    /// The word, the bar and the key number underneath.
+    Number,
+}
+
+/// One headline block. `fill` is the build's place on the bar (0 to 1, as a share of the best the
+/// unlocked pool allows); `None` means unknown. `current` is where the user's current gear sits on
+/// the same bar, `delta` the change against it in percent.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct Headline {
+    pub axis: Axis,
+    pub fill: Option<f32>,
+    pub current: Option<f32>,
+    pub delta: Option<i32>,
+    /// The key number with its unit, for raw detail. Sample text here.
+    pub number: &'static str,
+    /// Why the value is unknown, when `fill` is `None`.
+    pub unknown_why: &'static str,
+}
+
+impl Headline {
+    /// The headline word. Against current gear when there is a comparison, otherwise by place on
+    /// the bar. The thresholds are provisional.
+    pub fn word(&self) -> &'static str {
+        let Some(fill) = self.fill else {
+            return "UNKNOWN";
+        };
+        match (self.axis, self.delta) {
+            (Axis::Damage, Some(d)) => match d {
+                20.. => "MUCH HIGHER",
+                5..=19 => "HIGHER",
+                -4..=4 => "SIMILAR",
+                _ => "LOWER",
+            },
+            (Axis::Toughness, Some(d)) => match d {
+                20.. => "MUCH TANKIER",
+                5..=19 => "TANKIER",
+                -4..=4 => "SOLID",
+                _ => "SQUISHIER",
+            },
+            (Axis::Damage, None) => match fill {
+                f if f >= 0.85 => "VERY HIGH",
+                f if f >= 0.6 => "HIGH",
+                f if f >= 0.35 => "MODERATE",
+                _ => "LOW",
+            },
+            (Axis::Toughness, None) => match fill {
+                f if f >= 0.85 => "VERY TOUGH",
+                f if f >= 0.6 => "TOUGH",
+                f if f >= 0.35 => "MODERATE",
+                _ => "FRAGILE",
+            },
+        }
+    }
+
+    fn label(&self) -> &'static str {
+        match self.axis {
+            Axis::Damage => "DAMAGE",
+            Axis::Toughness => "TOUGHNESS",
+        }
+    }
+
+    fn tip(&self) -> &'static str {
+        match self.axis {
+            Axis::Damage => "Damage is modelled from assumed uptime and weak-spot rate. Open Why for the numbers.",
+            Axis::Toughness => "Toughness is modelled from defence, resistances and health skills. Open Why for the numbers.",
+        }
+    }
+}
+
 /// The card's data: the weapon, up to five armour pieces and the charm. `None` is an empty slot.
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct BuildData {
     pub weapon: Option<Piece>,
     pub armour: [Option<Piece>; 5],
@@ -184,6 +274,9 @@ pub struct BuildData {
     pub skills: Vec<Skill>,
     /// How the set and group skills are drawn.
     pub pinned_style: PinnedStyle,
+    pub damage: Headline,
+    pub toughness: Headline,
+    pub headline_style: HeadlineStyle,
 }
 
 impl BuildData {
@@ -269,6 +362,23 @@ impl BuildData {
                 Skill::normal("Stamina surge", 2, 3),
             ],
             pinned_style: PinnedStyle::default(),
+            damage: Headline {
+                axis: Axis::Damage,
+                fill: Some(0.72),
+                current: Some(0.58),
+                delta: Some(24),
+                number: "4,820 dmg/min",
+                unknown_why: "Needs a weapon",
+            },
+            toughness: Headline {
+                axis: Axis::Toughness,
+                fill: Some(0.64),
+                current: Some(0.61),
+                delta: Some(4),
+                number: "1,180 effective HP",
+                unknown_why: "Needs armour",
+            },
+            headline_style: HeadlineStyle::default(),
         }
     }
 }
@@ -370,6 +480,8 @@ enum Hit {
     Skill(Skill),
     /// The "+N more on Why" line.
     Why,
+    /// A headline block's modelled-value note.
+    Tip(&'static str),
 }
 
 /// The build card screen: shell state, the card's data and the icon cache.
@@ -428,6 +540,9 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
             }
             Hit::Skill(k) => {
                 tip.on_hover_text(skill_tip(k));
+            }
+            Hit::Tip(text) => {
+                tip.on_hover_text(*text);
             }
             Hit::Why => {
                 if tip.clicked() {
@@ -512,6 +627,24 @@ fn card(
         SKILLS_W
     };
     let side = right - left - strip_w - SKILLS_GAP >= EQUIP_MIN_W;
+    // The two headline blocks sit on the same columns as the rows and the skills strip: toughness
+    // over the last skills column, damage over the one before it (or ending at the equipment rows).
+    let gap = if side && strip_w > SKILLS_W {
+        SKILL_GAP
+    } else {
+        SKILLS_GAP
+    };
+    let by = content.min.y + HEAD_TOP;
+    let tx = right - HEAD_W;
+    headline(
+        p,
+        hits,
+        tx - gap - HEAD_W,
+        by,
+        &data.damage,
+        data.headline_style,
+    );
+    headline(p, hits, tx, by, &data.toughness, data.headline_style);
     let top = content.min.y + 120.0;
     let eq_right = if side {
         right - strip_w - SKILLS_GAP
@@ -587,6 +720,98 @@ fn card(
             data.pinned_style,
         );
     }
+}
+
+/// One headline block, `HEAD_W` wide, four fixed rows so both blocks line up: label with the
+/// `MODELLED` tag, the word, the bar, and a detail line (change or number, depending on style).
+/// The bar fill and the tick snap to whole pixels.
+fn headline(
+    p: &Painter,
+    hits: &mut Vec<(Rect, Hit)>,
+    x: f32,
+    y: f32,
+    h: &Headline,
+    style: HeadlineStyle,
+) {
+    let ppp = p.ctx().pixels_per_point();
+    let snap = |v: f32| (v * ppp).round() / ppp;
+    let right = x + HEAD_W;
+    p.text(
+        Pos2::new(x, y + 6.0),
+        Align2::LEFT_CENTER,
+        h.label(),
+        mono(10.5),
+        DIM,
+    );
+    if h.fill.is_some() {
+        p.text(
+            Pos2::new(right, y + 6.0),
+            Align2::RIGHT_CENTER,
+            "MODELLED",
+            mono(10.5),
+            WARN,
+        );
+    }
+    let known = h.fill.is_some();
+    let word = fit(p, h.word(), HEAD_W, "mono", 20.0);
+    p.text(
+        Pos2::new(x, y + 27.0),
+        Align2::LEFT_CENTER,
+        word,
+        mono(20.0),
+        if known { FG } else { FAINT },
+    );
+    let bar = Rect::from_min_size(Pos2::new(x, snap(y + 44.0)), Vec2::new(HEAD_W, HEAD_BAR_H));
+    p.rect_filled(bar, HEAD_BAR_H / 2.0, LINE);
+    if let Some(fill) = h.fill {
+        let w = snap((HEAD_W * fill.clamp(0.0, 1.0)).max(HEAD_BAR_H));
+        p.rect_filled(
+            Rect::from_min_size(bar.min, Vec2::new(w, HEAD_BAR_H)),
+            HEAD_BAR_H / 2.0,
+            ACCENT,
+        );
+    }
+    let detail_y = y + 62.0;
+    let detail = |text: String, color: Color32| {
+        p.text(
+            Pos2::new(x, detail_y),
+            Align2::LEFT_CENTER,
+            fit(p, &text, HEAD_W, "mono", 11.0),
+            mono(11.0),
+            color,
+        );
+    };
+    if !known {
+        detail(h.unknown_why.to_string(), DIM);
+    } else {
+        match style {
+            HeadlineStyle::Word => {}
+            HeadlineStyle::Compare => {
+                if let Some(c) = h.current {
+                    let tx = snap(x + HEAD_W * c.clamp(0.0, 1.0));
+                    p.rect_filled(
+                        Rect::from_min_max(
+                            Pos2::new(tx - 0.75, bar.top() - 3.0),
+                            Pos2::new(tx + 0.75, bar.bottom() + 3.0),
+                        ),
+                        0.0,
+                        FG,
+                    );
+                }
+                match h.delta {
+                    Some(0) => detail("Same as your gear".into(), DIM),
+                    Some(d) if d > 0 => detail(format!("+{d}% vs your gear"), OK),
+                    Some(d) => detail(format!("{d}% vs your gear"), WARN),
+                    None => detail("Nothing worn to compare".into(), FAINT),
+                }
+            }
+            HeadlineStyle::Number => detail(h.number.to_string(), DIM),
+        }
+    }
+    hits.push((
+        Rect::from_min_max(Pos2::new(x, y), Pos2::new(right, detail_y + 8.0)),
+        Hit::Tip(h.tip()),
+    ));
 }
 
 /// The skills strip: a section label with its hairline, then the set and group skills pinned at
@@ -1124,5 +1349,35 @@ mod tests {
             names(&mixed, &hide_least_important(&refs, 1)),
             ["Unweighted"]
         );
+    }
+
+    fn line(axis: Axis, fill: Option<f32>, delta: Option<i32>) -> Headline {
+        Headline {
+            axis,
+            fill,
+            current: None,
+            delta,
+            number: "",
+            unknown_why: "",
+        }
+    }
+
+    #[test]
+    fn headline_words_follow_the_change_against_gear_or_the_bar() {
+        let t = |d| line(Axis::Toughness, Some(0.5), d).word();
+        assert_eq!(t(Some(40)), "MUCH TANKIER");
+        assert_eq!(t(Some(5)), "TANKIER");
+        assert_eq!(t(Some(4)), "SOLID");
+        assert_eq!(t(Some(-4)), "SOLID");
+        assert_eq!(t(Some(-5)), "SQUISHIER");
+        assert_eq!(
+            line(Axis::Damage, Some(0.5), Some(20)).word(),
+            "MUCH HIGHER"
+        );
+        // No gear to compare: the place on the bar decides.
+        assert_eq!(line(Axis::Damage, Some(0.9), None).word(), "VERY HIGH");
+        assert_eq!(line(Axis::Toughness, Some(0.1), None).word(), "FRAGILE");
+        // Unknown never gets a word that sounds like a result.
+        assert_eq!(line(Axis::Damage, None, Some(30)).word(), "UNKNOWN");
     }
 }
