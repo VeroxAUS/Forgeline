@@ -104,6 +104,45 @@ svg.chart text{fill:var(--dim);font-size:11px}
 .step{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
 .step .no{width:28px;height:28px;border-radius:50%;background:var(--surface-2);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700}
 .dl{color:var(--ok)}.dn{color:var(--warn)}
+
+/* looks */
+body[data-look=forge]{--bg:#13100c;--surface:#1c1812;--surface-2:#27211a;--line:#4a3b25;--text:#ece0c8;--dim:#b4a58a;--accent:#d29a3c;--ok:#8fbf6a;--warn:#df8a3d;--error:#d9675a;font-family:Georgia,'Times New Roman',serif}
+body[data-look=forge] .panel,body[data-look=forge] .tile,body[data-look=forge] .card,body[data-look=forge] .detail,body[data-look=forge] .dlg{border-radius:3px;box-shadow:inset 0 0 0 3px var(--bg),inset 0 0 0 4px var(--line);border-color:var(--line);padding:16px 20px}
+body[data-look=forge] h2,body[data-look=forge] nav h1{letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+body[data-look=forge] th{text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+body[data-look=forge] .btn,body[data-look=forge] .seg button,body[data-look=forge] nav button,body[data-look=forge] .chip,body[data-look=forge] select{border-radius:2px}
+body[data-look=forge] .ibox{border-radius:50%;border:2px solid var(--line);background:radial-gradient(#352c20,#1c1812)}
+body[data-look=forge] .tile b{font-family:Georgia,serif}
+body[data-look=clean]{--bg:#0d1015;--surface:#151a21;--surface-2:#1c222b;--line:#232a34;--text:#eef1f6;--dim:#97a1b0;--accent:#5aa9ff;--ok:#4fd1a1;--warn:#ffb454;--error:#ff6b6b}
+body[data-look=clean] .panel,body[data-look=clean] .tile,body[data-look=clean] .card,body[data-look=clean] .detail,body[data-look=clean] .dlg{border-radius:14px;border-color:transparent;background:var(--surface)}
+body[data-look=clean] .tile{padding:16px}
+body[data-look=clean] .tile b{font-size:32px;font-weight:600;color:var(--text)}
+body[data-look=clean] nav{background:var(--bg);border-right:0}
+body[data-look=clean] nav button{border-radius:10px;padding:11px 12px}
+body[data-look=clean] th{background:transparent;border-bottom:1px solid var(--line)}
+body[data-look=clean] td{border-top:1px solid #1c222b}
+body[data-look=clean] .btn,body[data-look=clean] .seg button,body[data-look=clean] .chip,body[data-look=clean] select{border-radius:99px}
+body[data-look=clean] .ibox{border-radius:12px;border:0;background:#1f2732}
+body[data-look=clean] .bar{height:6px}
+body[data-look=pro]{--bg:#0a0c0f;--surface:#101318;--surface-2:#161a20;--line:#242a33;--text:#d7dde6;--dim:#8793a3;--accent:#3fd0c9;--ok:#6bd06b;--warn:#e8b13a;--error:#f0605a;font-size:13px;font-family:'Segoe UI',system-ui,sans-serif}
+body[data-look=pro] .panel,body[data-look=pro] .tile,body[data-look=pro] .card,body[data-look=pro] .detail,body[data-look=pro] .dlg{border-radius:2px;padding:8px 10px}
+body[data-look=pro] .tile b{font-family:Consolas,'Courier New',monospace;font-size:22px}
+body[data-look=pro] td,body[data-look=pro] th{padding:3px 8px;font-variant-numeric:tabular-nums}
+body[data-look=pro] td.n,body[data-look=pro] .n{font-family:Consolas,'Courier New',monospace}
+body[data-look=pro] h2{font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+body[data-look=pro] .btn,body[data-look=pro] .seg button,body[data-look=pro] nav button,body[data-look=pro] .chip,body[data-look=pro] select{border-radius:2px;padding:4px 10px}
+body[data-look=pro] nav{width:132px}
+body[data-look=pro] .ibox{width:28px;height:28px;border-radius:2px}
+body[data-look=pro] svg.ic{width:18px;height:18px}
+body[data-look=pro] .cards{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px}
+body[data-look=pro] .tiles{gap:6px}
+body[data-look=pro] .status{padding:4px 0;margin-bottom:8px}
+body[data-look=pro] tr:nth-child(even) td{background:#12161b}
+.lookbar{display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap;padding:8px 16px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.lookbar .seg button{padding:5px 12px}
+.lookbar span.t{color:var(--dim);font-size:13px}
+.hm{border-collapse:collapse}.hm td,.hm th{padding:6px 12px;text-align:center;border:1px solid var(--bg)}
+.hm .a{background:#3a2c0f;color:var(--accent);font-weight:700}.hm .b{background:#102a3a;color:#6fb3e0}
 </style>
 </head>
 <body>
@@ -119,6 +158,7 @@ svg.chart text{fill:var(--dim);font-size:11px}
 <symbol id="g-gem" viewBox="0 0 28 28"><path d="M8 5h12l5 7-11 13L3 12z"/><path d="M3 12h22M10 5l4 20M18 5l-4 20"/></symbol>
 <symbol id="g-coin" viewBox="0 0 28 28"><circle cx="14" cy="14" r="10"/><path d="M10 14h8M14 10v8"/></symbol>
 </defs></svg><div class="note">Mock-up with invented sample data. No Capcom names, art or data. Looks and flow only, not performance. Click the screens on the left.</div>
+<div class="lookbar"><b>Look:</b><span class="seg" id="lk"><button class="on" data-l="current">Current</button><button data-l="forge">1 Forge</button><button data-l="clean">2 Clean</button><button data-l="pro">3 Pro</button></span><span class="t" id="lknote"></span></div>
 <div class="app">
 <nav>
 <h1>FORGELINE</h1>
@@ -198,7 +238,7 @@ svg.chart text{fill:var(--dim);font-size:11px}
 
 <section class="screen" id="why">
 <h2>Why this build</h2>
-<div class="vt seg" id="wvt"><button class="on" data-w="w0">Overview</button><button data-w="w1">Compare two builds (option)</button><button data-w="w2">Skill value (option)</button><button data-w="w3">What changed (option)</button></div>
+<div class="vt seg" id="wvt"><button class="on" data-w="w0">Overview</button><button data-w="w1">Compare two builds (option)</button><button data-w="w2">Skill value (option)</button><button data-w="w3">What changed (option)</button><button data-w="w4">Sensitivity grid (option)</button><button data-w="w5">Plain summary (option)</button></div>
 <div class="vw on" id="w0">
 <div class="banner warn"><span>&#9888; The best build changes if uptime drops below about 45% (then Safe leads by 6 points).</span><button class="btn sec">Show the switch point</button></div>
 <div class="panel"><b>Where the 412 comes from (modelled)</b>
@@ -238,6 +278,14 @@ svg.chart text{fill:var(--dim);font-size:11px}
 <span>Critical Eye 3</span><div class="bar"><span style="width:55%"></span></div><span class="n hi">&minus;38</span>
 <span>Earplugs 2</span><div class="bar ok"><span style="width:0%"></span></div><span class="n">must-have</span>
 <span>Tremor Resistance 1</span><div class="bar ok"><span style="width:0%"></span></div><span class="n">must-have</span></div></div></div>
+<div class="vw" id="w4"><div class="iconnote">Option: where the best build flips, as a table of uptime against weak-spot rate. Modelled.</div>
+<div class="panel"><table class="hm"><tr><th>Uptime \ Weak-spot</th><th>30%</th><th>50%</th><th>70%</th></tr>
+<tr><th>30%</th><td class="b">Safe</td><td class="b">Safe</td><td class="b">Safe</td></tr>
+<tr><th>45%</th><td class="b">Safe</td><td class="b">Safe</td><td class="a">Best</td></tr>
+<tr><th>60% (now)</th><td class="a">Best</td><td class="a">Best &#9679;</td><td class="a">Best</td></tr>
+<tr><th>80%</th><td class="a">Best</td><td class="a">Best</td><td class="a">Best</td></tr></table><small style="color:var(--dim)">&#9679; = your current assumptions. Which build is ahead in each cell.</small></div></div>
+<div class="vw" id="w5"><div class="iconnote">Option: a short plain-language summary on top of the numbers.</div>
+<div class="panel"><b>In short</b><p style="margin:8px 0">This build is chosen because it gives the most damage you can make now while keeping the two must-haves (Earplugs and Tremor Resistance). It gives up about 60 defence compared with the Safe build.</p><p style="margin:0;color:var(--dim)">It would change if the attack buff is up less than about 45% of the time. <span class="pill">modelled</span></p></div></div>
 <div class="vw" id="w3"><div class="iconnote">Option: why the build changed since the last save.</div>
 <div class="panel"><b>Since the save at 11:02</b><ul class="clean" style="margin-top:8px"><li>You gained 1x Iron Scale, so the waist piece is one part closer.</li><li>Best build changed: Ashen Coil replaced Ironwood Belt (+7 eff. raw, modelled).</li><li>Shopping list: 6 parts needed before, 5 now.</li></ul></div></div>
 </section>
@@ -378,6 +426,13 @@ rerender();
 
 function vsw(id,cls){document.querySelectorAll('#'+id+' button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#'+id+' button').forEach(function(x){x.classList.toggle('on',x===b)});var sec=document.getElementById(id).parentNode;sec.querySelectorAll('.vw').forEach(function(v){v.classList.toggle('on',v.id===b.dataset.w)});};});}
 vsw('svt');vsw('wvt');
+
+var LN={current:"The look so far. Neutral dark grey with an amber accent.",
+forge:"Game-inspired: warm bronze and parchment tones, serif headings, framed panels, round icon medallions. Our own shapes and colours, no Capcom art. In egui: flat fills and 1 px strokes, plus a system serif or a licensed font.",
+clean:"Modern dashboard: cool blue accent, big numbers, large rounded cards, no borders, lots of space. Easiest in egui: rounded rects and flat colours.",
+pro:"Dense pro-tool: small type, monospace numbers, tight rows, thin lines, teal accent. Most information per screen; best for a second monitor. Cheapest in egui."};
+document.querySelectorAll('#lk button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#lk button').forEach(function(x){x.classList.toggle('on',x===b)});document.body.dataset.look=b.dataset.l;document.getElementById('lknote').textContent=LN[b.dataset.l];};});
+document.getElementById('lknote').textContent=LN.current;
 </script>
 </body>
 </html>
