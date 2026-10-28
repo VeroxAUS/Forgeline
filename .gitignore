@@ -23,3 +23,6 @@ data-cache/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Fixtures are allowed (and must be listed in fixtures/README.md as synthetic)
+!fixtures/**/*.bin

@@ -1,0 +1,106 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+//! Forgeline entry point. Step 1 only has the `--headless-check` mode used by CI; the window and
+//! the `--update` child mode arrive in steps 6 and 9.
+
+use forgeline_core::{memory, results::BenchResult};
+use std::path::PathBuf;
+use std::process::ExitCode;
+
+const USAGE: &str = "usage: forgeline --headless-check [<fixture dir>] [--results-dir <dir>] [--limit-mb <n>] [--ci]";
+
+/// Private bytes the data and engine side may use with fixture data (section 3.4 of the Phase 2 plan).
+const DEFAULT_LIMIT_MB: u64 = 20;
+
+fn main() -> ExitCode {
+    let mut args = std::env::args().skip(1);
+    match args.next().as_deref() {
+        Some("--headless-check") => headless_check(args.collect()),
+        Some("-h" | "--help") => {
+            println!("{USAGE}");
+            ExitCode::SUCCESS
+        }
+        _ => {
+            eprintln!("{USAGE}\nThe window is not built yet (Phase 2, step 9).");
+            ExitCode::from(2)
+        }
+    }
+}
+
+/// Loads the fixture data and builds a snapshot without any window, then checks the process's peak
+/// private bytes against the limit and writes a results file. Until the engine exists (step 8) there
+/// is nothing to load, so this measures the bare process; the check grows with the code.
+fn headless_check(args: Vec<String>) -> ExitCode {
+    let mut fixture: Option<PathBuf> = None;
+    let mut results_dir = PathBuf::from("bench/results");
+    let mut limit_mb = DEFAULT_LIMIT_MB;
+    let mut ci = std::env::var("CI").is_ok_and(|v| v == "true");
+    let mut it = args.into_iter();
+    while let Some(a) = it.next() {
+        match a.as_str() {
+            "--results-dir" => match it.next() {
+                Some(d) => results_dir = PathBuf::from(d),
+                None => return usage_error("--results-dir needs a folder"),
+            },
+            "--limit-mb" => match it.next().and_then(|v| v.parse().ok()) {
+                Some(n) => limit_mb = n,
+                None => return usage_error("--limit-mb needs a number"),
+            },
+            "--ci" => ci = true,
+            other if other.starts_with('-') => {
+                return usage_error(&format!("unknown flag {other}"))
+            }
+            other => fixture = Some(PathBuf::from(other)),
+        }
+    }
+    if let Some(dir) = &fixture {
+        if !dir.is_dir() {
+            return usage_error("the fixture folder does not exist");
+        }
+    }
+
+    let mem = memory::read();
+    let Some(peak) = mem.peak_private_bytes.or(mem.private_bytes) else {
+        eprintln!("headless check: the system did not report memory use");
+        return ExitCode::FAILURE;
+    };
+
+    let mut result = BenchResult::new("ci-headless", ci, "bytes", vec![peak as f64]);
+    result
+        .conditions
+        .insert("mode".into(), "headless-check".into());
+    result.conditions.insert("window".into(), "none".into());
+    result
+        .conditions
+        .insert("wilds".into(), "not running".into());
+    result
+        .conditions
+        .insert("limit_mb".into(), limit_mb.to_string());
+    if let Some(name) = fixture.as_deref().and_then(|p| p.file_name()) {
+        result
+            .conditions
+            .insert("fixture".into(), name.to_string_lossy().into_owned());
+    }
+    match result.write_into(&results_dir) {
+        Ok(path) => println!("results file: {}", path.display()),
+        Err(e) => {
+            eprintln!("headless check: cannot write the results file: {e}");
+            return ExitCode::FAILURE;
+        }
+    }
+
+    let mb = peak as f64 / (1024.0 * 1024.0);
+    println!("peak private bytes: {mb:.1} MB (limit {limit_mb} MB)");
+    if mb > limit_mb as f64 {
+        eprintln!("headless check FAILED: {mb:.1} MB is over the {limit_mb} MB limit");
+        return ExitCode::FAILURE;
+    }
+    ExitCode::SUCCESS
+}
+
+fn usage_error(msg: &str) -> ExitCode {
+    eprintln!("{msg}\n{USAGE}");
+    ExitCode::from(2)
+}

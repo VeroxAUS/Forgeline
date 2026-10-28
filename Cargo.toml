@@ -1,0 +1,31 @@
+[workspace]
+resolver = "2"
+members = ["crates/forgeline-core", "crates/forgeline-app"]
+# Standalone docs tool with its own lockfile (and its own CI job).
+exclude = ["tools/plan-page"]
+
+[workspace.package]
+version = "0.2.0-dev"
+edition = "2021"
+rust-version = "1.97"
+license = "MPL-2.0"
+repository = "https://github.com/VeroxAUS/Forgeline"
+publish = false
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_System_ProcessStatus",
+    "Win32_System_SystemInformation",
+    "Win32_System_Threading",
+] }
+
+# Small and quick to start. opt-level "s" or 3 is decided by measurement in step 11.
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

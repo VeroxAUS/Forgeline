@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 //! Turns Forgeline plan markdown into one self-contained, dark-themed HTML page.
 //!
 //! The styling lives in `style.css` and is baked into the binary, so every plan page
