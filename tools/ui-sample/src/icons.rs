@@ -522,6 +522,11 @@ impl Headless {
 
     /// One frame of the demo at `size` points and `ppp` pixels per point.
     pub fn frame(&mut self, demo: &mut Demo, size: Vec2, ppp: f32) -> render::Frame {
+        self.run(size, ppp, |ui| show(ui, demo))
+    }
+
+    /// One frame of any screen.
+    pub fn run(&mut self, size: Vec2, ppp: f32, mut f: impl FnMut(&mut Ui)) -> render::Frame {
         let input = egui::RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size)),
             viewports: std::iter::once((
@@ -534,7 +539,7 @@ impl Headless {
             .collect(),
             ..Default::default()
         };
-        let mut out = self.ctx.run_ui(input, |ui| show(ui, demo));
+        let mut out = self.ctx.run_ui(input, |ui| f(ui));
         self.rast.apply(std::mem::take(&mut out.textures_delta));
         let prims = self.ctx.tessellate(out.shapes, out.pixels_per_point);
         self.rast.paint(

@@ -1,0 +1,46 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+//! Renders the element 4 build card without a window: `build_shots [out dir] [pixels per point]`.
+//! Writes the first frame (icons still loading), the ready frame, the recomputing state and a
+//! larger window.
+
+use egui::Vec2;
+use std::sync::Arc;
+use std::time::Duration;
+use ui_sample::build_card::{BuildCard, Headless};
+use ui_sample::icons::SampleSource;
+use ui_sample::shell::Status;
+
+fn main() -> std::io::Result<()> {
+    let mut args = std::env::args().skip(1);
+    let dir = std::path::PathBuf::from(args.next().unwrap_or_else(|| "shots".into()));
+    let ppp: f32 = args.next().and_then(|a| a.parse().ok()).unwrap_or(2.0);
+    std::fs::create_dir_all(&dir)?;
+    let size = Vec2::new(1000.0, 700.0);
+    let mut h = Headless::new();
+    let source = SampleSource {
+        delay: Duration::from_millis(20),
+    };
+    let mut app = BuildCard::new(h.ctx(), Arc::new(source));
+
+    let save = |name: &str, f: ui_sample::render::Frame| -> std::io::Result<()> {
+        let path = dir.join(name);
+        f.write_png(&path)?;
+        println!("{}", path.display());
+        Ok(())
+    };
+    h.frame(&mut app, size, ppp);
+    save("build-loading.png", h.frame(&mut app, size, ppp))?;
+    assert!(app.cache.wait_idle(Duration::from_secs(5)), "icons arrived");
+    save("build-ready.png", h.frame(&mut app, size, ppp))?;
+    app.shell.status = Status::Recomputing;
+    save("build-recomputing.png", h.frame(&mut app, size, ppp))?;
+    app.shell.status = Status::Synced;
+    save(
+        "build-large.png",
+        h.frame(&mut app, Vec2::new(1400.0, 900.0), ppp),
+    )?;
+    Ok(())
+}

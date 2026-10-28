@@ -137,8 +137,17 @@ fn mono(size: f32) -> egui::FontId {
     font("mono", size)
 }
 
-/// Draws the whole shell into `ui`, filling its available rectangle.
+/// Draws the whole shell into `ui`, filling its available rectangle. The content area shows a
+/// labelled placeholder.
 pub fn show(ui: &mut Ui, shell: &mut Shell) {
+    show_with(ui, shell, &mut |p, content, shell| {
+        show_content(p, content, shell);
+        placeholder(p, content, shell);
+    });
+}
+
+/// Like `show`, but `body` draws the content area (header gradient included) itself.
+pub fn show_with(ui: &mut Ui, shell: &mut Shell, body: &mut dyn FnMut(&Painter, Rect, &Shell)) {
     let screen = ui.max_rect();
     let painter = ui.painter_at(screen);
     painter.rect_filled(screen, 0.0, BG);
@@ -166,7 +175,7 @@ pub fn show(ui: &mut Ui, shell: &mut Shell) {
     );
     let status = Rect::from_min_max(screen.min + Vec2::new(0.0, body_h), screen.max);
 
-    show_content(&painter, content, shell);
+    body(&painter, content, shell);
     show_rail(ui, &painter, rail, shell);
     show_status(&painter, status, &shell.status);
 }
@@ -255,7 +264,7 @@ fn show_rail(ui: &mut Ui, p: &Painter, rail: Rect, shell: &mut Shell) {
     }
 }
 
-fn show_content(p: &Painter, content: Rect, shell: &Shell) {
+pub(crate) fn show_content(p: &Painter, content: Rect, shell: &Shell) {
     gradient(
         p,
         Rect::from_min_size(content.min, Vec2::new(content.width(), 150.0)),
@@ -283,8 +292,12 @@ fn show_content(p: &Painter, content: Rect, shell: &Shell) {
         font("inter-medium", 20.0),
         FG,
     );
+}
 
-    // Placeholder body: a hairline frame saying what will live here.
+/// A hairline frame saying what will live in the content area.
+fn placeholder(p: &Painter, content: Rect, shell: &Shell) {
+    let left = content.min.x + MARGIN;
+    let sec = shell.section;
     let body = Rect::from_min_max(
         Pos2::new(left, content.min.y + 106.0),
         Pos2::new(content.max.x - MARGIN, content.max.y - MARGIN),

@@ -45,6 +45,17 @@ cargo run --release --features window --bin icons_window              # real win
 
 Screenshots are in [docs/ux/samples/icons/](../../docs/ux/samples/icons/).
 
+## Element 4: the build card
+
+`src/build_card.rs`: the weapon, five armour pieces and the charm as D3 equipment rows inside the shell, each with its icon tile (element 3 cache, plain glyph while loading or when there is none), decoration slot circles (filled when a decoration sits in it) and `Owned` or `Missing N`. An empty slot keeps its row shape with a faint word. One quiet line under the title says how many pieces need parts. Sample data only, labelled `SAMPLE DATA, NOT YOUR SAVE`; the real build comes with the optimizer (Phase 4).
+
+```
+cargo run --release --bin build_shots -- <out dir> 2                  # screenshots, no GPU
+cargo run --release --features window --bin build_window              # real window (the maintainer's PC)
+```
+
+Screenshots are in [docs/ux/samples/build/](../../docs/ux/samples/build/).
+
 ## Run it in a real window (the maintainer's PC)
 
 ```
