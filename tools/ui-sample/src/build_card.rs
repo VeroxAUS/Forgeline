@@ -16,8 +16,10 @@ use super::{font, render, Icon};
 use egui::{Align2, Color32, Context, Painter, Pos2, Rect, Stroke, Ui, Vec2};
 use std::sync::Arc;
 
+pub mod customise;
 mod monster;
 pub mod shopping;
+pub use customise::State as CustomiseState;
 pub use monster::{
     items as monster_items, remember, Element, Group, Monster, Pick, Selector, ROSTER,
 };
@@ -784,6 +786,8 @@ enum Hit {
     Crumb(Pick),
     /// `Missing N` on a Build row (index of the piece): lists the missing items, opens Shopping.
     Missing(usize),
+    /// The Customise button at the top right of Build.
+    Customise,
     /// One half of the Shopping view switch.
     ShopView(ShopView),
     /// One half of the Shopping by-monster sort toggle.
@@ -805,6 +809,8 @@ pub struct BuildCard {
     pub selector: Selector,
     /// The Shopping screen's view and piece filter.
     pub shopping: ShoppingState,
+    /// The Customise drawer: presets, assumptions and weights.
+    pub customise: CustomiseState,
     /// Review only: draws the `Missing N` hover for this piece without a pointer.
     pub demo_missing_tip: Option<usize>,
     /// A recompute started by a chip change ends at this time. A real recompute would run on a
@@ -830,6 +836,7 @@ impl BuildCard {
             popup: None,
             selector: Selector::default(),
             shopping: ShoppingState::default(),
+            customise: CustomiseState::new(),
             demo_missing_tip: None,
             recompute_until: None,
         }
@@ -867,13 +874,23 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
     let cache = &mut app.cache;
     let hits = &mut app.hits;
     let shopping = &app.shopping;
+    let drawer_open = app.customise.open;
+    let drawer_edited = app.customise.changed();
     hits.clear();
     let mut content_rect = Rect::NOTHING;
     shell::show_with(ui, &mut app.shell, &mut |p, content, shell| {
         content_rect = content;
         shell::show_content(p, content, shell);
         match shell.section {
-            shell::Section::Build => card(p, content, data, cache, hits, &shell.status),
+            shell::Section::Build => card(
+                p,
+                content,
+                data,
+                cache,
+                hits,
+                &shell.status,
+                (drawer_open, drawer_edited),
+            ),
             shell::Section::Shopping => shopping::header(p, hits, content, data, shopping),
             _ => placeholder(p, content),
         }
@@ -891,6 +908,7 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
             | Hit::Mode(_)
             | Hit::Alt(_)
             | Hit::Missing(_)
+            | Hit::Customise
             | Hit::ShopView(_)
             | Hit::ShopSort(_)
             | Hit::ShopFilter => egui::Sense::click(),
@@ -949,6 +967,19 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
                 let data = &app.data;
                 tip.on_hover_cursor(egui::CursorIcon::PointingHand)
                     .on_hover_ui(|ui| shopping::missing_tip(ui, data, *i));
+            }
+            Hit::Customise => {
+                if tip.clicked() {
+                    app.customise.open = !app.customise.open;
+                    app.popup = None;
+                }
+                let text = if app.customise.changed() {
+                    "Customise: weights and assumptions. Some differ from the baseline."
+                } else {
+                    "Customise: weights, assumptions and saved presets."
+                };
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text(text);
             }
             Hit::ShopView(v) => {
                 if tip.clicked() {
@@ -1037,6 +1068,14 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
         }
     }
     popup(ui, app);
+    if app.shell.section == shell::Section::Build {
+        if app.customise.open && app.popup.is_some() {
+            app.popup = None;
+        }
+        if customise::drawer(ui, content_rect, &mut app.customise) {
+            app.start_recompute();
+        }
+    }
 }
 
 /// The must-have popup: a small panel under the chip (or the Add button) that opened it. Closed by
@@ -1350,11 +1389,20 @@ fn card(
     cache: &mut IconCache,
     hits: &mut Vec<(Rect, Hit)>,
     status: &Status,
+    (drawer_open, drawer_edited): (bool, bool),
 ) {
     let left = content.min.x + MARGIN;
     let right = content.max.x - MARGIN;
+    let cust = customise_button(
+        p,
+        hits,
+        right,
+        content.min.y + 30.0,
+        drawer_open,
+        drawer_edited,
+    );
     p.text(
-        Pos2::new(right, content.min.y + 30.0),
+        Pos2::new(cust - 16.0, content.min.y + 30.0),
         Align2::RIGHT_CENTER,
         "SAMPLE DATA, NOT YOUR SAVE",
         mono(10.5),
@@ -1375,7 +1423,14 @@ fn card(
     };
     // Header controls sit in the column left of the damage block, so they stop short of it.
     let head_stop = right - 2.0 * HEAD_W - SKILL_GAP - HEAD_CLEAR;
-    crumb_alt(p, hits, left, right - 190.0, content.min.y + 30.0, data);
+    crumb_alt(
+        p,
+        hits,
+        left,
+        cust - 190.0 - 16.0,
+        content.min.y + 30.0,
+        data,
+    );
     mode_switch(p, hits, head_stop, content.min.y + 58.0, data.mode);
     alternatives(p, hits, left, head_stop, content.min.y + ALT_TOP, data);
 
@@ -1549,6 +1604,61 @@ fn crumb_alt(
 
 /// The Solo or Multiplayer switch: two equal halves, the chosen one a filled accent block. Its
 /// right edge is `right`; `cy` is the centre line of the title.
+/// The Customise button: a ghost button with a sliders mark, at the top right of Build. Accent
+/// while the drawer is open; a dot says some values differ from the baseline. Returns its left edge.
+fn customise_button(
+    p: &Painter,
+    hits: &mut Vec<(Rect, Hit)>,
+    right: f32,
+    cy: f32,
+    open: bool,
+    edited: bool,
+) -> f32 {
+    const W: f32 = 104.0;
+    let ppp = p.ctx().pixels_per_point();
+    let snap = |v: f32| (v * ppp).round() / ppp;
+    let r = Rect::from_min_size(
+        Pos2::new(snap(right - W), snap(cy - 11.0)),
+        Vec2::new(W, 22.0),
+    );
+    let hot = p.ctx().pointer_hover_pos().is_some_and(|h| r.contains(h));
+    let col = if open {
+        ACCENT
+    } else if hot {
+        FG
+    } else {
+        DIM
+    };
+    p.rect_stroke(
+        r,
+        2.0,
+        Stroke::new(1.0, if open { ACCENT } else { LINE }),
+        egui::StrokeKind::Inside,
+    );
+    // Two slider lines with a knob each.
+    let gx = r.left() + 14.0;
+    for (dy, kx) in [(-3.5, 4.0), (3.5, 10.0)] {
+        let y = r.center().y + dy;
+        p.line_segment(
+            [Pos2::new(gx, y), Pos2::new(gx + 14.0, y)],
+            Stroke::new(1.3, col),
+        );
+        p.circle_filled(Pos2::new(gx + kx, y), 2.4, col);
+    }
+    p.text(
+        Pos2::new(r.left() + 36.0, r.center().y),
+        Align2::LEFT_CENTER,
+        "Customise",
+        font("inter-medium", 12.0),
+        col,
+    );
+    if edited {
+        p.circle_filled(Pos2::new(r.right() - 9.0, r.top() + 7.0), 3.0, ACCENT);
+    }
+    hits.push((r, Hit::Customise));
+    r.left()
+}
+
 fn mode_switch(p: &Painter, hits: &mut Vec<(Rect, Hit)>, right: f32, cy: f32, mode: PlayMode) {
     let ppp = p.ctx().pixels_per_point();
     let snap = |v: f32| (v * ppp).round() / ppp;
