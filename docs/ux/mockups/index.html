@@ -85,6 +85,12 @@ svg.chart{width:100%;height:auto;max-width:520px}
 svg.chart text{fill:var(--dim);font-size:11px}
 .pill{display:inline-block;border-radius:4px;padding:0 6px;font-size:12px;background:var(--surface-2);color:var(--dim);margin-right:4px}
 .iconnote{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--dim);margin-bottom:16px}
+
+.tg{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;margin-bottom:12px}
+.tg label{color:var(--dim);font-size:12px;margin-right:6px}
+.tg .seg{display:inline-flex}.tg .seg button{border-radius:0}.tg .seg button:first-child{border-radius:6px 0 0 6px}.tg .seg button:last-child{border-radius:0 6px 6px 0}
+.tg select{background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font:inherit}
+.tips li{margin-bottom:6px}.tips .m{color:var(--warn);font-size:12px}
 </style>
 </head>
 <body>
@@ -115,13 +121,18 @@ svg.chart text{fill:var(--dim);font-size:11px}
 <div class="status"><span>Save read 12:41</span><span>Game build 12345678</span><span class="chip ok">&#10003; up to date</span><span>Preset: Solo</span><span>Weapon: Light bowgun (generic)</span></div>
 
 <section class="screen on" id="best">
-<h2>Best build you can make now</h2>
+<div class="tg" id="toggles">
+<span><label>Preset</label><span class="seg" id="preset"><button class="on" data-v="solo">Solo</button><button data-v="multi">Multiplayer</button><button data-v="safe">Safe</button></span></span>
+<span><label>Mode</label><select id="mode"><option value="gen">General hunting</option><option value="mon">Per monster: Sample Monster A</option><option value="mon2">Per monster: Sample Monster B</option></select></span>
+<span><label>Alternative</label><span class="seg" id="alt"><button class="on" data-a="best">Best</button><button data-a="safe">Safe</button><button data-a="def">Defensive</button><button data-a="mon">Monster-specific</button><button data-a="gen">General hunting</button><button data-a="gogma">Gogma-specific</button></span></span>
+</div>
+<h2 id="bt">Best build you can make now</h2>
 <div class="iconnote">Icon boxes are <b>placeholder glyphs of our own</b>. With the maintainer's yes, the real item icons are read from the user's own game install at update time (see brief). Click a piece for details.</div>
 <div class="tiles">
-<div class="tile"><small>Effective raw (modelled)</small><b>412</b><em>assumes 60% uptime</em></div>
+<div class="tile"><small>Effective raw (modelled)</small><b id="v-raw">412</b><em id="v-note">assumes 60% uptime</em></div>
 <div class="tile"><small>Affinity</small><b>35%</b><em>+8 from skills</em></div>
-<div class="tile"><small>Defence</small><b>388</b><em>of 412 possible here</em></div>
-<div class="tile"><small>Missing parts</small><b>5</b><em>see shopping list</em></div>
+<div class="tile"><small>Defence</small><b id="v-def">388</b><em>of 412 possible here</em></div>
+<div class="tile"><small>Missing parts</small><b id="v-miss">5</b><em>see shopping list</em></div>
 <div class="tile"><small>Makeable in</small><b>2 hunts</b><em>estimate, Sample Monster A</em></div>
 </div>
 <div class="cards" id="cards">
@@ -134,6 +145,17 @@ svg.chart text{fill:var(--dim);font-size:11px}
 <button class="card" data-d="charm"><span class="ibox r2"><svg class="ic"><use href="#g-charm"/></svg><i>II</i></span><span><b>Sample Charm II</b><small>Talisman</small><small class="ok">&#10003; owned</small></span></button>
 </div>
 <div class="detail on" id="detail"></div>
+<div class="cols">
+<div class="panel"><b>Build breakdown</b>
+<p id="v-sum" style="margin:8px 0 0">Raw damage build: Attack Boost and Critical Eye carry most of the number, with Earplugs and Tremor Resistance as the comfort floor.</p>
+<table style="margin-top:8px"><tr><th>Role</th><th>What it does here</th></tr>
+<tr><td>Damage</td><td>Attack Boost 4, Critical Eye 3 (+35% affinity)</td></tr>
+<tr><td>Comfort</td><td>Earplugs 2, Tremor Resistance 1 (must-haves)</td></tr>
+<tr><td>Weak point</td><td>Resistances: Thunder &minus;2 and Dragon &minus;3 are the gaps</td></tr></table></div>
+<div class="panel tips"><b>Playstyle tips</b> <span class="pill">derived from this build</span>
+<ul class="clean" id="v-tips" style="margin-top:8px"></ul>
+<small style="color:var(--dim)">Tips come from what this build's skills reward and from the assumptions on the Why tab, not from a fight simulation. Lines marked <span class="m">modelled</span> depend on those assumptions.</small></div>
+</div>
 <div class="cols">
 <div class="panel"><b>Skills</b>
 <div class="skl" style="margin-top:8px">
@@ -264,6 +286,23 @@ charm:["Sample Charm II","Talisman, rarity 5.","Skills: Attack Boost 1.","Owned 
 function show(k){var d=D[k],e=document.getElementById('detail');e.innerHTML='<h3>'+d[0]+'</h3><div>'+d[1]+'</div><div>'+d[2]+'</div><div style="color:var(--dim)">'+d[3]+'</div>';e.classList.add('on');
 document.querySelectorAll('#cards .card').forEach(function(c){c.classList.toggle('sel',c.dataset.d===k)});}
 document.querySelectorAll('#cards .card').forEach(function(c){c.onclick=function(){show(c.dataset.d)}});show('weapon');
+
+var A={best:{t:"Best build you can make now",raw:412,def:388,miss:5,note:"assumes 60% uptime",sum:"Raw damage build: Attack Boost and Critical Eye carry most of the number, with Earplugs and Tremor Resistance as the comfort floor.",tips:["Keep the attack buff up: this build leans on it for about 22% of its number. <span class='m'>modelled at 60% uptime</span>","Aim at weak spots: affinity is 35%, so crits are worth chasing. <span class='m'>modelled at 50% weak-spot rate</span>","Thunder and Dragon resistance are low. Expect those attacks to hurt more."]},
+safe:{t:"Safe build",raw:386,def:448,miss:3,note:"assumes 60% uptime",sum:"Trades 26 effective raw for 60 more defence and Guard. Fewer parts missing.",tips:["Guard lets you block more often. Use it when learning a fight.","Lower damage means longer fights, so patience beats greed. <span class='m'>modelled</span>","Still keeps the Earplugs and Tremor Resistance floor."]},
+def:{t:"Defensive build",raw:349,def:476,miss:4,note:"assumes 60% uptime",sum:"Resistance-heavy: lowest damage, highest defence.",tips:["Best against monsters with big elemental hits.","Damage is clearly lower: consider Safe if you just want comfort. <span class='m'>modelled</span>"]},
+mon:{t:"Build for Sample Monster A",raw:421,def:380,miss:7,note:"tuned to Sample Monster A",sum:"Weights Sample Monster A's weak element and its main attacks. Needs the most missing parts.",tips:["Only worth it if you hunt this monster repeatedly.","Uses the monster's weak spots in the model. <span class='m'>modelled</span>"]},
+gen:{t:"General hunting build",raw:398,def:402,miss:2,note:"assumes 60% uptime",sum:"A balanced pick for mixed hunts with few new parts to collect.",tips:["Good all-round choice when you do not know the next target.","Close to Best in damage with fewer missing parts. <span class='m'>modelled</span>"]},
+gogma:{t:"Gogma-specific build",raw:0,def:0,miss:0,note:"not available yet",sum:"Needs Gogma Artian data that is not decoded yet (open question 4). Shown as a placeholder.",tips:["Will appear when the game data supports it."]}};
+var cur='best';
+function setAlt(k){cur=k;var a=A[k];document.getElementById('bt').textContent=a.t;
+document.getElementById('v-raw').textContent=a.raw?a.raw:'\u2013';document.getElementById('v-def').textContent=a.def?a.def:'\u2013';document.getElementById('v-miss').textContent=a.raw?a.miss:'\u2013';
+document.getElementById('v-note').textContent=a.note;document.getElementById('v-sum').textContent=a.sum;
+document.getElementById('v-tips').innerHTML=a.tips.map(function(t){return '<li>'+t+'</li>'}).join('');
+document.querySelectorAll('#alt button').forEach(function(b){b.classList.toggle('on',b.dataset.a===k)});}
+document.querySelectorAll('#alt button').forEach(function(b){b.onclick=function(){setAlt(b.dataset.a)}});
+document.querySelectorAll('#preset button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#preset button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');if(b.dataset.v==='safe')setAlt('safe');else if(cur==='safe')setAlt('best');};});
+document.getElementById('mode').onchange=function(){setAlt(this.value==='gen'?'gen':'mon')};
+setAlt('best');
 </script>
 </body>
 </html>

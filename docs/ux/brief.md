@@ -29,6 +29,12 @@ A Monster Hunter Wilds player who wants the best build they can make right now, 
 - "Why this build" shows: a bar of where the number comes from, all five builds in one table with differences, a sensitivity chart (the uptime at which the best build changes), the assumptions, and what was considered and left out.
 - Shopping list is driven entirely by the save. No manual tick-off.
 
+## Build switching, breakdown and tips (maintainer feedback, 2026-10-28)
+- **Toggles on the build screens:** preset (solo, multiplayer, safe), mode (general hunting or per monster, with a monster picker) and alternative (best, safe, defensive, monster-specific, general hunting, Gogma-specific). Changing any of them updates the numbers, the breakdown and the tips at once. The Gogma-specific tab shows as not available until the game data supports it.
+- **Build breakdown:** a short summary of what the build is for, and a table of roles (damage, comfort, weak points).
+- **Playstyle tips:** derived only from the build's own skills and the editable assumptions (what each skill rewards, which resistances are low). Anything that depends on uptime or weak-spot rate is labelled "modelled". No rotation or fight simulation (out of scope), and no game facts that are not in extracted data or a cited source.
+- **Data needed:** skill effect text and numbers come from the game files (Phase 3 decoders); until decoded, tips are written from the skill list only. Per-monster tips need monster weak-point data, which is not yet confirmed in the files (open questions 4 and 12).
+
 ## Icons and images
 - **Decision (maintainer, 2026-10-28):** icons and images are read at runtime from the user's own game install, like the other game data. They are never committed, never shipped and never in the Nexus package. Only the files needed are extracted (never whole packs), into the local cache.
 - **Own glyphs as fallback:** the mock-ups use our own simple glyphs (slot shapes, part, gem, coin). They stay in the app for any item whose icon cannot be read, so a missing icon never leaves a hole.
