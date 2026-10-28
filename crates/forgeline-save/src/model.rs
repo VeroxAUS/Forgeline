@@ -70,8 +70,14 @@ pub const EMPTY_CATEGORY: u8 = 141;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EquipEntry {
+    /// First field. 13 on every weapon entry in the maintainer's save, 0 and 1 on armour, 21 on a
+    /// talisman candidate, 37 unknown (`docs/research.md`, Phase 2 step 4 notes).
     pub category: u8,
+    /// Second field: on a weapon the weapon type index, on armour the series.
     pub id: u32,
+    /// Third field: on a weapon the id within its type (0 for the base weapon), on armour the
+    /// piece number.
+    pub sub: i32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -209,16 +215,17 @@ fn read_equipment(equip: &ClassView, out: &mut SlotSummary) -> Result<(), SaveEr
         return Ok(());
     };
     // The field names of an equipment entry are not known yet (all 12 are unresolved hashes in
-    // `docs/research.md`), so the first two fields are read by position: a one-byte category, then
-    // a 32-bit id. This is the layout seen in the real save.
+    // `docs/research.md`), so the first three fields are read by position: a one-byte category, then
+    // two 32-bit numbers. This is the layout seen in the real save.
     out.equipment_box_len = boxed.count as usize;
     for entry in boxed.classes() {
-        let (mut category, mut eid) = (None, None);
-        for (i, f) in entry?.fields().take(2).enumerate() {
+        let (mut category, mut eid, mut sub) = (None, None, 0);
+        for (i, f) in entry?.fields().take(3).enumerate() {
             let f = f?;
             match (i, f.value.scalar()) {
                 (0, Some(sc)) if sc.size == 1 => category = Some(sc.as_i64()),
                 (1, Some(sc)) if sc.size == 4 => eid = Some(sc.as_i64()),
+                (2, Some(sc)) if sc.size == 4 => sub = sc.as_i64() as i32,
                 _ => {}
             }
         }
@@ -227,6 +234,7 @@ fn read_equipment(equip: &ClassView, out: &mut SlotSummary) -> Result<(), SaveEr
                 out.equipment.push(EquipEntry {
                     category: c as u8,
                     id: i as u32,
+                    sub,
                 });
             }
         }
@@ -403,6 +411,107 @@ pub fn equipment_dump(stream: &[u8]) -> Result<Vec<String>, SaveError> {
                     .join(", ")
             ));
             lines.extend(shown);
+        }
+    }
+    Ok(lines)
+}
+
+/// A structural listing of the fields of each slot's equipment class (`_Equip`): for every field
+/// its name (or hash), kind and size, and for class values and class arrays a compact numeric
+/// summary. Used to find where equipped gear, armour and talismans live. Numbers only.
+pub fn equipment_layout(
+    stream: &[u8],
+    names: &crate::names::TypeNames,
+) -> Result<Vec<String>, SaveError> {
+    fn compact(c: &ClassView, names: &crate::names::TypeNames) -> Result<String, SaveError> {
+        let mut parts = Vec::new();
+        for f in c.fields() {
+            let f = f?;
+            let v = match f.value {
+                Value::Scalar(sc) if sc.size <= 4 => format!("{}", sc.as_i64()),
+                Value::Scalar(_) => "wide".to_string(),
+                Value::Str(_) => "text".to_string(),
+                Value::Struct(b) => format!("struct{}", b.len()),
+                Value::Class(_) => "class".to_string(),
+                Value::Array(a) => format!("arr{}", a.count),
+            };
+            parts.push(format!("{}={v}", names.show(f.name_hash)));
+        }
+        Ok(parts.join(" "))
+    }
+
+    let stream = Stream::new(stream);
+    let root_hash = name_hash(n::ROOT);
+    let mut lines = Vec::new();
+    for entry in stream.top_level() {
+        let (_, class) = entry?;
+        if class.class_hash()? != root_hash {
+            continue;
+        }
+        let Some(Value::Array(slots)) = class.field(name_hash(n::SLOTS))? else {
+            continue;
+        };
+        for (si, slot) in slots.classes().enumerate() {
+            let Some(Value::Class(equip)) = slot?.field(name_hash(n::EQUIP))? else {
+                continue;
+            };
+            if si > 0 {
+                // Slots without data repeat the same shape; the first slot is enough.
+                continue;
+            }
+            for f in equip.fields() {
+                let f = f?;
+                let name = names.show(f.name_hash);
+                match f.value {
+                    Value::Scalar(sc) if sc.size <= 4 => {
+                        lines.push(format!("{name}: scalar t{} = {}", sc.code, sc.as_i64()))
+                    }
+                    Value::Scalar(sc) => {
+                        lines.push(format!("{name}: scalar t{} s{}", sc.code, sc.size))
+                    }
+                    Value::Str(_) => lines.push(format!("{name}: text")),
+                    Value::Struct(b) => lines.push(format!("{name}: struct of {} bytes", b.len())),
+                    Value::Class(c) => {
+                        lines.push(format!("{name}: class {}", names.show(c.class_hash()?)));
+                        lines.push(format!("    {}", compact(&c, names)?));
+                    }
+                    Value::Array(a) if a.kind == 1 => {
+                        let mut first = std::collections::BTreeMap::<i64, usize>::new();
+                        let mut sample = String::new();
+                        let mut class_name = String::new();
+                        for (i, c) in a.classes().enumerate() {
+                            let c = c?;
+                            if i == 0 {
+                                class_name = names.show(c.class_hash()?);
+                            }
+                            let key = match c.fields().next() {
+                                Some(Ok(f)) => f.value.scalar().map_or(-2, |s| s.as_i64()),
+                                _ => -3,
+                            };
+                            *first.entry(key).or_default() += 1;
+                            if sample.is_empty() && key != i64::from(EMPTY_CATEGORY) && key != 0 {
+                                sample = compact(&c, names)?;
+                            }
+                        }
+                        lines.push(format!(
+                            "{name}: array of {} x {class_name}; first field: {}",
+                            a.count,
+                            first
+                                .iter()
+                                .map(|(k, n)| format!("{k} x{n}"))
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ));
+                        if !sample.is_empty() {
+                            lines.push(format!("    sample: {sample}"));
+                        }
+                    }
+                    Value::Array(a) => lines.push(format!(
+                        "{name}: array of {} x t{} size {}",
+                        a.count, a.member_type, a.member_size
+                    )),
+                }
+            }
         }
     }
     Ok(lines)

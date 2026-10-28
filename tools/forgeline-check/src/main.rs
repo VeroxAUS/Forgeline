@@ -13,14 +13,15 @@
 use forgeline_core::datadir::is_protected;
 use forgeline_core::discovery::{self, DiscoveryEnv, SaveAccount};
 use forgeline_core::memory;
-use forgeline_save::model::{equipment_dump, summarize, SaveSummary};
+use forgeline_save::model::{equipment_dump, equipment_layout, summarize, SaveSummary};
+use forgeline_save::names::TypeNames;
 use forgeline_save::{container, SaveError};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::time::Instant;
 
-const USAGE: &str = "usage: forgeline-check discover [--steam-dir <folder>]\n       forgeline-check save [--steam-dir <folder>] [--work-dir <folder>]\n       forgeline-check save --file <copy of the save> --steam-id <id>\n       add --equip-dump to `save` to list the equipment box entries (numbers only)";
+const USAGE: &str = "usage: forgeline-check discover [--steam-dir <folder>]\n       forgeline-check save [--steam-dir <folder>] [--work-dir <folder>]\n       forgeline-check save --file <copy of the save> --steam-id <id>\n       add --equip-dump to `save` to list the equipment box entries, or --equip-layout for the fields of the equipment class (numbers only)";
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
@@ -128,7 +129,10 @@ fn shown(p: &Path) -> String {
 fn save(args: Vec<String>) -> ExitCode {
     let (mut steam_dir, mut work_dir, mut file, mut steam_id) = (None, None, None, None);
     let equip_dump = args.iter().any(|a| a == "--equip-dump");
-    let mut it = args.into_iter().filter(|a| a != "--equip-dump");
+    let equip_layout = args.iter().any(|a| a == "--equip-layout");
+    let mut it = args
+        .into_iter()
+        .filter(|a| a != "--equip-dump" && a != "--equip-layout");
     while let Some(a) = it.next() {
         let slot = match a.as_str() {
             "--steam-dir" => &mut steam_dir,
@@ -205,6 +209,12 @@ fn save(args: Vec<String>) -> ExitCode {
         }
     };
     let took = started.elapsed();
+    if equip_layout {
+        match equipment_layout(&stream, &TypeNames::builtin()) {
+            Ok(lines) => lines.iter().for_each(|l| println!("{l}")),
+            Err(e) => eprintln!("equipment layout failed: {e}"),
+        }
+    }
     if equip_dump {
         match equipment_dump(&stream) {
             Ok(lines) => lines.iter().for_each(|l| println!("{l}")),

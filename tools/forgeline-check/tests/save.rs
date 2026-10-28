@@ -148,3 +148,19 @@ fn the_equipment_dump_lists_numbers_for_in_use_entries() {
     assert!(text.contains("slot 1 entry 0: t4s1=13 t8s4=0"), "{text}");
     assert!(!text.contains("Fixture"), "{text}");
 }
+
+#[test]
+fn the_equipment_layout_lists_the_fields_of_the_equipment_class() {
+    let copy = fixture("one-slot.bin");
+    let out = check(&[
+        "save".as_ref(),
+        "--file".as_ref(),
+        copy.as_os_str(),
+        "--steam-id".as_ref(),
+        "4242".as_ref(),
+        "--equip-layout".as_ref(),
+    ]);
+    let text = String::from_utf8_lossy(&out.stdout).into_owned();
+    assert!(out.status.success(), "{text}");
+    assert!(text.contains("_EquipBox: array of 8 x app.savedata.cEquipWork; first field: 1 x2, 13 x3, 21 x1, 141 x2"), "{text}");
+}
