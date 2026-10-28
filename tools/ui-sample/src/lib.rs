@@ -28,16 +28,24 @@ pub enum Variant {
     Slate,
     /// Warm black, icon tiles, one static header gradient, one orange accent.
     Ember,
+    /// The maintainer's pick: A as the base with C's orange accent, round skill dots and icon tiles.
+    ModernEmber,
 }
 
 impl Variant {
-    pub const ALL: [Variant; 3] = [Variant::ModernDark, Variant::Slate, Variant::Ember];
+    pub const ALL: [Variant; 4] = [
+        Variant::ModernDark,
+        Variant::Slate,
+        Variant::Ember,
+        Variant::ModernEmber,
+    ];
 
     pub fn slug(self) -> &'static str {
         match self {
             Variant::ModernDark => "a-modern-dark",
             Variant::Slate => "b-slate",
             Variant::Ember => "c-ember",
+            Variant::ModernEmber => "d-modern-ember",
         }
     }
 
@@ -46,6 +54,7 @@ impl Variant {
             Variant::ModernDark => "A. Modern Dark",
             Variant::Slate => "B. Slate",
             Variant::Ember => "C. Ember",
+            Variant::ModernEmber => "D. Modern Ember",
         }
     }
 
@@ -90,6 +99,13 @@ impl Variant {
                 numbered: false,
                 skills: SkillStyle::ThinBars,
                 headline: Headline::Plain,
+                ..base
+            },
+            Variant::ModernEmber => Style {
+                accent: c(255, 138, 61),
+                accent_ink: c(26, 12, 2),
+                icon_tiles: true,
+                skills: SkillStyle::Dots,
                 ..base
             },
             Variant::Ember => Style {

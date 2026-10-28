@@ -2,8 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-//! Opens the sample in a real window: `cargo run --release --features window --bin window [a|b|c]`.
-//! Press 1, 2 or 3 to switch style. Repaints only on input, so it idles at zero.
+//! Opens the sample in a real window: `cargo run --release --features window --bin window [a|b|c|d]`.
+//! Press 1, 2, 3 or 4 to switch style. Repaints only on input, so it idles at zero.
 
 use ui_sample::{install_fonts, show, State, Variant, SCREEN};
 
@@ -18,6 +18,7 @@ impl eframe::App for App {
                 (egui::Key::Num1, Variant::ModernDark),
                 (egui::Key::Num2, Variant::Slate),
                 (egui::Key::Num3, Variant::Ember),
+                (egui::Key::Num4, Variant::ModernEmber),
             ] {
                 if i.key_pressed(key) {
                     self.state.variant = v;
@@ -32,6 +33,7 @@ fn main() -> eframe::Result {
     let variant = match std::env::args().nth(1).as_deref() {
         Some("b") => Variant::Slate,
         Some("c") => Variant::Ember,
+        Some("d") => Variant::ModernEmber,
         _ => Variant::ModernDark,
     };
     let options = eframe::NativeOptions {

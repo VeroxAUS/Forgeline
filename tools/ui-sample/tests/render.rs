@@ -18,4 +18,5 @@ fn every_variant_renders_something_distinct() {
     }
     assert_ne!(frames[0].rgba, frames[1].rgba);
     assert_ne!(frames[1].rgba, frames[2].rgba);
+    assert_ne!(frames[0].rgba, frames[3].rgba);
 }
