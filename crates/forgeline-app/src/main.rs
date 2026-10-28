@@ -34,8 +34,9 @@ fn main() -> ExitCode {
 }
 
 /// Loads the fixture data and builds a snapshot without any window, then checks the process's peak
-/// private bytes against the limit and writes a results file. Until the engine exists (step 8) there
-/// is nothing to load, so this measures the bare process; the check grows with the code.
+/// private bytes against the limit and writes a results file. With a fixture folder that holds
+/// `saves/one-slot.bin`, the real engine (worker thread, save watcher, cache) runs on it first, so
+/// the number includes the engine; the check grows with the code.
 fn headless_check(args: Vec<String>) -> ExitCode {
     let mut fixture: Option<PathBuf> = None;
     let mut results_dir = PathBuf::from("bench/results");
@@ -62,6 +63,13 @@ fn headless_check(args: Vec<String>) -> ExitCode {
     if let Some(dir) = &fixture {
         if !dir.is_dir() {
             return usage_error("the fixture folder does not exist");
+        }
+    }
+
+    if let Some(dir) = &fixture {
+        if let Err(why) = run_engine_on_fixture(dir) {
+            eprintln!("headless check FAILED: {why}");
+            return ExitCode::FAILURE;
         }
     }
 
@@ -102,6 +110,57 @@ fn headless_check(args: Vec<String>) -> ExitCode {
         return ExitCode::FAILURE;
     }
     ExitCode::SUCCESS
+}
+
+/// The invented Steam ID the fixture saves are keyed with (`fixtures/README.md`).
+const FIXTURE_STEAM_ID: u64 = 76_561_197_960_269_970;
+
+/// Runs the engine on `<dir>/saves/one-slot.bin` (if there) with a throwaway data folder and waits
+/// for the first complete snapshot. Nothing to do for a folder without the fixture save.
+fn run_engine_on_fixture(dir: &std::path::Path) -> Result<(), String> {
+    use forgeline_engine::{Engine, EngineConfig, SaveOverride};
+    let save = dir.join("saves").join("one-slot.bin");
+    if !save.is_file() {
+        return Ok(());
+    }
+    let data_root = std::env::temp_dir().join(format!("forgeline-headless-{}", std::process::id()));
+    let data = DataDir::open(Some(data_root.clone())).map_err(|e| e.to_string())?;
+    let (tx, rx) = std::sync::mpsc::channel();
+    let engine = Engine::start(
+        EngineConfig {
+            data,
+            steam_root: Some(data_root.clone()),
+            account_id: None,
+            save_override: Some(SaveOverride {
+                path: save,
+                steam_id64: FIXTURE_STEAM_ID,
+            }),
+        },
+        move || {
+            let _ = tx.send(());
+        },
+    );
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    let result = loop {
+        let s = engine.snapshot();
+        if !s.refreshing {
+            break match (&s.save, &s.save_error) {
+                (Some(v), None) => {
+                    println!("engine: fixture save read, {} slots", v.slots.len());
+                    Ok(())
+                }
+                (_, Some(e)) => Err(format!("the engine could not read the fixture save: {e}")),
+                _ => Err("the engine produced no save summary".to_string()),
+            };
+        }
+        let left = deadline.saturating_duration_since(std::time::Instant::now());
+        if left.is_zero() || rx.recv_timeout(left).is_err() {
+            break Err("the engine did not finish within 10 s".to_string());
+        }
+    };
+    drop(engine);
+    let _ = std::fs::remove_dir_all(data_root);
+    result
 }
 
 /// The update child process: finds the game and the save, extracts the needed files into the data

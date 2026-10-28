@@ -98,3 +98,20 @@ The pack format facts (header, encrypted entry table, chunk table) and the 129-b
 ## crates/forgeline-update (the update flow, linked into the app's `--update` mode)
 
 No third-party crate beyond those already listed for `forgeline-pak`, `forgeline-save` and `forgeline-core` (serde and serde_json). The file hash used to notice changes (FNV-1a, 64 bit) is a few lines of our own code from the published algorithm.
+
+## crates/forgeline-engine (compiled into the app)
+
+| Crate | Version | Licence | Use |
+|---|---|---|---|
+| notify | 8.2.1 | CC0-1.0 | operating-system file change notifications for the save watcher (default features off) |
+| notify-types | 2.2.0 | MIT OR Apache-2.0 | dependency of notify |
+| inotify, inotify-sys | 0.11.5, 0.1.8 | ISC | Linux backend of notify (CI and development only; not used on Windows) |
+| kqueue, kqueue-sys | 1.2.1, 1.1.2 | MIT | macOS and BSD backend of notify (never built for Windows) |
+| mio | 1.2.4 | MIT | event loop used by notify |
+| walkdir, same-file, winapi-util | 2.5.0, 1.0.6, 0.1.11 | Unlicense/MIT, Unlicense/MIT, Unlicense OR MIT | dependencies of notify |
+| windows-link | 0.2.1 | MIT OR Apache-2.0 | dependency of windows-sys 0.61 |
+| wasi | 0.11.1 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | dependency of mio (WebAssembly only, never built for Windows or Linux) |
+| bitflags, libc, log | 2.13.2, 0.2.191, 0.4.34 | MIT OR Apache-2.0 | dependencies of notify |
+| windows-sys | 0.61.2 | MIT OR Apache-2.0 | second version, used by notify and mio on Windows |
+
+Licences read from each crate's `Cargo.toml` (`cargo metadata`). CC0-1.0 is a public-domain dedication and compatible with MPL-2.0. No GPL crate is used.
