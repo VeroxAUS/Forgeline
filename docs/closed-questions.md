@@ -253,3 +253,12 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Which words?** Against gear: damage MUCH HIGHER, HIGHER, SIMILAR, LOWER; toughness MUCH TANKIER, TANKIER, SOLID, SQUISHIER; cut-offs at plus or minus 5% and plus 20%. Without gear the word comes from the bar position (2026-10-28 10:06 UTC).
 - **Look check?** Passed ("Okay I like all of those", 2026-10-28 10:06 UTC), reviewed from screenshots in the cloud; not run on the PC.
 - **Merge PR #56?** Yes ("merge when ready", 2026-10-28 10:06 UTC). Merged at 10:06:47 UTC (cloud, CI green on Ubuntu and Windows).
+
+### UX element 7: must-have chips (2026-10-28)
+- **Keep the chip row above the equipment?** Yes (2026-10-28 10:21 UTC). It costs 54 points of height; the WEAPON and CHARM labels stay.
+- **A must-have the unlocked gear cannot reach?** Show the best build without it, with an amber chip and one line under the title (2026-10-28 10:21 UTC, "This works").
+- **How many chips, and what for "+N more"?** The maintainer asked what happens with four must-haves (10:21 UTC). Chips are now 116 points wide so four fit across at base and at 16:9; `+N more` appears from five and opens a list with level cells and remove (2026-10-28 10:33 UTC, "Four chips at 14 characters work").
+- **Long skill names?** First a hand-written short-name table (10:21 UTC), then changed to a plain ellipsis with the full name on hover (10:27 UTC); about 14 characters ("Convert Thund…") with four across, rather than 19 with three (10:33 UTC). No short-name table.
+- **Skill search in the Add list?** Ideally yes, with the Customise drawer (element 11) (2026-10-28 10:21 UTC).
+- **Look check?** Passed after three review rounds, reviewed from screenshots in the cloud; not run on the PC.
+- **Merge PR #58?** Yes ("you can merge", 2026-10-28 10:33 UTC). Merged at 10:33:34 UTC (cloud, CI green on Ubuntu and Windows).
