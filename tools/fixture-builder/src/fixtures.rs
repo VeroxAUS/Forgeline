@@ -248,7 +248,7 @@ fn slot_expected(index: usize, s: &Slot) -> Json {
         "equipment_in_use": s.equip.iter().filter(|e| e.category != EMPTY_CATEGORY).count(),
         "equipment_by_category": by_category,
         "box_item_types_in_use": s.box_items.iter().filter(|i| i.1 > 0).count(),
-        "pouch_entries": s.pouch.len(),
+        "pouch_entries": s.pouch.iter().filter(|i| i.1 > 0).count(),
         "found_flag_bits_set": s.found_flags.iter().map(|w| w.count_ones()).sum::<u32>(),
         "boss_entries": s.bosses.len(),
         "bosses_with_kills": s.bosses.iter().filter(|b| b.1 > 0).count(),

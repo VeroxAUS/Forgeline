@@ -10,3 +10,4 @@ publish.workspace = true
 
 [dependencies]
 forgeline-core = { path = "../../crates/forgeline-core" }
+forgeline-save = { path = "../../crates/forgeline-save" }

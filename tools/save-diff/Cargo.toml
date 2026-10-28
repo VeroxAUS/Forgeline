@@ -1,0 +1,13 @@
+[package]
+name = "save-diff"
+description = "Compares two save copies and lists the fields that changed (names and numbers only)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+forgeline-core = { path = "../../crates/forgeline-core" }
+forgeline-save = { path = "../../crates/forgeline-save" }
