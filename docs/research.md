@@ -207,6 +207,15 @@ The structure words printed from the real decrypted stream (16,458,692 bytes; no
 - The reference walker of the Phase 1 spike also accepts scalar types with any value size (aligned only when the size is 1, 2, 4 or 8) and arrays of kind 0 whose members are strings, classes or arrays; the reader now does the same.
 - Confirmed by name hash: `Active` (field of the slot) and `_Data` (field of the root) are real names, not invented.
 
+### Equipment box entries (Phase 2 step 4, checked against the maintainer's game screenshots, 2026-10-28)
+`_Equip._EquipBox` is an array of 2,400 `cEquipWork`; 59 are in use in the maintainer's save. The first field of an unused entry is 141. Field order and types (names unknown, all hashes): `u8`, `s32`, `s32`, `s32`, `u32`, `u64` (zero in all 59), `u8`, `s16[4]`, `s16[3]`, `s32`, `u8`, `u8`. The array holds equipped pieces too, not only spare ones.
+- **First field (category):** 13 weapon (16 entries), 0 and 1 armour (25 and 15 entries), 21 talisman (1), 37 mantle (2).
+- **Weapon:** second field = weapon type (0 to 13 in the save's order, which matches the game's weapon menu order 0, 3, 1, 2, 4 to 10, 13, 12, 11 in the box; 13 is the light bowgun, confirmed). Third field = the weapon within its type, 0 for the 13 other base weapons. The four `s16[4]` values hold bowgun customisation (bowguns only) and the `s16[3]` array holds decoration ids.
+- **Armour:** category 0 is the "A" look (green dot in the game's box) and category 1 the "B" look (orange diamond): same stats, other appearance. Second field = series, third field = piece number 0 to 4. The starter series 2, 3 and 4 exist in both looks (15 + 15 entries); every other piece is look A only. The maintainer's waist screenshot (9 pieces: 6 rarity-1 starters in three A/B pairs, then rarity 2, 3 and 4) matches piece number 3 exactly, and 40 armour entries across the five piece numbers (7, 8, 8, 9, 8) match the maintainer's count of 40 from screenshots (an earlier count of 48 was a miscount).
+- **Talisman and mantle:** category 21 (second field 57 here) and 37 (second field 0 and 10, two mantles, one equipped, both rarity 4).
+- **Open:** the maintainer owns 4 light bowguns (Hope Cannon I the base, Dosha Faithbreaker I, Hope Rifle III, Dosha Faithbreaker II); the box array holds only 3 weapon entries of type 13 (third field 2, 16 and 17) and the base entry for the type has third field 2, not 0. The fourth light bowgun is not found yet. The meaning of the third field for weapons is therefore not confirmed. Meanings of the other numeric fields (third field of armour 30, 70 and 150) are not known.
+- Other arrays in the same class (counts only): 140 equipment sets, 500 palico entries, 1,000 Artian parts, a list of 29 item ids with counts (probably decorations), 2,400-bit and smaller bit lists.
+
 
 With those fixes the whole 16.5 MB stream walks to the exact end with no error: **187 distinct classes**.
 

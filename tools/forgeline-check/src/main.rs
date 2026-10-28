@@ -13,7 +13,9 @@
 use forgeline_core::datadir::is_protected;
 use forgeline_core::discovery::{self, DiscoveryEnv, SaveAccount};
 use forgeline_core::memory;
-use forgeline_save::model::{equipment_dump, equipment_layout, summarize, SaveSummary};
+use forgeline_save::model::{
+    equipment_dump, equipment_layout, summarize, EquipKind, SaveSummary, LIGHT_BOWGUN_TYPE,
+};
 use forgeline_save::names::TypeNames;
 use forgeline_save::{container, SaveError};
 use std::collections::BTreeMap;
@@ -328,12 +330,39 @@ fn print_summary(s: &SaveSummary) {
                 .collect::<Vec<_>>()
                 .join(", ")
         );
+        let weapons = slot.weapons_by_type();
         println!(
-            "  light bowguns (category 13): {}; talisman candidates (category 21): {}",
-            by_cat.get(&13).copied().unwrap_or(0),
-            by_cat.get(&21).copied().unwrap_or(0)
+            "  weapons: {} ({}); only type 13 (light bowgun) is named, the rest are by number",
+            weapons.values().sum::<usize>(),
+            weapons
+                .iter()
+                .map(|(t, n)| format!("type {t} x{n}"))
+                .collect::<Vec<_>>()
+                .join(", ")
         );
-        println!("  other categories are not named yet; the meaning of a number is not verified");
+        println!(
+            "  light bowguns: {}",
+            weapons.get(&LIGHT_BOWGUN_TYPE).copied().unwrap_or(0)
+        );
+        let by_piece = slot.armor_entries_by_piece();
+        println!(
+            "  armour box entries: {} (by piece number: {}); A look {}, B look {}; counted once for stats: {}",
+            by_piece.values().sum::<usize>(),
+            by_piece
+                .iter()
+                .map(|(p, n)| format!("{p} x{n}"))
+                .collect::<Vec<_>>()
+                .join(", "),
+            slot.count_of(|k| matches!(k, EquipKind::Armor { look_b: false, .. })),
+            slot.count_of(|k| matches!(k, EquipKind::Armor { look_b: true, .. })),
+            slot.armor_distinct_series_pieces()
+        );
+        println!(
+            "  talismans: {}; mantles: {}; other equipment: {}",
+            slot.count_of(|k| matches!(k, EquipKind::Talisman { .. })),
+            slot.count_of(|k| matches!(k, EquipKind::Mantle { .. })),
+            slot.count_of(|k| matches!(k, EquipKind::Unknown { .. }))
+        );
         println!(
             "  item box types with a count: {}; pouch entries: {}",
             slot.box_items.len(),

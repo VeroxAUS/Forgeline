@@ -5,7 +5,7 @@
 //! Reads the committed fixture saves back and compares with the expected values the builder wrote
 //! next to them. Also checks that bad input fails cleanly.
 
-use forgeline_save::model::{read_save, SaveSummary};
+use forgeline_save::model::{read_save, EquipKind, SaveSummary};
 use forgeline_save::{container, SaveError};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -39,12 +39,21 @@ fn as_expected(s: &SaveSummary) -> Value {
             for e in &slot.equipment {
                 *by_category.entry(e.category.to_string()).or_default() += 1;
             }
+            let strmap = |m: BTreeMap<i32, usize>| -> BTreeMap<String, usize> {
+                m.into_iter().map(|(k, v)| (k.to_string(), v)).collect()
+            };
             json!({
                 "slot": i + 1,
                 "has_data": slot.has_data(),
                 "active": slot.active_flag,
                 "equipment_in_use": slot.equipment.len(),
                 "equipment_by_category": by_category,
+                "weapons_by_type": strmap(slot.weapons_by_type()),
+                "armor_entries": slot.count_of(|k| matches!(k, EquipKind::Armor { .. })),
+                "armor_entries_by_piece": strmap(slot.armor_entries_by_piece()),
+                "armor_distinct_series_pieces": slot.armor_distinct_series_pieces(),
+                "talismans": slot.count_of(|k| matches!(k, EquipKind::Talisman { .. })),
+                "mantles": slot.count_of(|k| matches!(k, EquipKind::Mantle { .. })),
                 "box_item_types_in_use": slot.box_items.len(),
                 "pouch_entries": slot.pouch.len(),
                 "found_flag_bits_set": slot.found_flag_bits_set,

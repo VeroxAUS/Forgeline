@@ -111,6 +111,16 @@ fn a_given_copy_is_read_with_the_short_or_long_steam_id() {
             String::from_utf8_lossy(&out.stderr)
         );
         assert!(text.contains("slot 1: has data, ACTIVE"), "{text}");
+        assert!(
+            text.contains("weapons: 4 (type 0 x1, type 3 x1, type 13 x2)"),
+            "{text}"
+        );
+        assert!(text.contains("light bowguns: 2"), "{text}");
+        assert!(text.contains("armour box entries: 4 (by piece number: 1 x1, 3 x3); A look 3, B look 1; counted once for stats: 3"), "{text}");
+        assert!(
+            text.contains("talismans: 1; mantles: 1; other equipment: 0"),
+            "{text}"
+        );
     }
 }
 
@@ -142,10 +152,12 @@ fn the_equipment_dump_lists_numbers_for_in_use_entries() {
     let text = String::from_utf8_lossy(&out.stdout).into_owned();
     assert!(out.status.success(), "{text}");
     assert!(
-        text.contains("slot 1: first field over all 8 entries: 1 x2, 13 x3, 21 x1, 141 x2"),
+        text.contains(
+            "slot 1: first field over all 12 entries: 0 x3, 1 x1, 13 x4, 21 x1, 37 x1, 141 x2"
+        ),
         "{text}"
     );
-    assert!(text.contains("slot 1 entry 0: t4s1=13 t8s4=0"), "{text}");
+    assert!(text.contains("slot 1 entry 0: t4s1=13 t7s4=0"), "{text}");
     assert!(!text.contains("Fixture"), "{text}");
 }
 
@@ -162,5 +174,5 @@ fn the_equipment_layout_lists_the_fields_of_the_equipment_class() {
     ]);
     let text = String::from_utf8_lossy(&out.stdout).into_owned();
     assert!(out.status.success(), "{text}");
-    assert!(text.contains("_EquipBox: array of 8 x app.savedata.cEquipWork; first field: 1 x2, 13 x3, 21 x1, 141 x2"), "{text}");
+    assert!(text.contains("_EquipBox: array of 12 x app.savedata.cEquipWork; first field: 0 x3, 1 x1, 13 x4, 21 x1, 37 x1, 141 x2"), "{text}");
 }

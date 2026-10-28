@@ -16,6 +16,7 @@ const TYPE_U8: u32 = 4;
 const TYPE_S16: u32 = 5;
 const TYPE_S32: u32 = 7;
 const TYPE_U32: u32 = 8;
+const TYPE_U64: u32 = 10;
 const TYPE_F32: u32 = 11;
 const TYPE_STRING: u32 = 15;
 const TYPE_STRUCT: u32 = 16;
@@ -33,6 +34,7 @@ pub enum Value {
     U8(u8),
     S32(i32),
     U32(u32),
+    U64(u64),
     F32(f32),
     Str(String),
     /// Sixteen raw bytes, aligned to 16 (invented content only).
@@ -114,6 +116,10 @@ impl Out {
             }
             Value::U32(x) => {
                 self.u32(TYPE_U32);
+                self.sized(&x.to_le_bytes());
+            }
+            Value::U64(x) => {
+                self.u32(TYPE_U64);
                 self.sized(&x.to_le_bytes());
             }
             Value::F32(x) => {

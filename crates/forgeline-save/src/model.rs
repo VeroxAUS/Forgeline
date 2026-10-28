@@ -68,16 +68,75 @@ pub mod n {
 /// Equipment category value that marks an empty box entry.
 pub const EMPTY_CATEGORY: u8 = 141;
 
+/// Equipment categories seen in the maintainer's save, checked against their equipment box
+/// screenshots on 2026-10-28 (`docs/research.md`, Phase 2 step 4 notes).
+pub mod category {
+    /// Armour, look "A" (the green dot in the game's box).
+    pub const ARMOR_A: u8 = 0;
+    /// Armour, look "B" (the orange diamond): same stats, other appearance.
+    pub const ARMOR_B: u8 = 1;
+    /// Any weapon; the first number is the weapon type.
+    pub const WEAPON: u8 = 13;
+    /// Talisman.
+    pub const TALISMAN: u8 = 21;
+    /// Mantle.
+    pub const MANTLE: u8 = 37;
+}
+
+/// The weapon type number of the light bowgun (the last of the 14 types in the save's order).
+pub const LIGHT_BOWGUN_TYPE: i32 = 13;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EquipEntry {
-    /// First field. 13 on every weapon entry in the maintainer's save, 0 and 1 on armour, 21 on a
-    /// talisman candidate, 37 unknown (`docs/research.md`, Phase 2 step 4 notes).
+    /// First field, see [`category`].
     pub category: u8,
-    /// Second field: on a weapon the weapon type index, on armour the series.
-    pub id: u32,
-    /// Third field: on a weapon the id within its type (0 for the base weapon), on armour the
-    /// piece number.
-    pub sub: i32,
+    /// Second field. Weapon: the weapon type. Armour: the series. Talisman and mantle: the id.
+    pub first: i32,
+    /// Third field. Weapon: the weapon within its type (0 for the base weapon; the maintainer's
+    /// light bowguns are 2, 16 and 17). Armour: the piece number 0 to 4. Otherwise 0.
+    pub second: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EquipKind {
+    Weapon {
+        weapon_type: i32,
+        id: i32,
+    },
+    /// `look_b` is false for the "A" look and true for "B".
+    Armor {
+        look_b: bool,
+        series: i32,
+        piece: i32,
+    },
+    Talisman {
+        id: i32,
+    },
+    Mantle {
+        id: i32,
+    },
+    Unknown {
+        category: u8,
+    },
+}
+
+impl EquipEntry {
+    pub fn kind(&self) -> EquipKind {
+        match self.category {
+            category::WEAPON => EquipKind::Weapon {
+                weapon_type: self.first,
+                id: self.second,
+            },
+            category::ARMOR_A | category::ARMOR_B => EquipKind::Armor {
+                look_b: self.category == category::ARMOR_B,
+                series: self.first,
+                piece: self.second,
+            },
+            category::TALISMAN => EquipKind::Talisman { id: self.first },
+            category::MANTLE => EquipKind::Mantle { id: self.first },
+            other => EquipKind::Unknown { category: other },
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -118,6 +177,45 @@ impl SlotSummary {
             || !self.pouch.is_empty()
             || self.found_flag_bits_set > 0
             || self.bosses.iter().any(|b| b.kills > 0 || b.captures > 0)
+    }
+
+    /// Weapons owned, by weapon type number.
+    pub fn weapons_by_type(&self) -> std::collections::BTreeMap<i32, usize> {
+        let mut m = std::collections::BTreeMap::new();
+        for e in &self.equipment {
+            if let EquipKind::Weapon { weapon_type, .. } = e.kind() {
+                *m.entry(weapon_type).or_default() += 1;
+            }
+        }
+        m
+    }
+
+    /// Armour entries in the box by piece number, the way the game's box counts them (each look
+    /// of a piece is its own entry).
+    pub fn armor_entries_by_piece(&self) -> std::collections::BTreeMap<i32, usize> {
+        let mut m = std::collections::BTreeMap::new();
+        for e in &self.equipment {
+            if let EquipKind::Armor { piece, .. } = e.kind() {
+                *m.entry(piece).or_default() += 1;
+            }
+        }
+        m
+    }
+
+    /// Armour pieces counted once for stats: the A and B looks of a piece are the same piece.
+    pub fn armor_distinct_series_pieces(&self) -> usize {
+        self.equipment
+            .iter()
+            .filter_map(|e| match e.kind() {
+                EquipKind::Armor { series, piece, .. } => Some((series, piece)),
+                _ => None,
+            })
+            .collect::<std::collections::BTreeSet<_>>()
+            .len()
+    }
+
+    pub fn count_of(&self, f: impl Fn(&EquipKind) -> bool) -> usize {
+        self.equipment.iter().filter(|e| f(&e.kind())).count()
     }
 
     pub fn bosses_with_kills(&self) -> usize {
@@ -233,8 +331,8 @@ fn read_equipment(equip: &ClassView, out: &mut SlotSummary) -> Result<(), SaveEr
             if c != i64::from(EMPTY_CATEGORY) {
                 out.equipment.push(EquipEntry {
                     category: c as u8,
-                    id: i as u32,
-                    sub,
+                    first: i as i32,
+                    second: sub,
                 });
             }
         }
@@ -423,17 +521,37 @@ pub fn equipment_layout(
     stream: &[u8],
     names: &crate::names::TypeNames,
 ) -> Result<Vec<String>, SaveError> {
-    fn compact(c: &ClassView, names: &crate::names::TypeNames) -> Result<String, SaveError> {
+    /// Numbers only, nested classes shown to `depth` levels.
+    fn compact(
+        c: &ClassView,
+        names: &crate::names::TypeNames,
+        depth: u32,
+    ) -> Result<String, SaveError> {
         let mut parts = Vec::new();
         for f in c.fields() {
             let f = f?;
             let v = match f.value {
                 Value::Scalar(sc) if sc.size <= 4 => format!("{}", sc.as_i64()),
-                Value::Scalar(_) => "wide".to_string(),
+                Value::Scalar(sc) => {
+                    if sc.as_u64() == 0 {
+                        "wide0".to_string()
+                    } else {
+                        "wide!=0".to_string()
+                    }
+                }
                 Value::Str(_) => "text".to_string(),
                 Value::Struct(b) => format!("struct{}", b.len()),
+                Value::Class(inner) if depth > 0 => {
+                    format!("{{{}}}", compact(&inner, names, depth - 1)?)
+                }
                 Value::Class(_) => "class".to_string(),
-                Value::Array(a) => format!("arr{}", a.count),
+                Value::Array(a) => match a.scalars() {
+                    Ok(v) if a.count <= 8 && a.member_size <= 4 => {
+                        let vals: Vec<String> = v.map(|x| (x as u32 as i32).to_string()).collect();
+                        format!("[{}]", vals.join(","))
+                    }
+                    _ => format!("arr{}", a.count),
+                },
             };
             parts.push(format!("{}={v}", names.show(f.name_hash)));
         }
@@ -473,7 +591,7 @@ pub fn equipment_layout(
                     Value::Struct(b) => lines.push(format!("{name}: struct of {} bytes", b.len())),
                     Value::Class(c) => {
                         lines.push(format!("{name}: class {}", names.show(c.class_hash()?)));
-                        lines.push(format!("    {}", compact(&c, names)?));
+                        lines.push(format!("    {}", compact(&c, names, 3)?));
                     }
                     Value::Array(a) if a.kind == 1 => {
                         let mut first = std::collections::BTreeMap::<i64, usize>::new();
@@ -490,7 +608,7 @@ pub fn equipment_layout(
                             };
                             *first.entry(key).or_default() += 1;
                             if sample.is_empty() && key != i64::from(EMPTY_CATEGORY) && key != 0 {
-                                sample = compact(&c, names)?;
+                                sample = compact(&c, names, 3)?;
                             }
                         }
                         lines.push(format!(
