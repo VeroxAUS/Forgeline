@@ -121,10 +121,11 @@ svg.chart text{fill:var(--dim);font-size:11px}
 <div class="status"><span>Save read 12:41</span><span>Game build 12345678</span><span class="chip ok">&#10003; up to date</span><span>Preset: Solo</span><span>Weapon: Light bowgun (generic)</span></div>
 
 <section class="screen on" id="best">
+<div class="iconnote" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">Safe appears twice? Compare two fixes: <span class="seg" id="opt"><button class="on" data-o="A">Option A (recommended)</button><button data-o="B">Option B</button></span><span id="optnote"></span></div>
 <div class="tg" id="toggles">
-<span><label>Preset</label><span class="seg" id="preset"><button class="on" data-v="solo">Solo</button><button data-v="multi">Multiplayer</button><button data-v="safe">Safe</button></span></span>
+<span><label id="plabel">Playstyle</label><span class="seg" id="preset"></span></span>
 <span><label>Mode</label><select id="mode"><option value="gen">General hunting</option><option value="mon">Per monster: Sample Monster A</option><option value="mon2">Per monster: Sample Monster B</option></select></span>
-<span><label>Alternative</label><span class="seg" id="alt"><button class="on" data-a="best">Best</button><button data-a="safe">Safe</button><button data-a="def">Defensive</button><button data-a="mon">Monster-specific</button><button data-a="gen">General hunting</button><button data-a="gogma">Gogma-specific</button></span></span>
+<span><label>Alternative</label><span class="seg" id="alt"><button class="on" data-a="best">Best</button><button data-a="safe" id="safebtn">Safe</button><button data-a="def">Defensive</button><button data-a="mon">Monster-specific</button><button data-a="gen">General hunting</button><button data-a="gogma">Gogma-specific</button></span></span>
 </div>
 <h2 id="bt">Best build you can make now</h2>
 <div class="iconnote">Icon boxes are <b>placeholder glyphs of our own</b>. With the maintainer's yes, the real item icons are read from the user's own game install at update time (see brief). Click a piece for details.</div>
@@ -300,7 +301,14 @@ document.getElementById('v-note').textContent=a.note;document.getElementById('v-
 document.getElementById('v-tips').innerHTML=a.tips.map(function(t){return '<li>'+t+'</li>'}).join('');
 document.querySelectorAll('#alt button').forEach(function(b){b.classList.toggle('on',b.dataset.a===k)});}
 document.querySelectorAll('#alt button').forEach(function(b){b.onclick=function(){setAlt(b.dataset.a)}});
-document.querySelectorAll('#preset button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#preset button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');if(b.dataset.v==='safe')setAlt('safe');else if(cur==='safe')setAlt('best');};});
+var OPT='A';
+function buildPreset(){var p=document.getElementById('preset'),v=OPT==='A'?[['solo','Solo'],['multi','Multiplayer']]:[['solo','Solo'],['multi','Multiplayer'],['cautious','Cautious']];
+p.innerHTML=v.map(function(x,n){return '<button '+(n?'':'class="on" ')+'data-v="'+x[0]+'">'+x[1]+'</button>'}).join('');
+document.getElementById('safebtn').textContent=OPT==='A'?'Safe':'Safe (max defence)';
+document.getElementById('optnote').textContent=OPT==='A'?'Playstyle = Solo or Multiplayer only. "Safe" is one choice, in Alternative; picking it applies the cautious weights.':'"Cautious" is a playstyle that raises comfort and defence weights in every alternative; "Safe (max defence)" is a separate build goal. Two controls, clearer names.';
+p.querySelectorAll('button').forEach(function(b){b.onclick=function(){p.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');};});}
+document.querySelectorAll('#opt button').forEach(function(b){b.onclick=function(){OPT=b.dataset.o;document.querySelectorAll('#opt button').forEach(function(x){x.classList.toggle('on',x===b)});buildPreset();};});
+buildPreset();
 document.getElementById('mode').onchange=function(){setAlt(this.value==='gen'?'gen':'mon')};
 setAlt('best');
 </script>
