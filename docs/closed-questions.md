@@ -270,5 +270,5 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Save-aware version?** Yes, as a later PR ("Sounds good", 10:47 UTC).
 - **Which weapons first?** Light bowgun until the other weapons are implemented (10:47 UTC).
 - **How does the meal bonus count?** As a separate add-on line that never changes the build score, so a different or skipped meal does not alter it (10:47 UTC).
-- **Meal data from the game files first (Phase 3)?** Not yet answered; open question 17.
+- **Meal data from the game files first (Phase 3)?** Yes, checking the game files for meal data is a Phase 3 task ("yes we should check the game files for meal data first as a Phase 3 task", 2026-10-28 10:48 UTC). Tracked as open question 17.
 
