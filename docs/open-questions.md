@@ -19,6 +19,10 @@ Numbers are kept stable; answered questions leave a gap (question 8 moved to clo
 10. **Nexus comments and bugs.** Does Nexus's GraphQL v2 expose comments or bug reports, and does Nexus email authors about them? Check the maintainer's author notification settings once the mod page is live (see `docs/research.md`, "Nexus monitoring").
 11. **Motion values and base power.** Motion values, and attack and ammo base power (for example bowgun ammo values), were not found in the game files in step 5. The Phase 4 damage formula and any future simulation need them. The Phase 3 and Phase 4 plans must address this early: a cited source, or Phase 5 training-room measurement.
 12. **Drop, reward and part-break sources.** Do the game files hold drop and reward tables and part-break sources, with rates, so the shopping list and the in-game overlay can say where and how to get a part (carve, part break, reward)? Partly answered (Phase 1 step 5): report-style reward data was located but real per-monster drop tables were not confirmed, and part-break sources were not looked for. The Phase 3 data survey must check it; if the files do not hold it, the "where and how" part is marked open or sourced from a cited, labelled community source. Asked 2026-10-27 with the overlay approval (PR #21).
+13. **Quest start in the save.** Does the save record an accepted or started quest, so the monster selector could switch by itself? Step 4's quest-accept diff did not identify a field. Otherwise it needs memory reads through forgeline-live. The selector is manual until answered. Asked 2026-10-28 (UX restart).
+14. **Icons from the install.** Can the item, monster and equipment icons be read from the user's own install at runtime, and at what memory cost? Checked by UX element 3 (see `docs/ux/design-plan.md`).
+15. **Damage and toughness presentation.** Word tiers (Solid, Tankier, Much tankier) may be too vague. Try 2 or 3 options when UX element 6 is built and let the maintainer choose.
+16. **Overlay look.** Position, size and colours are provisional until seen in game.
 
 ## Waiting on the maintainer (asked 2026-10-27, Phase 2 plan, PR #21)
 
