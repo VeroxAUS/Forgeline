@@ -98,6 +98,12 @@ svg.chart text{fill:var(--dim);font-size:11px}
 .sr input[type=range]{width:100%;accent-color:var(--accent)}
 .sr .bl{color:var(--dim);font-size:11px;text-align:right}
 .sr .mod{color:var(--accent)}
+
+.vt{margin-bottom:12px}
+.vw{display:none}.vw.on{display:block}
+.step{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.step .no{width:28px;height:28px;border-radius:50%;background:var(--surface-2);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700}
+.dl{color:var(--ok)}.dn{color:var(--warn)}
 </style>
 </head>
 <body>
@@ -192,6 +198,8 @@ svg.chart text{fill:var(--dim);font-size:11px}
 
 <section class="screen" id="why">
 <h2>Why this build</h2>
+<div class="vt seg" id="wvt"><button class="on" data-w="w0">Overview</button><button data-w="w1">Compare two builds (option)</button><button data-w="w2">Skill value (option)</button><button data-w="w3">What changed (option)</button></div>
+<div class="vw on" id="w0">
 <div class="banner warn"><span>&#9888; The best build changes if uptime drops below about 45% (then Safe leads by 6 points).</span><button class="btn sec">Show the switch point</button></div>
 <div class="panel"><b>Where the 412 comes from (modelled)</b>
 <div class="stack"><span style="width:44%;background:#6fb3e0" title="Weapon raw"></span><span style="width:22%;background:#e0a63a" title="Attack Boost"></span><span style="width:18%;background:#58b97c" title="Affinity"></span><span style="width:10%;background:#b58be0" title="Sharpness/ammo"></span><span style="width:6%;background:#a3acb9" title="Other"></span></div>
@@ -218,12 +226,27 @@ svg.chart text{fill:var(--dim);font-size:11px}
 <li><span class="pill">+11 raw</span>Sample Helm Beta: needs a part from a monster you haven't unlocked.</li>
 <li><span class="pill">+4 raw</span>Dropping Tremor Resistance: a must-have, so rejected.</li>
 <li><span class="pill">&minus;18 raw</span>A different waist piece with Guard: Safe build uses it instead.</li></ul></div>
+</div>
+<div class="vw" id="w1"><div class="iconnote">Option: pick any two builds and see only the differences.</div>
+<div class="panel"><table><tr><th></th><th>Best</th><th>Safe</th></tr>
+<tr><td>Effective raw (modelled)</td><td class="n hi">412</td><td class="n">386</td></tr><tr><td>Defence</td><td class="n">388</td><td class="n hi">448</td></tr>
+<tr><td>Attack Boost</td><td class="n hi">4</td><td class="n">2</td></tr><tr><td>Guard</td><td class="n">0</td><td class="n hi">2</td></tr>
+<tr><td>Missing parts</td><td class="n">5</td><td class="n hi">3</td></tr></table><small style="color:var(--dim)">Differences are highlighted; identical rows are folded away in the real view.</small></div></div>
+<div class="vw" id="w2"><div class="iconnote">Option: what each skill is worth in this build, found by removing it and re-scoring (modelled).</div>
+<div class="panel"><div class="skl" style="grid-template-columns:150px 1fr 90px">
+<span>Attack Boost 4</span><div class="bar"><span style="width:90%"></span></div><span class="n hi">&minus;62 if removed</span>
+<span>Critical Eye 3</span><div class="bar"><span style="width:55%"></span></div><span class="n hi">&minus;38</span>
+<span>Earplugs 2</span><div class="bar ok"><span style="width:0%"></span></div><span class="n">must-have</span>
+<span>Tremor Resistance 1</span><div class="bar ok"><span style="width:0%"></span></div><span class="n">must-have</span></div></div></div>
+<div class="vw" id="w3"><div class="iconnote">Option: why the build changed since the last save.</div>
+<div class="panel"><b>Since the save at 11:02</b><ul class="clean" style="margin-top:8px"><li>You gained 1x Iron Scale, so the waist piece is one part closer.</li><li>Best build changed: Ashen Coil replaced Ironwood Belt (+7 eff. raw, modelled).</li><li>Shopping list: 6 parts needed before, 5 now.</li></ul></div></div>
 </section>
 
 <section class="screen" id="shop">
 <h2>Shopping list</h2>
 <div class="iconnote">Driven entirely by the save: parts you gain leave the list on their own. No manual tick-off.</div>
-<div class="panel"><table>
+<div class="vt seg" id="svt"><button class="on" data-w="s0">List</button><button data-w="s1">By monster (option)</button><button data-w="s2">By piece (option)</button><button data-w="s3">Upgrade path (option)</button></div>
+<div class="vw on" id="s0"><div class="panel"><table>
 <tr><th>Part (sample)</th><th class="n">Need</th><th class="n">Have</th><th>Progress</th><th>Where to get it</th></tr>
 <tr><td><span style="display:flex;align-items:center;gap:10px"><span class="ibox r3"><svg class="ic"><use href="#g-part"/></svg></span><b>Ashen Plate</b></span></td><td class="n hi">2</td><td class="n">0</td><td><div class="bar" style="width:90px"><span style="width:0%"></span></div></td><td>Sample Monster A &middot; body carve &middot; high rank</td></tr>
 <tr><td><span style="display:flex;align-items:center;gap:10px"><span class="ibox r3"><svg class="ic"><use href="#g-part"/></svg></span><b>Ashen Claw</b></span></td><td class="n hi">1</td><td class="n">0</td><td><div class="bar" style="width:90px"><span style="width:0%"></span></div></td><td>Sample Monster A &middot; tail break</td></tr>
@@ -231,6 +254,20 @@ svg.chart text{fill:var(--dim);font-size:11px}
 <tr><td><span style="display:flex;align-items:center;gap:10px"><span class="ibox r4"><svg class="ic"><use href="#g-gem"/></svg></span><b>Ember Gem</b></span></td><td class="n hi">1</td><td class="n">0</td><td><div class="bar" style="width:90px"><span style="width:0%"></span></div></td><td>Sample Monster C &middot; rare drop (about 5%)</td></tr>
 <tr><td><span style="display:flex;align-items:center;gap:10px"><span class="ibox "><svg class="ic"><use href="#g-coin"/></svg></span><b>Zenny</b></span></td><td class="n hi">3200</td><td class="n">3200</td><td><div class="bar" style="width:90px"><span style="width:100%"></span></div></td><td><span class="ok">&#10003; enough</span></td></tr>
 </table></div>
+</div>
+<div class="vw" id="s1"><div class="iconnote">Option: group the same list by monster, so one hunt plan is obvious. Source data is invented here; real sources depend on open question 12.</div>
+<div class="cols">
+<div class="panel"><b>Sample Monster A</b> <span class="pill">covers 3 of 5 parts</span><table style="margin-top:6px"><tr><td>Ashen Plate</td><td class="n hi">2</td><td>body carve</td></tr><tr><td>Ashen Claw</td><td class="n hi">1</td><td>tail break</td></tr></table></div>
+<div class="panel"><b>Sample Monster B</b> <span class="pill">1 part</span><table style="margin-top:6px"><tr><td>Iron Scale</td><td class="n hi">1</td><td>wounds</td></tr></table></div>
+<div class="panel"><b>Sample Monster C</b> <span class="pill">1 part</span><table style="margin-top:6px"><tr><td>Ember Gem</td><td class="n hi">1</td><td>rare drop</td></tr></table></div></div></div>
+<div class="vw" id="s2"><div class="iconnote">Option: group by armour piece, so you see which piece you can finish first.</div>
+<div class="cards">
+<div class="card" style="flex-direction:column"><b>Ashen Mail (chest)</b><small>2 parts missing &middot; closest to done</small><div class="bar" style="margin-top:6px"><span style="width:60%"></span></div><small>Ashen Plate &times;2</small></div>
+<div class="card" style="flex-direction:column"><b>Ashen Coil (waist)</b><small>3 parts missing</small><div class="bar" style="margin-top:6px"><span style="width:25%"></span></div><small>Ashen Claw, Iron Scale &times;2</small></div></div></div>
+<div class="vw" id="s3"><div class="iconnote">Option: an order to collect in, with the modelled gain of each step. Gains are modelled, not measured.</div>
+<div class="panel"><div class="step"><span class="no">1</span><span><b>Hunt Sample Monster A</b><br><small style="color:var(--dim)">Ashen Plate &times;2, Ashen Claw</small></span><span class="dl">+31 eff. raw <small>(modelled)</small></span></div>
+<div class="step"><span class="no">2</span><span><b>Wounds on Sample Monster B</b><br><small style="color:var(--dim)">Iron Scale</small></span><span class="dl">+9 eff. raw <small>(modelled)</small></span></div>
+<div class="step"><span class="no">3</span><span><b>Rare drop, Sample Monster C</b><br><small style="color:var(--dim)">Ember Gem (low odds)</small></span><span class="dl">+4 eff. raw <small>(modelled)</small></span></div></div></div>
 <p style="color:var(--dim);font-size:13px">Drop sources are shown only when the game files or a cited source give them; otherwise "source unknown".</p>
 </section>
 
@@ -338,6 +375,9 @@ document.getElementById('addm').onchange=function(){if(this.value){MH.push(this.
 document.getElementById('reset').onclick=function(){W=JSON.parse(W0);AS=JSON.parse(AS0);MH=JSON.parse(MH0);rerender();recompute();};
 document.getElementById('savep').onclick=function(){var s=document.getElementById('mypre');var o=document.createElement('option');o.textContent='My preset '+(s.options.length-2);s.appendChild(o);s.value=o.textContent;};
 rerender();
+
+function vsw(id,cls){document.querySelectorAll('#'+id+' button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#'+id+' button').forEach(function(x){x.classList.toggle('on',x===b)});var sec=document.getElementById(id).parentNode;sec.querySelectorAll('.vw').forEach(function(v){v.classList.toggle('on',v.id===b.dataset.w)});};});}
+vsw('svt');vsw('wvt');
 </script>
 </body>
 </html>
