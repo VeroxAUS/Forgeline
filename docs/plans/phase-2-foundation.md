@@ -63,8 +63,8 @@ A Cargo workspace of small crates. The UI is a thin shell; nothing heavy lives i
 | `forgeline-save` | save container decryption, inflate, class-stream walker, typed readers for the classes we need | 4 |
 | `forgeline-pak` | pack index and single-entry reader, path hashing, exe string scan (route A), type-name table | 5 |
 | `forgeline-update` | the update flow: extract needed files, stage, validate, swap | 6 |
-| `forgeline-engine` | file watcher, background worker, cache, the single `Snapshot` the UI reads | 7 |
-| `forgeline-app` | the egui window (debug data viewer) | 8 |
+| `forgeline-engine` | file watcher, background worker, cache, the single `Snapshot` the UI reads | 8 |
+| `forgeline-app` | the egui window (debug data viewer) | 9 |
 | `tools/forgeline-check` | developer command-line report (counts and names only) | 2 |
 | `tools/fixture-builder` | builds small synthetic fixture saves | 3 |
 | `tools/bench` | benchmark harness, ported from the Phase 1 sampler | 9 |

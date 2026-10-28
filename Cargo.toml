@@ -9,6 +9,7 @@ members = [
     "tools/save-diff",
     "crates/forgeline-pak",
     "crates/forgeline-update",
+    "crates/forgeline-engine",
 ]
 # Standalone docs tool with its own lockfile (and its own CI job).
 exclude = ["tools/plan-page"]

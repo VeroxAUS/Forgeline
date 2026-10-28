@@ -1,0 +1,21 @@
+[package]
+name = "forgeline-engine"
+description = "Forgeline engine: save watcher, background recompute, view cache and the Snapshot the window reads"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+forgeline-core = { path = "../forgeline-core" }
+forgeline-save = { path = "../forgeline-save" }
+forgeline-update = { path = "../forgeline-update" }
+serde.workspace = true
+serde_json.workspace = true
+# Default features off: no debouncer (watch.rs has its own) and no crossbeam channel.
+notify = { version = "8", default-features = false }
+
+[dev-dependencies]
+forgeline-update = { path = "../forgeline-update", features = ["test-support"] }

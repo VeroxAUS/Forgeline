@@ -15,6 +15,7 @@ path = "src/main.rs"
 [dependencies]
 forgeline-core = { path = "../forgeline-core" }
 forgeline-update = { path = "../forgeline-update" }
+forgeline-engine = { path = "../forgeline-engine" }
 
 [dev-dependencies]
 forgeline-pak = { path = "../forgeline-pak" }
