@@ -168,3 +168,6 @@ All answered 2026-10-27, in the order they were asked.
 ### Phase 2 plan approved (2026-10-28)
 - **Approve the Phase 2 plan (PR #21)?** Yes, at 2026-10-28 03:52 UTC. Merged at 03:52 UTC (PR #21; tested and approved by the maintainer in the cloud, docs only, CI green). Pass time for the plan review: 03:52 UTC.
 - **Budget changes (decision E)?** Still deferred: they are only looked at if needed (see `open-questions.md`).
+
+### Phase 2 step 1 merged (2026-10-28)
+- **Merge the step 1 PR (#28)?** Yes (2026-10-28 04:03 UTC, "You are good to merge"). Merged at 04:03 UTC after the cloud test round: CI green on Ubuntu and Windows (check, RAM check, plan-page).
