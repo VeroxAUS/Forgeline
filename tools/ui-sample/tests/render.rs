@@ -450,3 +450,57 @@ fn shopping_views_filter_and_missing_click_through() {
     h.frame(&mut app, Vec2::new(3000.0, 2100.0), 1.0);
     h.frame(&mut app, size, 1.0);
 }
+
+#[test]
+fn customise_drawer_opens_draws_changes_and_scales() {
+    use egui::Vec2;
+    use std::sync::Arc;
+    use std::time::Duration;
+    use ui_sample::build_card::customise::Customise;
+    use ui_sample::build_card::{BuildCard, Headless};
+    use ui_sample::icons::SampleSource;
+    use ui_sample::shell::Section;
+
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    let size = Vec2::new(1000.0, 700.0);
+    h.frame(&mut app, size, 1.0);
+    assert!(app.cache.wait_idle(Duration::from_secs(5)));
+    let closed = h.frame(&mut app, size, 1.0).rgba;
+    app.custom.open = true;
+    h.frame(&mut app, size, 1.0);
+    let open = h.frame(&mut app, size, 1.0).rgba;
+    assert_ne!(closed, open, "the drawer draws");
+    // A moved bar and a loaded preset change the picture; Reset all puts it back.
+    app.custom.comfort[0].value = 10;
+    h.frame(&mut app, size, 1.0);
+    let moved = h.frame(&mut app, size, 1.0).rgba;
+    assert_ne!(open, moved);
+    app.custom.reset_all();
+    h.frame(&mut app, size, 1.0);
+    assert_eq!(open, h.frame(&mut app, size, 1.0).rgba);
+    // Worst-case names, a full preset list, the 16:9 and large windows all draw.
+    app.custom = Customise::sample_long();
+    app.custom.open = true;
+    for (size, ppp) in [
+        (Vec2::new(1600.0, 900.0), 1.0),
+        (Vec2::new(2800.0, 1575.0), 1.0),
+    ] {
+        h.frame(&mut app, size, ppp);
+        assert_ne!(closed.len(), 0);
+        h.frame(&mut app, size, ppp);
+    }
+    // The drawer belongs to the Build screen only.
+    app.custom.open = true;
+    app.shell.section = Section::Shopping;
+    h.frame(&mut app, size, 1.0);
+    let shop = h.frame(&mut app, size, 1.0).rgba;
+    app.custom.open = false;
+    h.frame(&mut app, size, 1.0);
+    assert_eq!(shop, h.frame(&mut app, size, 1.0).rgba);
+}

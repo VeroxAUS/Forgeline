@@ -187,6 +187,20 @@ fn draw_triangle(
 }
 
 impl Frame {
+    /// The `w` by `h` pixel part of the frame at (`x`, `y`), for zoom crops.
+    pub fn crop(&self, x: usize, y: usize, w: usize, h: usize) -> Frame {
+        let (w, h) = (w.min(self.width - x), h.min(self.height - y));
+        let mut rgba = Vec::with_capacity(w * h);
+        for row in y..y + h {
+            rgba.extend_from_slice(&self.rgba[row * self.width + x..row * self.width + x + w]);
+        }
+        Frame {
+            width: w,
+            height: h,
+            rgba,
+        }
+    }
+
     pub fn write_png(&self, path: &std::path::Path) -> std::io::Result<()> {
         let file = std::io::BufWriter::new(std::fs::File::create(path)?);
         let mut enc = png::Encoder::new(file, self.width as u32, self.height as u32);

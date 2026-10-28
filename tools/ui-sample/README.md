@@ -123,3 +123,15 @@ cargo run --release --bin shopping_shots -- <out dir> 2               # screensh
 ```
 
 Screenshots are in [docs/ux/samples/shopping/](../../docs/ux/samples/shopping/).
+
+## Element 11: the Customise drawer
+
+`src/build_card/customise.rs`: a 340 point drawer over the right of the Build screen, opened by the sliders icon on the Must have label row, left of `+ Add` (centred on the same line as that text) (closed by its cross, Escape or the same button). Top to bottom: saved presets (click to load, cross to delete, a name field and `Save`, which becomes `Replace` for a name that exists; capped at 8), the two assumption sliders (uptime, weak-spot rate; steps of 5 percent) and the comfort and defence weight sliders (0 to 10). Every slider row is the same size on one grid: name, value and `RESET` on the first line, the bar under it with a tick marking its baseline (weights) or default (assumptions); Reset shows only once the bar has moved, `RESET ALL` in the header sets every bar back. A moved bar or a loaded preset keeps the last build on screen and starts the non-blocking recompute. Long names get a plain ellipsis and the tooltip has the full name and the baseline.
+
+Everything is sample data and says so (`SAMPLE DATA, NOT RESEARCHED`): comfort baselines do not exist until the Phase 4 research round, the assumption defaults are invented and the skill names are illustrative. Sliders have no keyboard control yet.
+
+```
+cargo run --release --bin customise_shots -- <out dir> 2              # screenshots, no GPU
+```
+
+Screenshots are in [docs/ux/samples/customise/](../../docs/ux/samples/customise/).

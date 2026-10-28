@@ -16,6 +16,7 @@ use super::{font, render, Icon};
 use egui::{Align2, Color32, Context, Painter, Pos2, Rect, Stroke, Ui, Vec2};
 use std::sync::Arc;
 
+pub mod customise;
 mod monster;
 pub mod shopping;
 pub use monster::{
@@ -790,6 +791,8 @@ enum Hit {
     ShopSort(ShopSort),
     /// The Shopping piece-filter chip (clears the filter).
     ShopFilter,
+    /// The Customise button on the Must have label row (opens or closes the drawer).
+    Customise,
 }
 
 /// The build card screen: shell state, the card's data and the icon cache.
@@ -805,6 +808,8 @@ pub struct BuildCard {
     pub selector: Selector,
     /// The Shopping screen's view and piece filter.
     pub shopping: ShoppingState,
+    /// The Customise drawer: presets, assumption and weight sliders.
+    pub custom: customise::Customise,
     /// Review only: draws the `Missing N` hover for this piece without a pointer.
     pub demo_missing_tip: Option<usize>,
     /// A recompute started by a chip change ends at this time. A real recompute would run on a
@@ -830,6 +835,7 @@ impl BuildCard {
             popup: None,
             selector: Selector::default(),
             shopping: ShoppingState::default(),
+            custom: customise::Customise::sample(),
             demo_missing_tip: None,
             recompute_until: None,
         }
@@ -867,13 +873,14 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
     let cache = &mut app.cache;
     let hits = &mut app.hits;
     let shopping = &app.shopping;
+    let custom = &app.custom;
     hits.clear();
     let mut content_rect = Rect::NOTHING;
     shell::show_with(ui, &mut app.shell, &mut |p, content, shell| {
         content_rect = content;
         shell::show_content(p, content, shell);
         match shell.section {
-            shell::Section::Build => card(p, content, data, cache, hits, &shell.status),
+            shell::Section::Build => card(p, content, data, cache, hits, &shell.status, custom),
             shell::Section::Shopping => shopping::header(p, hits, content, data, shopping),
             _ => placeholder(p, content),
         }
@@ -893,7 +900,8 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
             | Hit::Missing(_)
             | Hit::ShopView(_)
             | Hit::ShopSort(_)
-            | Hit::ShopFilter => egui::Sense::click(),
+            | Hit::ShopFilter
+            | Hit::Customise => egui::Sense::click(),
             _ => egui::Sense::hover(),
         };
         let tip = ui.interact(*rect, ui.scope_id().with(("hit", i)), sense);
@@ -975,6 +983,13 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
                 tip.on_hover_cursor(egui::CursorIcon::PointingHand)
                     .on_hover_text(format!("Only items for {name}. Click to show all pieces."));
             }
+            Hit::Customise => {
+                if tip.clicked() {
+                    app.custom.open = !app.custom.open;
+                }
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text("Weights, assumptions and saved presets");
+            }
             Hit::Alt(Alt::Monster) if app.data.unavailable[Alt::Monster.idx()].is_none() => {
                 // The Monster cell always opens the selector: picking is the only way to choose it.
                 if tip.clicked() {
@@ -1016,6 +1031,17 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
         }
     }
     app.hits = hits;
+    if app.custom.open && app.shell.section == shell::Section::Build {
+        // Escape closes the drawer unless a popup is open (that one takes it first).
+        if app.popup.is_none() && ui.input(|i| i.key_pressed(egui::Key::Escape)) {
+            // A pending delete question takes the first Escape.
+            if app.custom.confirm.take().is_none() {
+                app.custom.open = false;
+            }
+        } else if customise::show(ui, content_rect, &mut app.custom) {
+            app.start_recompute();
+        }
+    }
     if let Some(i) = app.demo_missing_tip {
         let anchor = app.hits.iter().find_map(|(r, h)| match h {
             Hit::Missing(j) if *j == i => Some(*r),
@@ -1350,6 +1376,7 @@ fn card(
     cache: &mut IconCache,
     hits: &mut Vec<(Rect, Hit)>,
     status: &Status,
+    custom: &customise::Customise,
 ) {
     let left = content.min.x + MARGIN;
     let right = content.max.x - MARGIN;
@@ -1423,6 +1450,7 @@ fn card(
         content.min.y + CHIPS_TOP,
         data,
         *status == Status::Recomputing,
+        custom,
     );
     let top = chips_end + 14.0;
     if side {
@@ -1504,6 +1532,24 @@ fn card(
             data.pinned_style,
         );
     }
+}
+
+/// The Customise button: the sliders icon on the Must have label row, accent while the drawer is
+/// open. `r` is centred on the row's text centre line, so the icon lines up with `+ Add`.
+fn customise_button(p: &Painter, hits: &mut Vec<(Rect, Hit)>, r: Rect, open: bool) {
+    let col = if open {
+        ACCENT
+    } else if p.ctx().pointer_hover_pos().is_some_and(|h| r.contains(h)) {
+        FG
+    } else {
+        DIM
+    };
+    customise::sliders_glyph(
+        p,
+        Rect::from_center_size(r.center(), Vec2::splat(14.0)),
+        col,
+    );
+    hits.push((r, Hit::Customise));
 }
 
 /// The alternative's name after the breadcrumb (`BUILD · LIGHT BOWGUN · SAFE`), so the active one
@@ -1724,6 +1770,7 @@ fn alt_glyph(p: &Painter, r: Rect, a: Alt, col: Color32) {
 /// The must-have row: a label row (with the update note and `+ Add`) and one row of chips, all
 /// `data.chip_w` by `CHIP_H` on a fixed grid snapped to whole pixels. When the chips do not fit the
 /// last cell becomes `+N more`. Returns the y under the row.
+#[allow(clippy::too_many_arguments)]
 fn chips(
     p: &Painter,
     hits: &mut Vec<(Rect, Hit)>,
@@ -1732,6 +1779,7 @@ fn chips(
     y: f32,
     data: &BuildData,
     updating: bool,
+    custom: &customise::Customise,
 ) -> f32 {
     let ppp = p.ctx().pixels_per_point();
     let snap = |v: f32| (v * ppp).round() / ppp;
@@ -1747,13 +1795,28 @@ fn chips(
         if add_hot { ACCENT } else { DIM },
     );
     hits.push((add, Hit::Add));
+    // The Customise button sits left of `+ Add`, centred on the same line as that text (y + 8).
+    let cust = Rect::from_center_size(
+        Pos2::new(add.left() - 16.0 - 12.0, y + 8.0),
+        Vec2::new(24.0, 24.0),
+    );
+    customise_button(p, hits, cust, custom.open);
     if updating {
         let text = "UPDATING";
         let w = p
             .layout_no_wrap(text.to_string(), mono(10.5), ACCENT)
             .size()
             .x;
-        let x = right - 48.0 - 14.0;
+        // The icon stays where it is relative to `+ Add`; the note moves so the visible gaps
+        // either side of the icon match. The glyph's ink is 14 wide less a bar inset each end.
+        let add_w = p
+            .layout_no_wrap("+ Add".to_string(), mono(10.5), DIM)
+            .size()
+            .x;
+        let ink = 14.0 / 2.0 - 14.0 / 16.0;
+        let gap = (right - add_w) - (cust.center().x + ink);
+        // +0.5: the note's last letter has a little side bearing the `+ Add` side lacks.
+        let x = cust.center().x - ink - gap + 0.5;
         p.text(
             Pos2::new(x, y + 8.0),
             Align2::RIGHT_CENTER,
@@ -2423,6 +2486,76 @@ impl Default for Headless {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn customise_icon_shares_the_text_row_centre_line() {
+        use std::time::Duration;
+        let mut h = Headless::new();
+        let mut app = BuildCard::new(
+            h.ctx(),
+            Arc::new(crate::icons::SampleSource {
+                delay: Duration::ZERO,
+            }),
+        );
+        for (size, ppp) in [
+            (Vec2::new(1000.0, 700.0), 1.0),
+            (Vec2::new(1600.0, 900.0), 1.0),
+            (Vec2::new(2800.0, 1575.0), 1.0),
+            (Vec2::new(1000.0, 700.0), 2.0),
+        ] {
+            for updating in [false, true] {
+                app.shell.status = if updating {
+                    Status::Recomputing
+                } else {
+                    Status::Synced
+                };
+                h.frame(&mut app, size, ppp);
+                h.frame(&mut app, size, ppp);
+                let rect = |want: fn(&Hit) -> bool| {
+                    app.hits.iter().find(|(_, h)| want(h)).map(|(r, _)| *r)
+                };
+                let icon = rect(|h| matches!(h, Hit::Customise)).expect("icon");
+                let add = rect(|h| matches!(h, Hit::Add)).expect("add");
+                // `+ Add` and `UPDATING` are drawn centred 8 points under the row top.
+                let text_y = add.top() + 8.0;
+                let zoom = h.ctx().zoom_factor();
+                let off = (icon.center().y - text_y).abs() * zoom * ppp;
+                assert!(off <= 1.0, "{size:?} at {ppp}x: {off} px off");
+                if !updating {
+                    continue;
+                }
+                // Measured from the rendered pixels: with the note showing, the icon sits
+                // centred between its right edge and the left edge of `+ Add`.
+                let frame = h.frame(&mut app, size, ppp);
+                let (gap_before, gap_after) = icon_gaps(&frame, icon, add, text_y, zoom * ppp);
+                assert!(
+                    (gap_before - gap_after).abs() <= 1.0,
+                    "{size:?} at {ppp}x: gaps {gap_before} and {gap_after} px"
+                );
+            }
+        }
+    }
+
+    /// The pixel gaps (before, after) around the Customise icon's ink on the label row: from the
+    /// `UPDATING` note's right edge to the icon, and from the icon to `+ Add`'s left edge.
+    fn icon_gaps(f: &render::Frame, icon: Rect, add: Rect, text_y: f32, scale: f32) -> (f32, f32) {
+        let px = |v: f32| (v * scale).round() as usize;
+        let (y0, y1) = (px(text_y - 6.0), px(text_y + 6.0));
+        let ink =
+            |x: usize| (y0..y1).any(|y| f.rgba[y * f.width + x][..3].iter().any(|c| *c > 0.25));
+        let accent = |x: usize| {
+            (y0..y1).any(|y| {
+                let c = f.rgba[y * f.width + x];
+                c[0] > 0.8 && c[1] < 0.7 && c[2] < 0.4
+            })
+        };
+        let span = |a: f32, b: f32| (px(a)..px(b)).filter(|x| ink(*x));
+        let icon_ink: Vec<usize> = span(icon.left(), icon.right()).collect();
+        let (il, ir) = (icon_ink[0], *icon_ink.last().unwrap());
+        let add_l = span(add.left(), add.right()).next().expect("add ink");
+        let note_r = (0..il).rev().find(|x| accent(*x)).expect("note ink");
+        ((il - note_r - 1) as f32, (add_l - ir - 1) as f32)
+    }
 
     fn names(list: &[Skill], hidden: &[bool]) -> Vec<&'static str> {
         list.iter()
