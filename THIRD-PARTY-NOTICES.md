@@ -115,3 +115,18 @@ No third-party crate beyond those already listed for `forgeline-pak`, `forgeline
 | windows-sys | 0.61.2 | MIT OR Apache-2.0 | second version, used by notify and mio on Windows |
 
 Licences read from each crate's `Cargo.toml` (`cargo metadata`). CC0-1.0 is a public-domain dedication and compatible with MPL-2.0. No GPL crate is used.
+
+## tools/ui-sample (UX sample screen, not shipped in the app)
+
+Element 1 of `docs/ux/design-plan.md`. Standalone crate with its own lockfile. When the screen moves into the app, its fonts and crates move to the app's tables.
+
+| Item | Version | Licence | Use |
+|---|---|---|---|
+| Inter (Regular, Medium) | 4.0 | OFL-1.1 (the font files; Apache-2.0 for the project's other files) | text font. Copyright 2016-2023 The Inter Project Authors. Copied from the Debian `fonts-inter` package with its copyright file in `tools/ui-sample/fonts/COPYRIGHT-Inter.txt` |
+| JetBrains Mono (Regular, Medium) | 2.304 | OFL-1.1 | label and number font. Copyright 2020 JetBrains s.r.o. Copied from the Debian `fonts-jetbrains-mono` package with its copyright file in `tools/ui-sample/fonts/COPYRIGHT-JetBrainsMono.txt` |
+| egui, epaint, emath, ecolor | 0.37.0 | MIT OR Apache-2.0 | immediate-mode UI |
+| eframe (optional `window` feature only) | 0.37.0 | MIT OR Apache-2.0 | opens the sample in a window on the maintainer's PC |
+| png | 0.17.16 | MIT OR Apache-2.0 | writes the screenshots |
+| self_cell (via egui's font crate) | 1.3.0 | Apache-2.0 OR GPL-2.0-only | used under Apache-2.0; no GPL code is used |
+
+The other transitive crates are MIT, Apache-2.0, Zlib, 0BSD or BSD-2-Clause licensed (read from `cargo metadata`). The fonts are not renamed or modified, so OFL reserved-name rules are not triggered.

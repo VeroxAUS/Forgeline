@@ -1,0 +1,21 @@
+[package]
+name = "ui-sample"
+description = "Element 1 of the UX design plan: the sample Build screen in three style variants (not shipped)"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.97"
+license = "MPL-2.0"
+publish = false
+
+[features]
+# `cargo run --features window` opens the sample in a real window (needs a GPU; the maintainer's PC).
+window = ["dep:eframe"]
+
+[dependencies]
+egui = { version = "0.37", default-features = false }
+png = "0.17"
+eframe = { version = "0.37", optional = true }
+
+[[bin]]
+name = "window"
+required-features = ["window"]
