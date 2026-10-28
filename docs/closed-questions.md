@@ -189,3 +189,20 @@ All answered 2026-10-27, in the order they were asked.
 
 ### Phase 2 step 8 merged (2026-10-28)
 - **Merge the step 8 PR (#41)?** Yes ("You can merge PR #41, we can tidy up the message.", 2026-10-28 06:21 UTC). Merged at 06:24:18 UTC after the cloud and PC test round with Wilds running: CI green on Ubuntu and Windows (check, RAM check); the first view came from the cache in 0 ms, a save was noticed 562 ms after its modified time (one save gave two snapshots, v2 and v3, so the debounce may be tightened later), idle CPU 0, working set flat at 5.0 to 5.5 MB, no save error. For the half-written case the maintainer asked for a real test rather than accepting the cloud tests: `forgeline-check midwrite` rewrites a copy of the save in chunks and locks it under the engine, and on the PC (commit 8ac7d74, 06:17:56 UTC, Wilds running) it passed with 3 snapshots, 2 with a visible error (half-written file and lock), 0 wrong and the original view back at the end. The lock message was tidied to "the save is locked: the game is writing it" before the merge.
+
+### UX restart (2026-10-28)
+Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UTC), answered 06:56 UTC, then six follow-ups answered 07:00 UTC. Everything not listed below was accepted as recommended; question 45 (anything else) was parked.
+- **Overlay in a hunt (Q8)?** Before and after on the desktop. The overlay also helps pick the monster to hunt, and in a hunt shows shopping parts, parts to break and build swaps per matchup.
+- **Shopping item fields (Q12)?** Name, icon, owned and missing, monster, the piece it unlocks, and maybe the best place to farm (event or optional mission). The farm place depends on open question 12.
+- **Screens (Q20)?** As proposed, with Compare and What changed inside Why. Settings, Data and About are separated from the planner sections.
+- **Monster selector (Q26)?** On the Build screen, eventually switching by itself from a started quest (open question 13) or memory (forgeline-live).
+- **Overlay content (Q27)?** Top few shopping items, target hints and save-based info. With live info on, only parts from the monsters on the map.
+- **Overlay size (Q29)?** Under 320 px wide and a short column by default, adjustable, scaling with resolution.
+- **Overlay hotkey and default (Q30)?** One hotkey, F8 default, customisable. The overlay window is on by default; live data stays off by default.
+- **Minimum size (Q37)?** Probably 12 px text and a 1000 by 700 window; scaling to be tested.
+- **What would make a screen fail (Q43)?** Walls of text, unclear wording, boxes inside boxes, more than one primary action, anything that blocks the game while computing, sensory overload. The app should feel invisible, with enough text to trust it.
+- **Reopened: must-haves, weights, assumptions?** Customise drawer, but must-haves stay on the Build screen.
+- **Reopened: liked features?** Keep, but review each when added.
+- **Reopened: style?** Dark and quiet, icons and small visuals do the heavy lifting; try a real in-app sample screen before locking style rules.
+- **Reopened: wording, mock-up lessons?** As recommended: short and plain with one reasoning sentence, and one real egui element at a time instead of full mock-ups.
+- **Reopened: Customise drawer, trade-off wording?** Drawer kept. Toughness word tiers may be too vague, so the presentation is open question 15.
