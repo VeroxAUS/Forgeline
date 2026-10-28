@@ -298,7 +298,11 @@ fn print_summary(s: &SaveSummary) {
         if !slot.has_data() {
             continue;
         }
-        println!("  equipment box entries in use: {}", slot.equipment.len());
+        println!(
+            "  equipment box: {} entries, {} in use",
+            slot.equipment_box_len,
+            slot.equipment.len()
+        );
         println!(
             "  by category: {}",
             by_cat

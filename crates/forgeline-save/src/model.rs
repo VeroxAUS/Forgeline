@@ -5,6 +5,8 @@
 //! A typed summary of the save: the data the window needs and nothing else.
 //!
 //! Classes and fields are found by hashing the names in [`n`], so no type table is needed to read.
+//! The one exception is an equipment box entry, whose field names are unknown: its first two
+//! fields are read by position.
 //! The hunter name, hunter IDs and everything else in `_BasicData` are never read, so they cannot
 //! reach the summary. Numbers stay numbers: enum fields are read as plain integers.
 //!
@@ -25,8 +27,6 @@ pub mod n {
     pub const ACTIVE: &str = "Active";
     pub const EQUIP: &str = "_Equip";
     pub const EQUIP_BOX: &str = "_EquipBox";
-    pub const CATEGORY: &str = "Category_Gender";
-    pub const EQUIP_ID: &str = "EquipIdFixed";
     pub const ITEM: &str = "_Item";
     pub const BOX_ITEM: &str = "_BoxItem";
     pub const POUCH_ITEM: &str = "_PouchItem";
@@ -49,8 +49,6 @@ pub mod n {
         ACTIVE,
         EQUIP,
         EQUIP_BOX,
-        CATEGORY,
-        EQUIP_ID,
         ITEM,
         BOX_ITEM,
         POUCH_ITEM,
@@ -93,6 +91,9 @@ pub struct BossEntry {
 pub struct SlotSummary {
     /// The slot's own `Active` field.
     pub active_flag: bool,
+    /// Entries in the equipment box, empty ones included (a diagnostic: 0 means the box was not
+    /// found at all).
+    pub equipment_box_len: usize,
     /// Equipment box entries in use (the empty category is dropped).
     pub equipment: Vec<EquipEntry>,
     /// Item box entries with a count above zero.
@@ -207,15 +208,18 @@ fn read_equipment(equip: &ClassView, out: &mut SlotSummary) -> Result<(), SaveEr
     let Some(Value::Array(boxed)) = equip.field(name_hash(n::EQUIP_BOX))? else {
         return Ok(());
     };
-    let (cat, id) = (name_hash(n::CATEGORY), name_hash(n::EQUIP_ID));
+    // The field names of an equipment entry are not known yet (all 12 are unresolved hashes in
+    // `docs/research.md`), so the first two fields are read by position: a one-byte category, then
+    // a 32-bit id. This is the layout seen in the real save.
+    out.equipment_box_len = boxed.count as usize;
     for entry in boxed.classes() {
         let (mut category, mut eid) = (None, None);
-        for f in entry?.fields() {
+        for (i, f) in entry?.fields().take(2).enumerate() {
             let f = f?;
-            if f.name_hash == cat {
-                category = int(&f.value);
-            } else if f.name_hash == id {
-                eid = int(&f.value);
+            match (i, f.value.scalar()) {
+                (0, Some(sc)) if sc.size == 1 => category = Some(sc.as_i64()),
+                (1, Some(sc)) if sc.size == 4 => eid = Some(sc.as_i64()),
+                _ => {}
             }
         }
         if let (Some(c), Some(i)) = (category, eid) {
