@@ -180,3 +180,6 @@ All answered 2026-10-27, in the order they were asked.
 
 ### Phase 2 step 4 merged (2026-10-28)
 - **Merge the step 4 PR (#34)?** Yes ("Yes you can", 2026-10-28 05:17 UTC). Merged at 05:18:51 UTC after the cloud and PC test round with Wilds running: CI green on Ubuntu and Windows (check, RAM check); the final PC run matched the game (16 weapons including 3 light bowguns, 40 armour entries, 1 talisman, 2 mantles, read in 51 ms, 34.9 MB peak); the quest-accept diff showed 23 changes out of 1,139,979 values without identifying a quest field; the craft test took the light bowgun count from 3 to 4. Meanings of the weapon id, its small arrays and the weapon flag bitsets stay unverified (see `research.md`).
+
+### Phase 2 step 5 merged (2026-10-28)
+- **Merge the step 5 PR (#36)?** Yes ("Yes you can", 2026-10-28 05:30 UTC). Merged at 05:30:48 UTC after the cloud and PC test round (Wilds not running): CI green on Ubuntu and Windows (check, RAM check); on the real install 32 packs and 349,348 files, `pak_mods` never opened, all 34 needed paths resolved and read, index built in 97 ms, exe scan 1.59 s, names rebuilt for 186 of 187 classes and 972 of 973 fields, peak memory 35.9 MB private, read-only throughout.
