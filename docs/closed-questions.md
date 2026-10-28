@@ -235,3 +235,12 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Charm slot with no data?** Shows "No charm" for now (2026-10-28 08:50 UTC); owned talismans in the save stay an open question.
 - **Look check?** Passed ("Okay it looks right now", 2026-10-28 09:05 UTC), reviewed from screenshots in the cloud; not run on the PC.
 - **Merge PR #54?** Yes ("merge when you can", 2026-10-28 09:05 UTC). Merged at 09:07:24 UTC (cloud, CI green on Ubuntu and Windows).
+
+### UX element 5: skills strip (2026-10-28)
+- **One skills column or two beside the equipment?** One column (2026-10-28 09:18 UTC). The maintainer asked that a full endgame build's skill count be checked.
+- **Mark maxed skills?** No, all dots filled (2026-10-28 09:18 UTC).
+- **Skills left out when the list is too long?** Keep "+N more" but say where the rest are ("+N more on Why", clickable). Must-haves and set and group skills are never left out; the rest go by the optimizer's weight when there is one, otherwise lowest level first (2026-10-28 09:21 and 09:39 UTC).
+- **Set and group skills?** Pinned at the top, told apart from normal skills by a `SET` or `GROUP` tag, with progress in words rather than numbered circles (2026-10-28 09:21 and 09:39 UTC). Tiers are shown, one line each, because the 2-piece and 4-piece effects differ; the effect text is sample text until the game data is checked (2026-10-28 09:39 UTC).
+- **Must-have marker in the strip?** Not for now; must-haves are chips on the Build screen (element 7) (2026-10-28 09:39 UTC).
+- **Will real builds overflow the strip?** Researched at the maintainer's request (2026-10-28 09:43 UTC, findings in `docs/research.md`): typical endgame builds have about 15 to 17 skills, the largest found 22. Decided: set and group rows collapse automatically when a list is long, and the strip takes a second column in a wider window. "+N more on Why" is accepted for the rare extreme case (2026-10-28 09:52 UTC).
+- **Window shape?** The maintainer uses a 16:9 window that is usually not maximised, as do most second-monitor users, they expect (2026-10-28 09:52 UTC). The collapse path at the base size matters most; the second column appears from about 1232 points of width (a 16:9 window at the 700 point design height is about 1244).
