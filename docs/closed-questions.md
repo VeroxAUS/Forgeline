@@ -262,3 +262,13 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Skill search in the Add list?** Ideally yes, with the Customise drawer (element 11) (2026-10-28 10:21 UTC).
 - **Look check?** Passed after three review rounds, reviewed from screenshots in the cloud; not run on the PC.
 - **Merge PR #58?** Yes ("you can merge", 2026-10-28 10:33 UTC). Merged at 10:33:34 UTC (cloud, CI green on Ubuntu and Windows).
+
+### Food and item loadouts scope (2026-10-28)
+- **Add food and item loadouts?** Yes. The optimizer weights meals (ration type and guaranteed food skills); feasts, ticket meals and random food skills stay out of the maths. Item loadouts stay generic advice, with community opinions for every stage of the game (early, mid, high rank, endgame) where they exist (2026-10-28 10:47 UTC).
+- **When?** Meal model in Phase 4, "Eat and bring" card in Phase 6, save-aware lines after Phase 3 item mapping; about 14 to 20 h in three PRs ("This seems pretty good", 10:47 UTC).
+- **Who writes the advice?** A thread, hand-curated and credited, never scraped ("Yes, we can start there", 10:47 UTC).
+- **Save-aware version?** Yes, as a later PR ("Sounds good", 10:47 UTC).
+- **Which weapons first?** Light bowgun until the other weapons are implemented (10:47 UTC).
+- **How does the meal bonus count?** As a separate add-on line that never changes the build score, so a different or skipped meal does not alter it (10:47 UTC).
+- **Meal data from the game files first (Phase 3)?** Yes, checking the game files for meal data is a Phase 3 task ("yes we should check the game files for meal data first as a Phase 3 task", 2026-10-28 10:48 UTC). Tracked as open question 17.
+

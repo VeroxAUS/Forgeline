@@ -23,6 +23,7 @@ Numbers are kept stable; answered questions leave a gap (question 8 moved to clo
 14. **Icons from the install.** Can the item, monster and equipment icons be read from the user's own install at runtime, and at what memory cost? Checked by UX element 3 (see `docs/ux/design-plan.md`).
 15. **Damage and toughness presentation.** Word tiers (Solid, Tankier, Much tankier) may be too vague. Try 2 or 3 options when UX element 6 is built and let the maintainer choose.
 16. **Overlay look.** Position, size and colours are provisional until seen in game.
+17. **Meals and item loadouts in the game files and the save.** Do the files hold meal tables (ration values, food skill effects and chances, durations, ingredient ids) and does the save hold saved meals, the current meal and item loadouts? Community sources disagree on durations and proc chances, so no meal number is used until it is read from the files. If absent, meals stay advice labelled "community-reported, not verified". Asked 2026-10-28; Phase 3 research step.
 
 ## Waiting on the maintainer (asked 2026-10-27, Phase 2 plan, PR #21)
 
