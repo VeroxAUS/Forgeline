@@ -22,6 +22,12 @@ const ROW_STEP: f32 = 54.0;
 const TILE: f32 = 34.0;
 /// Every decoration slot circle is this size; its level is the number inside.
 const SLOT_R: f32 = 7.0;
+/// Gap between neighbouring slot circles, and the slot positions per row (three is what the sample uses; more are not drawn).
+const SLOT_GAP: f32 = 6.0;
+const SLOT_PITCH: f32 = SLOT_R * 2.0 + SLOT_GAP;
+const SLOT_COLS: usize = 3;
+/// Width of the status column (`Missing 2` fits).
+const STATUS_W: f32 = 72.0;
 const BG: Color32 = Color32::from_rgb(10, 10, 11);
 
 const FG: Color32 = Color32::from_rgb(236, 236, 238);
@@ -325,27 +331,31 @@ fn row(
     };
     cache.tile(p, tile, piece.icon_id, piece.glyph);
 
-    // Status word on the right, then the slot circles to its left.
+    // Two fixed columns at the same x on every row: the status word (left-aligned) at the right
+    // edge, and three slot positions to its left, filled from the left. Empty positions stay blank.
     let (txt, col) = if piece.missing == 0 {
         ("Owned".to_string(), OK)
     } else {
         (format!("Missing {}", piece.missing), WARN)
     };
-    let status = p.text(
-        Pos2::new(right, cy),
-        Align2::RIGHT_CENTER,
+    p.text(
+        Pos2::new(right - STATUS_W, cy),
+        Align2::LEFT_CENTER,
         txt,
         font("inter-medium", 12.0),
         col,
     );
-    let mut x = status.left() - 28.0;
-    for slot in piece.slots.iter().rev() {
-        let c = Pos2::new(x - SLOT_R, cy);
+    let ppp = p.ctx().pixels_per_point();
+    let snap = |v: f32| (v * ppp).round() / ppp;
+    let slots_left = right - STATUS_W - 28.0 - SLOT_COLS as f32 * SLOT_PITCH + SLOT_GAP;
+    for (i, slot) in piece.slots.iter().take(SLOT_COLS).enumerate() {
+        let c = Pos2::new(snap(slots_left + SLOT_R + i as f32 * SLOT_PITCH), snap(cy));
+        // Filled and empty share one outer diameter: the outline is drawn inside the radius.
         let ink = if slot.filled {
             p.circle_filled(c, SLOT_R, DIM);
             BG
         } else {
-            p.circle_stroke(c, SLOT_R, Stroke::new(1.0, FAINT));
+            p.circle_stroke(c, SLOT_R - 1.0, Stroke::new(1.0, FAINT));
             DIM
         };
         p.text(
@@ -359,8 +369,8 @@ fn row(
             Rect::from_center_size(c, Vec2::splat(SLOT_R * 2.0)),
             slot.level,
         ));
-        x -= SLOT_R * 2.0 + 6.0;
     }
+    let x = slots_left;
 
     p.text(
         Pos2::new(text_x, cy - 9.0),
