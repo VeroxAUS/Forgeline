@@ -138,3 +138,81 @@ fn downscale_halves_by_box_average() {
         "small icons are untouched"
     );
 }
+
+#[test]
+fn build_card_shows_icons_once_loaded_and_keeps_the_build_while_recomputing() {
+    use egui::Vec2;
+    use std::sync::Arc;
+    use std::time::Duration;
+    use ui_sample::build_card::{BuildCard, BuildData, Headless};
+    use ui_sample::icons::SampleSource;
+    use ui_sample::shell::Status;
+
+    let size = Vec2::new(1000.0, 700.0);
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    assert_eq!(app.data.pieces_missing(), 2);
+    h.frame(&mut app, size, 1.0);
+    assert!(app.cache.wait_idle(Duration::from_secs(5)));
+    // Five icons arrive; the sixth (id 6) has none and keeps its glyph.
+    assert_eq!((app.cache.stats().ready, app.cache.stats().missing), (5, 1));
+    let ready = h.frame(&mut app, size, 1.0);
+    assert_eq!((ready.width, ready.height), (1000, 700));
+
+    // Recomputing changes the status line and the summary, not the rows.
+    app.shell.status = Status::Recomputing;
+    let recomputing = h.frame(&mut app, size, 1.0);
+    assert_ne!(ready.rgba, recomputing.rgba);
+
+    // An empty build still draws, and a larger window fills its size.
+    app.shell.status = Status::Synced;
+    app.data = BuildData {
+        weapon: None,
+        armour: Default::default(),
+        charm: None,
+    };
+    assert_ne!(ready.rgba, h.frame(&mut app, size, 1.0).rgba);
+    let big = h.frame(&mut app, Vec2::new(1400.0, 900.0), 1.0);
+    assert_eq!((big.width, big.height), (1400, 900));
+}
+
+#[test]
+fn window_scale_follows_size_within_limits() {
+    use egui::Vec2;
+    use ui_sample::shell::{scale_for, MAX_SCALE};
+    assert_eq!(scale_for(Vec2::new(1000.0, 700.0)), 1.0);
+    assert_eq!(
+        scale_for(Vec2::new(800.0, 500.0)),
+        1.0,
+        "never below the design size"
+    );
+    assert!((scale_for(Vec2::new(2000.0, 1400.0)) - 2.0).abs() < 1e-6);
+    // The tighter axis decides, so a wide window does not overflow vertically.
+    assert!((scale_for(Vec2::new(3000.0, 1050.0)) - 1.5).abs() < 1e-6);
+    assert_eq!(scale_for(Vec2::new(9000.0, 9000.0)), MAX_SCALE);
+}
+
+#[test]
+fn larger_window_scales_the_content() {
+    use egui::Vec2;
+    use std::sync::Arc;
+    use std::time::Duration;
+    use ui_sample::build_card::{BuildCard, Headless};
+    use ui_sample::icons::SampleSource;
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    h.frame(&mut app, Vec2::new(1000.0, 700.0), 1.0);
+    assert_eq!(h.ctx().zoom_factor(), 1.0);
+    h.frame(&mut app, Vec2::new(2000.0, 1400.0), 1.0);
+    assert!((h.ctx().zoom_factor() - 2.0).abs() < 0.01);
+}

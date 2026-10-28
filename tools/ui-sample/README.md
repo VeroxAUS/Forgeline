@@ -45,6 +45,19 @@ cargo run --release --features window --bin icons_window              # real win
 
 Screenshots are in [docs/ux/samples/icons/](../../docs/ux/samples/icons/).
 
+## Element 4: the build card
+
+`src/build_card.rs`: the weapon, five armour pieces and the charm as D3 equipment rows inside the shell, each with its icon tile (element 3 cache, plain glyph while loading or when there is none), decoration slot circles (all one size and in fixed columns, the slot level as a number inside, filled when a decoration sits in it, hover says "Decoration slot, level N") and `Owned` or `Missing N`. An empty slot keeps its row shape with a faint word. One quiet line under the title says how many pieces need parts. Sample data only, labelled `SAMPLE DATA, NOT YOUR SAVE`; the real build comes with the optimizer (Phase 4).
+
+```
+cargo run --release --bin build_shots -- <out dir> 2                  # screenshots, no GPU
+cargo run --release --features window --bin build_window              # real window (the maintainer's PC)
+```
+
+The whole UI scales with the window (`shell::auto_scale`): egui's zoom factor follows the window size against the 1000 by 700 design size, never below 1 and capped at 3, so text, icons and spacing grow together. The factor changes only when the window size does, so nothing repaints at idle.
+
+Screenshots are in [docs/ux/samples/build/](../../docs/ux/samples/build/).
+
 ## Run it in a real window (the maintainer's PC)
 
 ```

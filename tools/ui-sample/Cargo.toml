@@ -31,3 +31,7 @@ required-features = ["window"]
 [[bin]]
 name = "icons_window"
 required-features = ["window"]
+
+[[bin]]
+name = "build_window"
+required-features = ["window"]

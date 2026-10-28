@@ -137,8 +137,45 @@ fn mono(size: f32) -> egui::FontId {
     font("mono", size)
 }
 
-/// Draws the whole shell into `ui`, filling its available rectangle.
+/// Draws the whole shell into `ui`, filling its available rectangle. The content area shows a
+/// labelled placeholder.
 pub fn show(ui: &mut Ui, shell: &mut Shell) {
+    show_with(ui, shell, &mut |p, content, shell| {
+        show_content(p, content, shell);
+        placeholder(p, content, shell);
+    });
+}
+
+/// Largest scale the window grows to; past this the extra room is just room.
+pub const MAX_SCALE: f32 = 3.0;
+
+/// The scale for a window of `size` physical-independent points at zoom 1: how many times
+/// bigger than the 1000 by 700 design size it fits, never below 1 and never above `MAX_SCALE`.
+pub fn scale_for(size: Vec2) -> f32 {
+    (size.x / MIN_SIZE.x)
+        .min(size.y / MIN_SIZE.y)
+        .clamp(1.0, MAX_SCALE)
+}
+
+pub(crate) const WANTED_ZOOM: &str = "forgeline-wanted-zoom";
+
+/// Scales the whole UI with the window (text, icons and spacing together) by driving egui's zoom
+/// factor from the window size. Changes the factor only when it moved, so an idle window repaints
+/// nothing; a resize already repaints.
+pub fn auto_scale(ctx: &egui::Context) {
+    let zoom = ctx.zoom_factor();
+    let size = ctx.content_rect().size() * zoom;
+    let want = scale_for(size);
+    // Kept so a headless renderer knows what the next pass will be at.
+    ctx.data_mut(|d| d.insert_temp(egui::Id::NULL.with(WANTED_ZOOM), want));
+    if (want - zoom).abs() > 0.005 {
+        ctx.set_zoom_factor(want);
+    }
+}
+
+/// Like `show`, but `body` draws the content area (header gradient included) itself.
+pub fn show_with(ui: &mut Ui, shell: &mut Shell, body: &mut dyn FnMut(&Painter, Rect, &Shell)) {
+    auto_scale(ui.ctx());
     let screen = ui.max_rect();
     let painter = ui.painter_at(screen);
     painter.rect_filled(screen, 0.0, BG);
@@ -166,7 +203,7 @@ pub fn show(ui: &mut Ui, shell: &mut Shell) {
     );
     let status = Rect::from_min_max(screen.min + Vec2::new(0.0, body_h), screen.max);
 
-    show_content(&painter, content, shell);
+    body(&painter, content, shell);
     show_rail(ui, &painter, rail, shell);
     show_status(&painter, status, &shell.status);
 }
@@ -255,7 +292,7 @@ fn show_rail(ui: &mut Ui, p: &Painter, rail: Rect, shell: &mut Shell) {
     }
 }
 
-fn show_content(p: &Painter, content: Rect, shell: &Shell) {
+pub(crate) fn show_content(p: &Painter, content: Rect, shell: &Shell) {
     gradient(
         p,
         Rect::from_min_size(content.min, Vec2::new(content.width(), 150.0)),
@@ -283,8 +320,12 @@ fn show_content(p: &Painter, content: Rect, shell: &Shell) {
         font("inter-medium", 20.0),
         FG,
     );
+}
 
-    // Placeholder body: a hairline frame saying what will live here.
+/// A hairline frame saying what will live in the content area.
+fn placeholder(p: &Painter, content: Rect, shell: &Shell) {
+    let left = content.min.x + MARGIN;
+    let sec = shell.section;
     let body = Rect::from_min_max(
         Pos2::new(left, content.min.y + 106.0),
         Pos2::new(content.max.x - MARGIN, content.max.y - MARGIN),

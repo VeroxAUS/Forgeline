@@ -8,6 +8,7 @@
 //! Everything shown is sample data with invented names. Icons are placeholder shapes, not game
 //! art. Nothing animates and nothing blurs: flat fills, hairlines and at most one static gradient.
 
+pub mod build_card;
 pub mod icons;
 pub mod render;
 pub mod shell;
@@ -318,7 +319,7 @@ impl Ctx<'_> {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Icon {
     Build,
     Cart,
