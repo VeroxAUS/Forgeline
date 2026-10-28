@@ -86,7 +86,6 @@ fn main() -> std::io::Result<()> {
                 m("Convert Thunder Resistance", 1, 1),
                 m("Convert Water Resistance", 1, 1),
                 m("Weakness exploit", 5, 5),
-                // No short name listed: cut with an ellipsis.
                 m("Poison Functionality", 1, 1),
             ],
         ),
@@ -110,6 +109,27 @@ fn main() -> std::io::Result<()> {
                 1.0,
             )?;
         }
+    }
+    // Long names at the width that fits four, and at the width that would show about 18 characters.
+    let long = vec![
+        m("Convert Thunder Resistance", 1, 1),
+        m("Convert Water Resistance", 1, 1),
+        m("Poison Functionality", 1, 1),
+        m("Weakness exploit", 5, 5),
+    ];
+    for (name, w) in [("w116", 116.0), ("w156", 156.0)] {
+        app.data = sample.clone();
+        app.data.must_haves = long.clone();
+        app.data.chip_w = w;
+        app.data.sync_must();
+        shot(&mut app, &mut h, &format!("long-{name}.png"), base, ppp)?;
+        shot(
+            &mut app,
+            &mut h,
+            &format!("long-{name}-16x9.png"),
+            Vec2::new(1600.0, 900.0),
+            1.0,
+        )?;
     }
     // The "+N more" popup with five must-haves.
     app.data = sample.clone();

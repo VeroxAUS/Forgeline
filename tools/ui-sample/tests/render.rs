@@ -180,6 +180,7 @@ fn build_card_shows_icons_once_loaded_and_keeps_the_build_while_recomputing() {
         damage: BuildData::sample().damage,
         toughness: BuildData::sample().toughness,
         must_haves: Vec::new(),
+        chip_w: ui_sample::build_card::CHIP_W,
         headline_style: Default::default(),
     };
     assert_ne!(ready.rgba, h.frame(&mut app, size, 1.0).rgba);

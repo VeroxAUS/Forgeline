@@ -54,7 +54,8 @@ const HEAD_W: f32 = SKILLS_W;
 const HEAD_TOP: f32 = 40.0;
 const HEAD_BAR_H: f32 = 6.0;
 /// Must-have chips: every chip is this size, on a fixed grid, one row (the rest go behind `+N more`).
-const CHIP_W: f32 = 116.0;
+/// Chip width: four fit across the equipment column at base and at 16:9.
+pub const CHIP_W: f32 = 116.0;
 const CHIP_H: f32 = 24.0;
 const CHIP_GAP: f32 = 8.0;
 const CHIPS_TOP: f32 = 106.0;
@@ -186,19 +187,6 @@ impl Skill {
             )
         }
     }
-}
-
-/// Hand-written short names for skills too long for a chip (the full name stays in the tooltip and
-/// the popups). Sample entries only: the real table is written against the real skill names once
-/// the extractor has them, and a name with no entry is cut with an ellipsis.
-pub fn short_name(name: &str) -> Option<&'static str> {
-    Some(match name {
-        "Weakness exploit" => "Weak Exploit",
-        "Convert Thunder Resistance" => "Cv Thun Res",
-        "Convert Water Resistance" => "Cv Wat Res",
-        "Stamina surge" => "Stam Surge",
-        _ => return None,
-    })
 }
 
 /// A skill the user insists on: the optimizer treats it as a hard constraint. `reachable` is the
@@ -363,6 +351,8 @@ pub struct BuildData {
     pub toughness: Headline,
     pub headline_style: HeadlineStyle,
     pub must_haves: Vec<MustHave>,
+    /// Chip width in points. `CHIP_W` unless the review is comparing widths.
+    pub chip_w: f32,
 }
 
 impl BuildData {
@@ -482,6 +472,7 @@ impl BuildData {
                 MustHave::new("Weakness exploit", 4, 5),
                 MustHave::new("Ammo saver", 2, 3),
             ],
+            chip_w: CHIP_W,
         };
         d.sync_must();
         d
@@ -1154,7 +1145,7 @@ fn card(
 }
 
 /// The must-have row: a label row (with the update note and `+ Add`) and one row of chips, all
-/// `CHIP_W` by `CHIP_H` on a fixed grid snapped to whole pixels. When the chips do not fit the
+/// `data.chip_w` by `CHIP_H` on a fixed grid snapped to whole pixels. When the chips do not fit the
 /// last cell becomes `+N more`. Returns the y under the row.
 fn chips(
     p: &Painter,
@@ -1197,7 +1188,8 @@ fn chips(
     }
 
     let n = data.must_haves.len();
-    let pitch = CHIP_W + CHIP_GAP;
+    let chip_w = data.chip_w;
+    let pitch = chip_w + CHIP_GAP;
     let cols = (((right - left + CHIP_GAP) / pitch).floor() as usize).max(1);
     if n == 0 {
         p.text(
@@ -1214,7 +1206,7 @@ fn chips(
         let m = &data.must_haves[i];
         let r = Rect::from_min_size(
             Pos2::new(snap(left + i as f32 * pitch), snap(row_y)),
-            Vec2::new(CHIP_W, CHIP_H),
+            Vec2::new(chip_w, CHIP_H),
         );
         let hot = hover.is_some_and(|h| r.contains(h));
         let bad = m.out_of_reach();
@@ -1228,26 +1220,20 @@ fn chips(
         p.rect_filled(r, 6.0, CHIP_FILL);
         p.rect_stroke(r, 6.0, Stroke::new(1.0, stroke), egui::StrokeKind::Inside);
         let level = m.level.to_string();
-        let level_w = 14.0;
+        let level_w = 9.0;
         p.text(
-            Pos2::new(r.right() - 8.0, r.center().y),
+            Pos2::new(r.right() - 7.0, r.center().y),
             Align2::RIGHT_CENTER,
             level,
             mono(11.0),
             if bad { WARN } else { ACCENT },
         );
         p.text(
-            Pos2::new(r.left() + 8.0, r.center().y),
+            Pos2::new(r.left() + 7.0, r.center().y),
             Align2::LEFT_CENTER,
-            // The hand-written short name when there is one; an ellipsis only as the fallback.
-            fit(
-                p,
-                short_name(m.name).unwrap_or(m.name),
-                CHIP_W - 16.0 - level_w - 2.0,
-                "inter",
-                12.0,
-            ),
-            font("inter", 12.0),
+            // Too long: cut with an ellipsis; the tooltip has the full name.
+            fit(p, m.name, chip_w - 14.0 - level_w - 3.0, "inter", 11.0),
+            font("inter", 11.0),
             FG,
         );
         hits.push((r, Hit::Chip(i)));
@@ -1255,7 +1241,7 @@ fn chips(
     if shown < n {
         let r = Rect::from_min_size(
             Pos2::new(snap(left + shown as f32 * pitch), snap(row_y)),
-            Vec2::new(CHIP_W, CHIP_H),
+            Vec2::new(chip_w, CHIP_H),
         );
         let hot = hover.is_some_and(|h| r.contains(h));
         let warn = data.must_haves[shown..].iter().any(|m| m.out_of_reach());
@@ -1868,14 +1854,6 @@ mod tests {
         assert!(!m.out_of_reach());
         m.reachable = Some(2);
         assert!(m.out_of_reach());
-    }
-
-    #[test]
-    fn short_names_are_shorter_and_only_for_listed_skills() {
-        for name in ["Weakness exploit", "Convert Thunder Resistance"] {
-            assert!(short_name(name).unwrap().len() < name.len());
-        }
-        assert_eq!(short_name("Focus"), None);
     }
 
     #[test]
