@@ -16,6 +16,11 @@ use super::{font, render, Icon};
 use egui::{Align2, Color32, Context, Painter, Pos2, Rect, Stroke, Ui, Vec2};
 use std::sync::Arc;
 
+mod monster;
+pub use monster::{
+    items as monster_items, remember, Element, Group, Monster, Pick, Selector, ROSTER,
+};
+
 const MARGIN: f32 = 28.0;
 const ROW_H: f32 = 48.0;
 const ROW_STEP: f32 = 54.0;
@@ -261,6 +266,8 @@ pub enum Popup {
     Add,
     /// The chips that did not fit in the row.
     More,
+    /// The monster selector, hanging from the Monster cell.
+    Monster,
 }
 
 /// Who the build is for. Solo and Multiplayer change what the optimizer weighs; it is a switch, not
@@ -457,6 +464,10 @@ pub struct BuildData {
     /// Why an alternative cannot be chosen yet (a plain sentence), by `Alt::idx`. Those cells are
     /// dimmed and do nothing when clicked.
     pub unavailable: [Option<&'static str>; 6],
+    /// The monster the Monster alternative is built for, once one is picked.
+    pub monster: Option<Pick>,
+    /// The last few picks, newest first (the selector lists them on top).
+    pub recent: Vec<Pick>,
 }
 
 impl BuildData {
@@ -583,10 +594,12 @@ impl BuildData {
                 None,
                 None,
                 None,
-                Some("Pick a monster first."),
+                None,
                 None,
                 Some("No Gogma gear unlocked yet."),
             ],
+            monster: None,
+            recent: Vec::new(),
         };
         d.sync_must();
         d
@@ -723,6 +736,8 @@ enum Hit {
     Mode(PlayMode),
     /// One cell of the alternatives row.
     Alt(Alt),
+    /// The monster named in the breadcrumb (its full name is in the tooltip).
+    Crumb(Pick),
 }
 
 /// The build card screen: shell state, the card's data and the icon cache.
@@ -734,6 +749,8 @@ pub struct BuildCard {
     hits: Vec<(Rect, Hit)>,
     /// The open must-have popup, if any.
     pub popup: Option<Popup>,
+    /// The monster selector's search text, cursor and Tempered switch.
+    pub selector: Selector,
     /// A recompute started by a chip change ends at this time. A real recompute would run on a
     /// background thread and report back; the sample only waits.
     recompute_until: Option<std::time::Instant>,
@@ -755,6 +772,7 @@ impl BuildCard {
             cache: IconCache::new(ctx, source),
             hits: Vec::new(),
             popup: None,
+            selector: Selector::default(),
             recompute_until: None,
         }
     }
@@ -849,6 +867,22 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
                 tip.on_hover_cursor(egui::CursorIcon::PointingHand)
                     .on_hover_text(m.tip());
             }
+            Hit::Crumb(pick) => {
+                tip.on_hover_text(pick.label());
+            }
+            Hit::Alt(Alt::Monster) if app.data.unavailable[Alt::Monster.idx()].is_none() => {
+                // The Monster cell always opens the selector: picking is the only way to choose it.
+                if tip.clicked() {
+                    app.selector.open(app.data.monster);
+                    app.popup = Some(Popup::Monster);
+                }
+                let text = match app.data.monster {
+                    Some(m) => format!("Monster. Built for {}. Click to change.", m.label()),
+                    None => format!("Monster. {} Click to pick one.", Alt::Monster.tip()),
+                };
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text(text);
+            }
             Hit::Alt(a) => {
                 let why = app.data.unavailable[a.idx()];
                 if tip.clicked() && why.is_none() && app.data.alt != *a {
@@ -889,6 +923,7 @@ fn popup(ui: &mut Ui, app: &mut BuildCard) {
         (Popup::Edit(i), Hit::Chip(j)) if i == *j => Some(*r),
         (Popup::Add, Hit::Add) => Some(*r),
         (Popup::More, Hit::More) => Some(*r),
+        (Popup::Monster, Hit::Alt(Alt::Monster)) => Some(*r),
         _ => None,
     });
     let Some(anchor) = anchor else {
@@ -897,7 +932,11 @@ fn popup(ui: &mut Ui, app: &mut BuildCard) {
         return;
     };
     let mut change: Option<Change> = None;
-    let width = if kind == Popup::More { 280.0 } else { POPUP_W };
+    let width = match kind {
+        Popup::More => 280.0,
+        Popup::Monster => monster::LIST_W,
+        _ => POPUP_W,
+    };
     // Stays inside the window: pushed left when it would run past the right edge.
     let pos_x = anchor
         .left()
@@ -937,6 +976,25 @@ fn popup(ui: &mut Ui, app: &mut BuildCard) {
                                 popup_add(ui, &app.data.must_haves, &mut change);
                             }
                         }
+                        Popup::Monster => {
+                            let mut out = None;
+                            monster::panel(
+                                ui,
+                                &mut app.selector,
+                                app.data.monster,
+                                &app.data.recent,
+                                &mut out,
+                            );
+                            match out {
+                                Some(monster::Outcome::Pick(p)) => {
+                                    change = Some(Change::Monster(p, true))
+                                }
+                                Some(monster::Outcome::Switch(p)) => {
+                                    change = Some(Change::Monster(p, false))
+                                }
+                                None => {}
+                            }
+                        }
                         Popup::More => {
                             let shown = chip_cells(&app.hits).saturating_sub(1);
                             for (i, m) in app.data.must_haves.iter().enumerate().skip(shown) {
@@ -970,6 +1028,15 @@ fn popup(ui: &mut Ui, app: &mut BuildCard) {
                 app.data.must_haves.push(MustHave::new(name, 1, max));
                 app.popup = None;
             }
+            Change::Monster(pick, close) => {
+                app.data.monster = Some(pick);
+                remember(&mut app.data.recent, pick);
+                app.data.alt = Alt::Monster;
+                app.data.apply_variant();
+                if close {
+                    app.popup = None;
+                }
+            }
         }
         app.start_recompute();
     }
@@ -979,6 +1046,8 @@ enum Change {
     Level(usize, u8),
     Remove(usize),
     Add(&'static str, u8),
+    /// A monster was picked; `true` closes the selector (the Tempered switch keeps it open).
+    Monster(Pick, bool),
 }
 
 /// Chip cells drawn last frame, the `+N more` cell included.
@@ -1181,7 +1250,7 @@ fn card(
     };
     // Header controls sit in the column left of the damage block, so they stop short of it.
     let head_stop = right - 2.0 * HEAD_W - SKILL_GAP - HEAD_CLEAR;
-    crumb_alt(p, left, content.min.y + 30.0, data.alt);
+    crumb_alt(p, hits, left, right - 190.0, content.min.y + 30.0, data);
     mode_switch(p, hits, head_stop, content.min.y + 58.0, data.mode);
     alternatives(p, hits, left, head_stop, content.min.y + ALT_TOP, data);
 
@@ -1314,7 +1383,14 @@ fn card(
 
 /// The alternative's name after the breadcrumb (`BUILD · LIGHT BOWGUN · SAFE`), so the active one
 /// is named in words as well as marked in the row.
-fn crumb_alt(p: &Painter, left: f32, y: f32, alt: Alt) {
+fn crumb_alt(
+    p: &Painter,
+    hits: &mut Vec<(Rect, Hit)>,
+    left: f32,
+    right: f32,
+    y: f32,
+    data: &BuildData,
+) {
     let base = p
         .layout_no_wrap("BUILD \u{b7} LIGHT BOWGUN".to_string(), mono(10.5), DIM)
         .size()
@@ -1322,10 +1398,28 @@ fn crumb_alt(p: &Painter, left: f32, y: f32, alt: Alt) {
     p.text(
         Pos2::new(left + base, y),
         Align2::LEFT_CENTER,
-        format!(" \u{b7} {}", alt.name().to_uppercase()),
+        format!(" \u{b7} {}", data.alt.name().to_uppercase()),
         mono(10.5),
         ACCENT,
     );
+    // The monster the build is for, in the same accent; a long name gets an ellipsis (full name
+    // on hover).
+    let (Alt::Monster, Some(pick)) = (data.alt, data.monster) else {
+        return;
+    };
+    let head = format!(" \u{b7} {}", Alt::Monster.name().to_uppercase());
+    let used = p.layout_no_wrap(head.clone(), mono(10.5), ACCENT).size().x;
+    let x = left + base + used;
+    let text = format!(" \u{b7} {}", pick.label().to_uppercase());
+    let text = fit(p, &text, right - x, "mono", 10.5);
+    let r = p.text(
+        Pos2::new(x, y),
+        Align2::LEFT_CENTER,
+        text,
+        mono(10.5),
+        ACCENT,
+    );
+    hits.push((r.expand2(Vec2::new(0.0, 4.0)), Hit::Crumb(pick)));
 }
 
 /// The Solo or Multiplayer switch: two equal halves, the chosen one a filled accent block. Its
