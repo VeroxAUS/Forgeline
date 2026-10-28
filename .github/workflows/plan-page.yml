@@ -1,10 +1,10 @@
 name: plan-page
 on:
   pull_request:
-    paths: ["tools/plan-page/**", ".github/workflows/plan-page.yml"]
+    paths: ["tools/plan-page/**", ".github/workflows/plan-page.yml", "rust-toolchain.toml"]
   push:
     branches: [main]
-    paths: ["tools/plan-page/**", ".github/workflows/plan-page.yml"]
+    paths: ["tools/plan-page/**", ".github/workflows/plan-page.yml", "rust-toolchain.toml"]
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -13,6 +13,8 @@ jobs:
         working-directory: tools/plan-page
     steps:
       - uses: actions/checkout@v4
+      - name: Install the pinned toolchain
+        run: rustup toolchain install --profile minimal --component rustfmt --component clippy "$(sed -n 's/^channel = \"\(.*\)\"/\1/p' ../../rust-toolchain.toml)"
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
