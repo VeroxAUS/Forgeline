@@ -300,8 +300,8 @@ fn run(env: &UpdateEnv, data: &DataDir, rep: &mut Reporter) -> Result<UpdateOutc
     let mut findings = validate(&staged, last_good.as_ref());
     if data.current().exists() && last_good.is_none() {
         findings.push(Finding {
-            severity: Severity::Warn,
-            message: "the last good data's manifest could not be read, so the new data was not compared with it"
+            severity: Severity::Block,
+            message: "the last good data's manifest could not be read, so the new data cannot be compared with it"
                 .to_string(),
         });
     }
@@ -354,7 +354,11 @@ pub fn update_from_steam(
         Err(e) => return fail(format!("finding the game: {e}")),
     };
     if is_protected(data.root(), &found.protected_paths()) {
-        return fail("the data folder is inside Steam, the install or a save folder".to_string());
+        // Refused without `fail`: a rejected folder gets nothing written into it, not even the
+        // status file.
+        return UpdateOutcome::Failed(
+            "the data folder is inside Steam, the install or a save folder".to_string(),
+        );
     }
     let account = match found.save_account() {
         SaveAccount::One(a) => a,

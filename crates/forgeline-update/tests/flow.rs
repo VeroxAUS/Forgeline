@@ -332,3 +332,55 @@ fn failures_before_the_extraction_are_reported_and_leave_data_alone() {
     );
     std::fs::remove_dir_all(root).ok();
 }
+
+#[test]
+fn a_protected_data_folder_is_refused_and_nothing_is_written_into_it() {
+    let root = temp_root("protected");
+    let steam = make(&root, &TreeOptions::default());
+    // A Steam folder with an ordinary name, so only the discovered paths mark the data folder as
+    // protected (the name check in `DataDir::open` does not).
+    let lib = root.join("lib");
+    std::fs::rename(&steam, &lib).unwrap();
+    let inside = lib.join("forgeline-data");
+    let data = DataDir::open(Some(inside.clone())).unwrap();
+    let before = snapshot(&lib);
+    let (o, _) = update(&lib, &data, &[]);
+    assert!(
+        matches!(&o, UpdateOutcome::Failed(m) if m.contains("inside Steam")),
+        "{o:?}"
+    );
+    assert!(
+        !inside.exists(),
+        "nothing may be created in a refused folder"
+    );
+    assert_eq!(snapshot(&lib), before);
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn an_unreadable_last_good_manifest_blocks_the_update_and_keeps_the_data() {
+    let root = temp_root("badmanifest");
+    let data = data_dir(&root);
+    let steam = make(&root, &TreeOptions::default());
+    assert!(matches!(
+        update(&steam, &data, &[]).0,
+        UpdateOutcome::Replaced { .. }
+    ));
+    let manifest_path = data.current().join("manifest.json");
+    std::fs::write(&manifest_path, "{ damaged").unwrap();
+    let (o, _) = update(&steam, &data, &[]);
+    match &o {
+        UpdateOutcome::Rejected(f) => assert!(
+            f.iter()
+                .any(|f| f.severity == Severity::Block && f.message.contains("manifest")),
+            "{f:?}"
+        ),
+        other => panic!("expected a rejection, got {other:?}"),
+    }
+    assert_eq!(
+        std::fs::read_to_string(&manifest_path).unwrap(),
+        "{ damaged"
+    );
+    assert!(!data.staging().exists());
+    std::fs::remove_dir_all(root).ok();
+}

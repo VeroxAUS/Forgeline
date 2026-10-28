@@ -101,6 +101,10 @@ fn run(
     notify: impl Fn() + Send + Sync + 'static,
 ) {
     forgeline_core::priority::set_thread_lowest();
+    // A crash between the update's two renames leaves no `current`; put the old data back before
+    // the first read. Once, here: later it could race a running update's own swap. Failure is
+    // not fatal: the view then shows that no data is extracted.
+    let _ = forgeline_update::swap::recover(&config.data);
     let cache_path = config.data.view_cache();
     let mut watcher: Option<(PathBuf, watch::SaveWatcher)> = None;
     let mut force = false;

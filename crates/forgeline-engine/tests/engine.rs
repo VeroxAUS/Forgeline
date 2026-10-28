@@ -213,3 +213,34 @@ fn refresh_picks_up_the_extracted_data_and_flags_nothing_without_a_game() {
         "no game build to compare with"
     );
 }
+
+#[test]
+fn a_swap_cut_short_by_a_crash_is_restored_before_the_first_read() {
+    let rig = Rig::new("recover");
+    let data = DataDir::open(Some(rig.root.join("data-dir"))).unwrap();
+    // Only `previous` exists, as after a crash between the update's two renames.
+    std::fs::create_dir_all(data.previous()).unwrap();
+    std::fs::write(
+        data.previous().join("manifest.json"),
+        Manifest {
+            schema: SCHEMA,
+            build_id: "77".into(),
+            exe_size: 0,
+            exe_modified: Some(0),
+            tool_version: "t".into(),
+            created: "t".into(),
+            files: vec![],
+            missing: vec![],
+            classes: vec![],
+        }
+        .to_json(),
+    )
+    .unwrap();
+    let (engine, rx) = rig.start();
+    let s = wait_for(&engine, &rx, "restored data", |s| {
+        settled(s) && s.data.manifest.is_some()
+    });
+    assert_eq!(s.data.manifest.as_ref().unwrap().build_id, "77");
+    assert!(data.current().join("manifest.json").is_file());
+    assert!(!data.previous().exists());
+}
