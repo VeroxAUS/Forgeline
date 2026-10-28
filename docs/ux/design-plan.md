@@ -59,7 +59,7 @@ Desktop only shows no live content. Before and after a hunt, decisions happen on
 ### Data these screens depend on (all unverified until confirmed)
 
 - "Best place to farm" (event or optional mission) and part-break hints need drop, part-break and mission data. Whether the game files hold it is open question 12. Until confirmed, the shopping row shows item, icon, owned and missing counts, monster and the piece it unlocks.
-- Automatic monster switching needs either the save recording a started quest (not found in step 4) or reading memory through forgeline-live. Until then the selector is manual.
+- Automatic monster switching needs either the save recording a started quest (not found in step 4) or reading memory through forgeline-live. Until then the selector is manual. Once the optional forgeline-live (off by default) is on, it will pick the monster automatically too, and the selector stays as the manual override.
 - Icons come from the user's own install at runtime. Whether the needed icon files can be read is unverified; each icon element falls back to a plain glyph.
 - Playstyle tips need skill data from the game files.
 

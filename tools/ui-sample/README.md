@@ -106,7 +106,7 @@ Screenshots are in [docs/ux/samples/chips/](../../docs/ux/samples/chips/).
 
 ## Element 9: the monster selector
 
-`src/build_card/monster.rs`: the Monster cell opens a search panel (recent picks, monsters, Guardian and Arch-Tempered on a 28 point row grid, a Tempered switch). The roster is the research list in docs/research.md (38 entries, names not yet checked against the game files); weak elements are unknown and have five reserved cells per row for the food plan's matchup. The pick names the build in the breadcrumb.
+`src/build_card/monster.rs`: the Monster cell opens a search panel (recent picks, monsters, Guardian and Arch-Tempered on a 28 point row grid, a Tempered switch that filters the list to monsters with a Tempered version). The roster is the research list in docs/research.md (38 entries, names not yet checked against the game files); weak elements are unknown and have five reserved cells per row for the food plan's matchup. The pick names the build in the breadcrumb.
 
 ```
 cargo run --release --bin monster_shots -- <out dir> 2                # screenshots, no GPU

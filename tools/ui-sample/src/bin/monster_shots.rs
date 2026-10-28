@@ -71,14 +71,26 @@ fn main() -> std::io::Result<()> {
     shot(&mut app, &mut h, "monster-nomatch.png", base, ppp)?;
     app.selector.query.clear();
 
-    // Keyboard cursor on a monster with no Tempered version.
+    // Tempered switch on: only monsters with a Tempered version are listed.
+    app.selector.tempered = true;
+    shot(&mut app, &mut h, "monster-tempered-filter.png", base, ppp)?;
+    // The same search with the switch on and off: Gogmazios has no Tempered version.
+    app.selector.query = "go".into();
+    shot(&mut app, &mut h, "monster-tempered-go-on.png", base, ppp)?;
+    app.selector.tempered = false;
+    shot(&mut app, &mut h, "monster-tempered-go-off.png", base, ppp)?;
+    app.selector.tempered = true;
+    app.selector.query.clear();
+    app.selector.tempered = false;
+
+    // Keyboard cursor near the end of the list (the list scrolls to it).
     app.selector.reveal();
     app.selector.cursor = ROSTER
         .iter()
         .take(index("Zoh Shia"))
         .filter(|m| m.group == ui_sample::build_card::Group::Base)
         .count();
-    shot(&mut app, &mut h, "monster-no-tempered.png", base, ppp)?;
+    shot(&mut app, &mut h, "monster-scrolled.png", base, ppp)?;
     app.selector.cursor = 0;
 
     // A pick: the breadcrumb names it, the build is recomputing, recent picks sit on top.

@@ -222,10 +222,13 @@ pub enum Item {
 }
 
 /// The rows for a search text: recent picks first when the search is empty, then each group that has
-/// a match (case-insensitive, anywhere in the name).
-pub fn items(query: &str, recent: &[Pick]) -> Vec<Item> {
+/// a match (case-insensitive, anywhere in the name). With `tempered_only` (the Tempered switch on)
+/// only monsters that have a Tempered version are listed.
+pub fn items(query: &str, recent: &[Pick], tempered_only: bool) -> Vec<Item> {
     let q = query.trim().to_lowercase();
+    let keep = |i: usize| !tempered_only || ROSTER[i].can_temper();
     let mut v = Vec::new();
+    let recent: Vec<&Pick> = recent.iter().filter(|p| keep(p.index)).collect();
     if q.is_empty() && !recent.is_empty() {
         v.push(Item::Header("RECENT"));
         v.extend(recent.iter().map(|p| Item::Monster(p.index)));
@@ -234,7 +237,7 @@ pub fn items(query: &str, recent: &[Pick]) -> Vec<Item> {
         let start = v.len();
         v.push(Item::Header(g.label()));
         for (i, m) in ROSTER.iter().enumerate() {
-            if m.group == g && (q.is_empty() || m.name.to_lowercase().contains(&q)) {
+            if m.group == g && keep(i) && (q.is_empty() || m.name.to_lowercase().contains(&q)) {
                 v.push(Item::Monster(i));
             }
         }
@@ -275,7 +278,7 @@ pub fn panel(
     let snap = |v: f32| (v * ppp).round() / ppp;
     // Rows and gaps are set by this panel alone, so the 28 point grid is exact.
     ui.spacing_mut().item_spacing = Vec2::ZERO;
-    let list = items(&st.query, recent);
+    let list = items(&st.query, recent, st.tempered);
     let count = list
         .iter()
         .filter(|i| matches!(i, Item::Monster(_)))
@@ -409,43 +412,21 @@ pub fn panel(
     }
     ui.add_space(4.0);
 
-    // Footer: the Tempered switch (off for ones that have no Tempered version).
+    // Footer: the Tempered switch. On, the list shows only monsters that have a Tempered version.
     let (foot, resp) = ui.allocate_exact_size(Vec2::new(LIST_W, FOOT_H), egui::Sense::click());
     hair(ui.painter(), foot.left(), foot.right(), foot.top());
-    let target = if count > 0 {
-        let mut n = 0;
-        list.iter().find_map(|it| match it {
-            Item::Monster(i) if n == st.cursor => Some(*i),
-            Item::Monster(_) => {
-                n += 1;
-                None
-            }
-            _ => None,
-        })
-    } else {
-        None
-    };
-    // The switch follows the monster in the list that is lit; with none it follows the current pick.
-    let subject = target.or(current.map(|c| c.index));
-    let allowed = subject.is_none_or(|i| ROSTER[i].can_temper());
-    let on = st.tempered && allowed;
-    tempered_switch(ui.painter(), foot, on, allowed, resp.hovered());
-    if resp.clicked() && allowed {
+    tempered_switch(ui.painter(), foot, st.tempered, resp.hovered());
+    if resp.clicked() {
         st.tempered = !st.tempered;
-        if let Some(c) = current {
+        st.cursor = 0;
+        st.scroll = 0.0;
+        // The build follows the switch only when its monster has a Tempered version.
+        if let Some(c) = current.filter(|c| c.monster().can_temper()) {
             *out = Some(Outcome::Switch(Pick::new(c.index, st.tempered)));
         }
     }
-    resp.on_hover_cursor(if allowed {
-        egui::CursorIcon::PointingHand
-    } else {
-        egui::CursorIcon::NotAllowed
-    })
-    .on_hover_text(if allowed {
-        "Tempered: the harder version of the monster."
-    } else {
-        "This monster has no Tempered version."
-    });
+    resp.on_hover_cursor(egui::CursorIcon::PointingHand)
+        .on_hover_text("Tempered: list only monsters that have a Tempered version.");
 }
 
 /// One monster row: plain tile, name (ellipsis when it would not fit), the reserved weak-element
@@ -508,19 +489,13 @@ fn monster_row(p: &Painter, r: Rect, m: &Monster, lit: bool, current: bool, demo
 }
 
 /// `TEMPERED` label and a small switch at the right end of the footer.
-fn tempered_switch(p: &Painter, foot: Rect, on: bool, allowed: bool, hot: bool) {
+fn tempered_switch(p: &Painter, foot: Rect, on: bool, hot: bool) {
     p.text(
         Pos2::new(foot.left() + 4.0, foot.center().y),
         Align2::LEFT_CENTER,
         "TEMPERED",
         mono(10.5),
-        if !allowed {
-            FAINT
-        } else if on || hot {
-            FG
-        } else {
-            DIM
-        },
+        if on || hot { FG } else { DIM },
     );
     let w = 30.0;
     let h = 16.0;
@@ -537,17 +512,7 @@ fn tempered_switch(p: &Painter, foot: Rect, on: bool, allowed: bool, hot: bool) 
         },
         track.center().y,
     );
-    p.circle_filled(
-        knob,
-        h / 2.0 - 3.0,
-        if on {
-            ACCENT_INK
-        } else if allowed {
-            DIM
-        } else {
-            FAINT
-        },
-    );
+    p.circle_filled(knob, h / 2.0 - 3.0, if on { ACCENT_INK } else { DIM });
 }
 
 /// Names the weak elements for a tooltip, or says they are unknown.
@@ -611,16 +576,41 @@ mod tests {
 
     #[test]
     fn search_matches_anywhere_and_drops_empty_groups() {
-        let all = items("", &[]);
+        let all = items("", &[], false);
         assert_eq!(names(&all).len(), ROSTER.len());
-        let q = items("DAH", &[]);
+        let q = items("DAH", &[], false);
         assert_eq!(names(&q), ["Jin Dahaad", "Arch-Tempered Jin Dahaad"]);
         assert_eq!(
             q.iter().filter(|i| matches!(i, Item::Header(_))).count(),
             2,
             "Guardian has no match so it has no header"
         );
-        assert!(items("zzz", &[]).is_empty());
+        assert!(items("zzz", &[], false).is_empty());
+    }
+
+    #[test]
+    fn tempered_switch_lists_only_monsters_with_a_tempered_version() {
+        let v = items("", &[], true);
+        let n = names(&v);
+        assert!(n.contains(&"Rathalos") && n.contains(&"Guardian Rathalos"));
+        for gone in [
+            "Zoh Shia",
+            "Gogmazios",
+            "Guardian Arkveld",
+            "Arch-Tempered Rey Dau",
+        ] {
+            assert!(!n.contains(&gone), "{gone}");
+        }
+        assert!(
+            !v.contains(&Item::Header("ARCH-TEMPERED")),
+            "a group with nothing left loses its label"
+        );
+        // Recent picks without a Tempered version drop out of the list too.
+        let recent = [
+            Pick::new(idx("Zoh Shia"), false),
+            Pick::new(idx("Rathalos"), false),
+        ];
+        assert_eq!(names(&items("", &recent, true))[0], "Rathalos");
     }
 
     #[test]
@@ -631,9 +621,9 @@ mod tests {
         }
         assert_eq!(recent.len(), RECENT_MAX);
         assert_eq!(recent[0].index, idx("Xu Wu"));
-        let v = items("", &recent);
+        let v = items("", &recent, false);
         assert_eq!(v[0], Item::Header("RECENT"));
         assert_eq!(v[1], Item::Monster(idx("Xu Wu")));
-        assert_eq!(items("rath", &recent)[0], Item::Header("MONSTERS"));
+        assert_eq!(items("rath", &recent, false)[0], Item::Header("MONSTERS"));
     }
 }
