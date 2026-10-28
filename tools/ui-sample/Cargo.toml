@@ -16,10 +16,18 @@ egui = { version = "0.37", default-features = false }
 png = "0.17"
 eframe = { version = "0.37", optional = true }
 
+# Only to put the icon thread in background mode (low CPU, disk and memory priority).
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_System_Threading"] }
+
 [[bin]]
 name = "window"
 required-features = ["window"]
 
 [[bin]]
 name = "shell_window"
+required-features = ["window"]
+
+[[bin]]
+name = "icons_window"
 required-features = ["window"]

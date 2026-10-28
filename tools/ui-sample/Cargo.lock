@@ -3292,6 +3292,7 @@ dependencies = [
  "eframe",
  "egui",
  "png 0.17.16",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
