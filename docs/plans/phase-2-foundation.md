@@ -2,45 +2,7 @@
 
 Target version: 0.2.0 · Status: draft (waiting for the maintainer's review)
 
-Each phase plan is written just before its phase, using what earlier phases found. The maintainer reviews and approves it before any work starts. Estimates are in threads and test rounds, not hours; real durations go in the time log (section 10).
-
-## How to read this plan
-
-**Run order** (steps are numbered in the order they run; parallel steps share a stage; at most 3 threads at once):
-
-- **Stage 1:** step 1 (workspace, CI, hygiene checks, changelog). Everything else waits for it.
-- **Stage 2 (parallel):** step 2 (find the save and the game), step 3 (fixture save builder), step 5 (pack reader and exe scan).
-- **Stage 3 (parallel):** step 4 (save reader, needs 3), step 6 (update flow with staging and validation, needs 2 and 5), step 7 (UX design: brief, mock-ups and style guide; cloud only, needs nothing from the PC).
-- **Stage 4:** step 8 (engine: file watcher, background recompute, cache; needs 2 and 4).
-- **Stage 5:** step 9 (the bare egui window built from the debug data viewer, following the style guide; needs 6, 7 and 8).
-- **Stage 6:** step 10 (UI footprint check: four sample views compared on the maintainer's PC; also ports the benchmark harness; needs 9, and uses the widget list from step 7).
-- **Stage 7:** step 11 (measure the real app on the maintainer's PC with Wilds running; needs 9 and 10).
-- **Stage 8:** step 12 (re-review the performance budget against real numbers; needs 11).
-- **Stage 9:** step 13 (close-out; needs 1 to 12).
-
-**Decisions needed from the maintainer** (details in section 7):
-
-- Tools: approved 2026-10-27 (fixture save builder, `forgeline-check`, `tools/bench`).
-- Approved 2026-10-27: the RAM rule for every PR (section 3.4), including its caps of 140 MB private bytes and 80 MB working set.
-- Approved 2026-10-27: the update flow runs as a short-lived child process of the app, not as a thread (section 3.1).
-- Approved 2026-10-27: a UX design step 7 (brief, mock-ups, style guide, including the in-game shopping-list overlay), and a look check next to the performance check in every window test round.
-- Approved 2026-10-27: a short hand-written list of the game file paths we need is kept in the repo (section 3.3).
-- Deferred: the proposed performance budget changes (section 3.4). The current budget stands as written until they are discussed at the step 12 budget re-review, or earlier only if the measurements suggest the budget is impossible to meet.
-
-**Maintainer's own actions, listed up front (trial arrangement, sessions cannot push tags or delete branches):**
-
-- At close-out: create the `v0.2.0` tag and a GitHub pre-release.
-- After each step PR merges: delete its branch if the automatic delete did not (a cloud session gets a 403).
-- Keep `spikes-archive` as it is; it is the only branch that stays besides `main`.
-- During steps 10 and 11: run the benchmark as administrator with Wilds at the Scarlet Forest base camp spot.
-
-**Phase 1 retro items folded in:**
-
-- Steps 10 and 11 close the Phase 1 step 6 gaps: "last build on screen" time and save-change recompute time, with Wilds running.
-- Electron (only 2 valid no-Wilds runs) is **not** re-run; the reason is in section 2. Slint (never tested) is now measured in step 10, together with a plain Win32 window and two egui renderers, to see how much of the 127 MB is the graphics stack.
-- A RAM check on every PR (step 1 for CI, step 11 for the PC reading).
-- The budget is re-reviewed against the real Phase 1 numbers (step 12).
-- GitHub Actions for the app crates (format, clippy, tests) from the first PR (step 1).
+Each phase plan is written just before its phase, using what earlier phases found. The maintainer reviews and approves it before any work starts. Estimates are in threads, test rounds and hours; real durations go in the time log (section 10).
 
 ## 1. Goal and done
 Build the foundation every later phase stands on: the app finds the maintainer's save and game install by itself, reads the active save slot, watches the save folder without polling, stages and validates an update of the game data, and shows all of it in a bare egui window grown from the debug data viewer. There is no optimizer yet; the window shows what the app knows, not a build. A UX design step (brief, mock-ups, style guide) also runs beside the backend work, so that this and every later window follows an agreed look, not "whatever works".
@@ -82,6 +44,12 @@ Done means:
   - Which character slot is active: the notes disagree. [PLAN.md](../PLAN.md) section 3 says one slot has `Active` = 1, but open question 3 lists the active slot as still open. Step 4 reads the `Active` field and step 11 confirms it on the maintainer's save; if it does not hold, the window shows all slots and says the active one is unknown.
   - Update confidence above 95% (question 9). Step 6 builds the structural half of the gate; the scoring half needs the optimizer.
   - Motion values (question 11): this phase only makes sure the pack reader can serve the deep search in Phase 3 (see [PLAN.md](../PLAN.md) section 6, Phases 3 and 5).
+- **Phase 1 retro items folded in:**
+  - Steps 10 and 11 close the Phase 1 step 6 gaps: "last build on screen" time and save-change recompute time, with Wilds running.
+  - Electron (only 2 valid no-Wilds runs) is **not** re-run; the reason is in section 2. Slint (never tested) is now measured in step 10, together with a plain Win32 window and two egui renderers, to see how much of the 127 MB is the graphics stack.
+  - A RAM check on every PR (step 1 for CI, step 11 for the PC reading).
+  - The budget is re-reviewed against the real Phase 1 numbers (step 12).
+  - GitHub Actions for the app crates (format, clippy, tests) from the first PR (step 1).
 
 ## 3. Design
 
@@ -633,7 +601,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 - **Windows hosted runners cannot show a window.** The CI RAM check is headless by design, so the GL cost is only seen on the PC. Fallback: the PC reading on every app-changing PR.
 - **Dependency licence or size surprise.** Notice: step 1 and each later crate add. Fallback: hand-write the small ones (`vdf.rs` already is).
 - **Personal data leaks into a fixture, cache or screenshot.** Notice: the hygiene test, the review of every PR, and the checklist. Fallback: the PR does not merge; if it was pushed, the coordinator tells the maintainer at once.
-- **Questions for the maintainer** are the decisions listed in the box at the top. New questions go to `docs/open-questions.md` via the coordinator.
+- **Questions for the maintainer** are the decisions listed in the review log (section 9). New questions go to `docs/open-questions.md` via the coordinator.
 
 ## 8. Versioning and changelog
 - The workspace version is `0.2.0-dev` from step 1 and becomes `0.2.0` at close-out (step 13).
@@ -652,7 +620,11 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
   - Step 11: Added the first RAM log from measurements with Wilds running.
   - Step 12: Changed the performance budget.
   - Step 13: Released 0.2.0.
-- The release and the `v0.2.0` tag are the maintainer's action (box at the top).
+**Maintainer's own actions (trial arrangement, sessions cannot push tags or delete branches):**
+- At close-out: create the `v0.2.0` tag and a GitHub pre-release.
+- After each step PR merges: delete its branch if the automatic delete did not (a cloud session gets a 403).
+- Keep `spikes-archive` as it is; it is the only branch that stays besides `main`.
+- During steps 10 and 11: run the benchmark as administrator with Wilds at the Scarlet Forest base camp spot.
 - Each changelog entry ends with "Reviewed and tested by VeroxAUS", and every merged PR gets a "Tested and approved by the maintainer:" comment (project rule, see the template's merge checklist).
 
 ## 9. Review log
@@ -668,6 +640,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 | 2026-10-27 | The maintainer | Motion values: all four routes approved (effective raw meanwhile, deep game-file search early in Phase 3 for all 14 weapons, training-dummy measurement in Phase 5, credited community data labelled unverified as a fallback). Recorded in `PLAN.md` and `closed-questions.md`. |
 | 2026-10-27 | The maintainer | The measured numbers (RAM, cold start, frame time, test count) will be shown publicly, so they must be real: `tools/bench` and the CI RAM check write a machine-readable results file per measurement (`bench/results/*.json`, section 3.3) and published figures are generated from them. Step 10 grows by 0.25 h; totals still about 18 h. |
 | 2026-10-27 | The maintainer | Wants the real frame-time trace kept as a debugging tool: full-resolution samples stay local, a thinned copy goes in the results file, and `tools/bench trace` renders an SVG/HTML trace, optionally against a game-only control. Step 10 grows by another 0.25 h (4 h); the total is about 18.5 h, range 15 to 24 h. |
+| 2026-10-28 | The maintainer | Skips the "How to read this plan" section, so it is dropped from the template, this plan and `tools/plan-page`. Its maintainer actions moved to section 8 and the Phase 1 retro items to section 2. The finished Phase 1 plan is left as a record. |
 
 ## 10. Time log
 | Event | Date and time |

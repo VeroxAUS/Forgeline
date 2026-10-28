@@ -4,11 +4,6 @@ Target version: 0.N.0 · Status: draft / approved / in progress / done
 
 Each phase plan is written just before its phase, using what earlier phases found. The maintainer reviews and approves it before any work starts. Estimates are in threads and test rounds, with rough wall-clock hours per step and in total beside them; real durations go in the time log (section 10).
 
-## How to read this plan
-A short box at the top, filled in last:
-- **Run order:** the stages and which steps run in each (parallel steps share a stage), for example "Stage 1: steps 1 and 2 in parallel. Stage 2: step 3."
-- **Decisions needed from the maintainer:** a list, one item per line.
-
 ## 1. Goal and done
 What this phase delivers, in two or three sentences.
 
@@ -116,9 +111,8 @@ Elapsed from approval to finish: `<hours>`. Steps overlap, so they do not add up
 3. No packed paragraphs: the done checklist, pass/fail criteria, tests and test round checklist are lists, one item per line.
 4. Per-file designs use one fixed block per file (heading, Purpose, Inputs and outputs, Depends on, Notes).
 5. Each tool's "Why" says what problem it solves, what happens without it, and what it touches on the maintainer's PC.
-6. A "How to read this plan" box sits at the top with the run order and the decisions needed.
-7. The final step is a close-out that includes the `README.md` update and banner label (section 4), and the done checklist lists each item.
-8. Check the rendered page against this list before publishing the PR and the Artifact. Republish the same Artifact link when the plan changes.
-9. Publish plan pages only via `tools/plan-page` (see its README), never with a hand-built page, so every republish looks identical.
-10. Before the close-out PR merges, the time log has no placeholders left: every row is filled (merge times to the second where the API gives them), the rows are in time order, "Phase finished" has its time, the "Actual time per step" table has an actual for every step (approximate starts marked, no fact repeated from the time log), and the single elapsed line is written out with its comparison against the section 4 estimate. The coordinator checks this at close-out.
-11. The estimates section gives rough wall-clock hours per step and in total (allowing for parallel stages), alongside threads and test rounds, with a plausible range, the earlier phase it is calibrated on, and the least certain step. The same hours go in the "Actual time per step" table of the time log as the estimated hours.
+6. The final step is a close-out that includes the `README.md` update and banner label (section 4), and the done checklist lists each item.
+7. Check the rendered page against this list before publishing the PR and the Artifact. Republish the same Artifact link when the plan changes.
+8. Publish plan pages only via `tools/plan-page` (see its README), never with a hand-built page, so every republish looks identical.
+9. Before the close-out PR merges, the time log has no placeholders left: every row is filled (merge times to the second where the API gives them), the rows are in time order, "Phase finished" has its time, the "Actual time per step" table has an actual for every step (approximate starts marked, no fact repeated from the time log), and the single elapsed line is written out with its comparison against the section 4 estimate. The coordinator checks this at close-out.
+10. The estimates section gives rough wall-clock hours per step and in total (allowing for parallel stages), alongside threads and test rounds, with a plausible range, the earlier phase it is calibrated on, and the least certain step. The same hours go in the "Actual time per step" table of the time log as the estimated hours.

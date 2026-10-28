@@ -1,4 +1,4 @@
-/* Forgeline plan page: dark-first, one readable column, boxed run-order, tables scroll inside .tw */
+/* Forgeline plan page: dark-first, one readable column, tables scroll inside .tw */
 :root{--bg:#14161a;--fg:#e1e5ea;--mut:#9aa2af;--acc:#e0a458;--line:#2f343d;--code:#1f232a;--box:#1a1f27;color-scheme:dark}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--fg);font:17px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;padding-block:32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -22,8 +22,6 @@ table{border-collapse:collapse;font-size:.92rem;min-width:720px;width:100%}
 th,td{border:1px solid var(--line);padding:.5em .7em;text-align:left;vertical-align:top}
 th{background:var(--code);font-weight:600;white-space:nowrap}
 tbody tr:nth-child(even){background:var(--box)}
-.box{background:var(--box);border:1px solid var(--acc);border-radius:6px;padding:.2em 1.4em 1em;margin:2em 0}
-.box h2{border-top:0;margin-top:.8em;padding-top:0}
 .cb{display:inline-block;width:.8em;height:.8em;border:1.5px solid var(--mut);border-radius:2px;margin-right:.5em;vertical-align:-.05em}
 .cb.on{background:var(--acc);border-color:var(--acc)}
 ul:has(.cb){list-style:none;padding-left:.2em}

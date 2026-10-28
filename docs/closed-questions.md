@@ -160,3 +160,7 @@ All answered 2026-10-27, in the order they were asked.
   >
   > [Keep it off]  [Turn on live data]
 
+
+### Starter kit for new projects (2026-10-28)
+- **Can the starter-kit template repo be private?** Yes (2026-10-28). It is `VeroxAUS/verox-template`; each new project picks its own visibility.
+- **Should the kit's plan template improvements be ported to Forgeline?** Yes (2026-10-28): items 1 to 4 (hours in estimates, banner or phase label check, look check, actual-time-per-step table), merged in PR #25. Standing rule: every generic Forgeline rule or fix is mirrored to `verox-template`, and the `new-verox-project` skill is kept up to date.

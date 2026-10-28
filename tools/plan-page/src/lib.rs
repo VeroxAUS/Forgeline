@@ -7,7 +7,6 @@ use pulldown_cmark::{html, CowStr, Event, HeadingLevel, Options, Parser, Tag, Ta
 use std::collections::HashMap;
 
 const STYLE: &str = include_str!("style.css");
-const BOX_HEADING: &str = "How to read this plan";
 
 fn slug(text: &str) -> String {
     let mut out = String::new();
@@ -25,15 +24,14 @@ fn raw(s: &str) -> Event<'static> {
     Event::Html(CowStr::from(s.to_string()))
 }
 
-/// Renders markdown to the page body: an HTML fragment (headings with ids, boxed
-/// "How to read this plan" section, tables wrapped for scrolling, checkbox task lists).
+/// Renders markdown to the page body: an HTML fragment (headings with ids,
+/// tables wrapped for scrolling, checkbox task lists).
 pub fn render_body(md: &str) -> String {
     let opts = Options::ENABLE_TABLES | Options::ENABLE_TASKLISTS | Options::ENABLE_STRIKETHROUGH;
     let events: Vec<Event> = Parser::new_ext(md, opts).collect();
 
     let mut out: Vec<Event> = Vec::with_capacity(events.len() + 16);
     let mut seen: HashMap<String, usize> = HashMap::new();
-    let mut in_box = false;
     let mut i = 0;
     while i < events.len() {
         match &events[i] {
@@ -43,7 +41,7 @@ pub fn render_body(md: &str) -> String {
                 classes,
                 attrs,
             }) => {
-                // Gather the heading text to build its id and detect the box heading.
+                // Gather the heading text to build its id.
                 let mut text = String::new();
                 let mut j = i + 1;
                 while j < events.len() && !matches!(events[j], Event::End(TagEnd::Heading(_))) {
@@ -51,14 +49,6 @@ pub fn render_body(md: &str) -> String {
                         text.push_str(t);
                     }
                     j += 1;
-                }
-                if in_box && *level == HeadingLevel::H2 {
-                    out.push(raw("</section>\n"));
-                    in_box = false;
-                }
-                if *level == HeadingLevel::H2 && text.trim() == BOX_HEADING {
-                    out.push(raw("<section class=\"box\">"));
-                    in_box = true;
                 }
                 let base = slug(&text);
                 let n = seen.entry(base.clone()).or_insert(0);
@@ -89,9 +79,6 @@ pub fn render_body(md: &str) -> String {
             other => out.push(other.clone()),
         }
         i += 1;
-    }
-    if in_box {
-        out.push(raw("</section>\n"));
     }
 
     let mut body = String::new();
@@ -165,21 +152,6 @@ mod tests {
         let html = render_body("- [ ] open\n- [x] done\n");
         assert!(html.contains("<span class=\"cb\""), "{html}");
         assert!(html.contains("<span class=\"cb on\""), "{html}");
-    }
-
-    #[test]
-    fn how_to_read_section_is_boxed_until_next_h2() {
-        let html = render_body("# T\n\n## How to read this plan\n\ntext\n\n## 1. Goal\n\nmore\n");
-        let open = html.find("<section class=\"box\">").expect("box opens");
-        let close = html.find("</section>").expect("box closes");
-        let goal = html.find("1. Goal").unwrap();
-        assert!(open < close && close < goal, "{html}");
-    }
-
-    #[test]
-    fn box_closes_at_end_of_document() {
-        let html = render_body("## How to read this plan\n\ntext\n");
-        assert!(html.trim_end().ends_with("</section>"), "{html}");
     }
 
     #[test]
