@@ -127,4 +127,4 @@ UI elements land in minor versions with the phase that supplies their data. Each
 
 | Element | Thread | Result |
 |---|---|---|
-| 1. Sample screen | 2026-10-28, started 07:16 UTC, look check passed 07:39 UTC (about 25 min of thread time, against the 4 h estimate) | Built as `tools/ui-sample` (PR #47): variants A to C, then D and its three variants. The maintainer locked in **D3** (see the review log). Reviewed from screenshots in the cloud; not run on the PC. |
+| 1. Sample screen | 2026-10-28, started 07:16 UTC, look check passed 07:39 UTC, merged 07:43:49 UTC (about 25 min of thread time, against the 4 h estimate; cloud, CI green on Ubuntu and Windows) | Built as `tools/ui-sample` (PR #47): variants A to C, then D and its three variants. The maintainer locked in **D3** (see the review log). Reviewed from screenshots in the cloud; not run on the PC. |
