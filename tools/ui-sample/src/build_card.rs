@@ -54,10 +54,12 @@ const HEAD_W: f32 = SKILLS_W;
 const HEAD_TOP: f32 = 40.0;
 const HEAD_BAR_H: f32 = 6.0;
 /// Must-have chips: every chip is this size, on a fixed grid, one row (the rest go behind `+N more`).
-const CHIP_W: f32 = 160.0;
+const CHIP_W: f32 = 116.0;
 const CHIP_H: f32 = 24.0;
-const CHIP_GAP: f32 = 12.0;
+const CHIP_GAP: f32 = 8.0;
 const CHIPS_TOP: f32 = 106.0;
+/// Width of the Add and Edit popups.
+const POPUP_W: f32 = 200.0;
 const CHIP_FILL: Color32 = Color32::from_rgb(20, 20, 23);
 const ACCENT: Color32 = Color32::from_rgb(255, 138, 61);
 const BG: Color32 = Color32::from_rgb(10, 10, 11);
@@ -184,6 +186,19 @@ impl Skill {
             )
         }
     }
+}
+
+/// Hand-written short names for skills too long for a chip (the full name stays in the tooltip and
+/// the popups). Sample entries only: the real table is written against the real skill names once
+/// the extractor has them, and a name with no entry is cut with an ellipsis.
+pub fn short_name(name: &str) -> Option<&'static str> {
+    Some(match name {
+        "Weakness exploit" => "Weak Exploit",
+        "Convert Thunder Resistance" => "Cv Thun Res",
+        "Convert Water Resistance" => "Cv Wat Res",
+        "Stamina surge" => "Stam Surge",
+        _ => return None,
+    })
 }
 
 /// A skill the user insists on: the optimizer treats it as a hard constraint. `reachable` is the
@@ -723,11 +738,7 @@ fn popup(ui: &mut Ui, app: &mut BuildCard) {
         return;
     };
     let mut change: Option<Change> = None;
-    let width = if kind == Popup::More {
-        280.0
-    } else {
-        CHIP_W + 40.0
-    };
+    let width = if kind == Popup::More { 280.0 } else { POPUP_W };
     // Stays inside the window: pushed left when it would run past the right edge.
     let pos_x = anchor
         .left()
@@ -1217,18 +1228,25 @@ fn chips(
         p.rect_filled(r, 6.0, CHIP_FILL);
         p.rect_stroke(r, 6.0, Stroke::new(1.0, stroke), egui::StrokeKind::Inside);
         let level = m.level.to_string();
-        let level_w = 22.0;
+        let level_w = 14.0;
         p.text(
-            Pos2::new(r.right() - 10.0, r.center().y),
+            Pos2::new(r.right() - 8.0, r.center().y),
             Align2::RIGHT_CENTER,
             level,
             mono(11.0),
             if bad { WARN } else { ACCENT },
         );
         p.text(
-            Pos2::new(r.left() + 10.0, r.center().y),
+            Pos2::new(r.left() + 8.0, r.center().y),
             Align2::LEFT_CENTER,
-            fit(p, m.name, CHIP_W - 20.0 - level_w, "inter", 12.0),
+            // The hand-written short name when there is one; an ellipsis only as the fallback.
+            fit(
+                p,
+                short_name(m.name).unwrap_or(m.name),
+                CHIP_W - 16.0 - level_w - 2.0,
+                "inter",
+                12.0,
+            ),
             font("inter", 12.0),
             FG,
         );
@@ -1853,6 +1871,14 @@ mod tests {
     }
 
     #[test]
+    fn short_names_are_shorter_and_only_for_listed_skills() {
+        for name in ["Weakness exploit", "Convert Thunder Resistance"] {
+            assert!(short_name(name).unwrap().len() < name.len());
+        }
+        assert_eq!(short_name("Focus"), None);
+    }
+
+    #[test]
     fn must_haves_mark_skills_so_the_strip_keeps_them() {
         let mut d = BuildData::sample();
         d.must_haves = vec![MustHave::new("Marksman", 2, 3)];
@@ -1877,9 +1903,9 @@ mod tests {
             app.data.must_haves = (0..n).map(|_| MustHave::new("Focus", 2, 3)).collect();
             assert_ne!(h.frame(&mut app, size, 1.0).rgba, base, "{n} chips");
         }
-        // 8 must-haves in a 3 column row: two chips and "+6 more".
+        // 8 must-haves in a 4 column row: three chips and "+5 more".
         h.frame(&mut app, size, 1.0);
-        assert_eq!(chip_cells(&app.hits), 3);
+        assert_eq!(chip_cells(&app.hits), 4);
         app.popup = Some(Popup::More);
         h.frame(&mut app, size, 1.0);
         let with_popup = h.frame(&mut app, size, 1.0).rgba;

@@ -77,6 +77,8 @@ fn main() -> std::io::Result<()> {
     let mut cases: Vec<(&str, Vec<MustHave>)> = vec![
         ("none", vec![]),
         ("three", with(3)),
+        ("four", with(4)),
+        ("five", with(5)),
         ("overflow-7", with(7)),
         (
             "long-names",
@@ -84,6 +86,8 @@ fn main() -> std::io::Result<()> {
                 m("Convert Thunder Resistance", 1, 1),
                 m("Convert Water Resistance", 1, 1),
                 m("Weakness exploit", 5, 5),
+                // No short name listed: cut with an ellipsis.
+                m("Poison Functionality", 1, 1),
             ],
         ),
     ];
@@ -96,7 +100,25 @@ fn main() -> std::io::Result<()> {
         app.data.must_haves = list;
         app.data.sync_must();
         shot(&mut app, &mut h, &format!("case-{name}.png"), base, ppp)?;
+        if matches!(name, "four" | "five") {
+            let wide = Vec2::new(1600.0, 900.0);
+            shot(
+                &mut app,
+                &mut h,
+                &format!("case-{name}-16x9.png"),
+                wide,
+                1.0,
+            )?;
+        }
     }
+    // The "+N more" popup with five must-haves.
+    app.data = sample.clone();
+    app.data.must_haves = with(5);
+    app.data.sync_must();
+    h.frame(&mut app, base, ppp);
+    app.popup = Some(Popup::More);
+    shot(&mut app, &mut h, "popup-more-5.png", base, ppp)?;
+    app.popup = None;
     // Overflow popup and the out-of-reach chip hidden in the overflow.
     app.data = sample.clone();
     app.data.must_haves = with(7);
