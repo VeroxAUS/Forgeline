@@ -185,6 +185,8 @@ fn build_card_shows_icons_once_loaded_and_keeps_the_build_while_recomputing() {
         mode: Default::default(),
         alt: Default::default(),
         unavailable: [None; 6],
+        monster: None,
+        recent: Vec::new(),
     };
     assert_ne!(ready.rgba, h.frame(&mut app, size, 1.0).rgba);
     let big = h.frame(&mut app, Vec2::new(1400.0, 900.0), 1.0);
@@ -353,4 +355,44 @@ fn alternatives_fall_back_and_move_the_headline() {
     d.mode = PlayMode::Multiplayer;
     d.apply_variant();
     assert!(d.toughness.fill > solo);
+}
+
+#[test]
+fn monster_selector_opens_and_the_pick_names_the_build() {
+    use egui::Vec2;
+    use std::{sync::Arc, time::Duration};
+    use ui_sample::build_card::{Alt, BuildCard, BuildData, Headless, Pick, Popup, ROSTER};
+    use ui_sample::icons::SampleSource;
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    assert!(
+        BuildData::sample().unavailable[Alt::Monster as usize].is_none(),
+        "the Monster cell is enabled once the selector exists"
+    );
+    let size = Vec2::new(1000.0, 700.0);
+    h.frame(&mut app, size, 1.0);
+    assert!(app.cache.wait_idle(Duration::from_secs(5)));
+    let closed = h.frame(&mut app, size, 1.0).rgba;
+    app.selector.open(None);
+    app.popup = Some(Popup::Monster);
+    h.frame(&mut app, size, 1.0);
+    let open = h.frame(&mut app, size, 1.0).rgba;
+    assert_ne!(closed, open, "the panel draws");
+    // Searching changes the list; the panel stays inside the window at a small size too.
+    app.selector.query = "guardian".into();
+    h.frame(&mut app, size, 1.0);
+    assert_ne!(open, h.frame(&mut app, size, 1.0).rgba);
+    h.frame(&mut app, Vec2::new(1000.0, 700.0), 3.0);
+    // A pick shows in the breadcrumb (the frame changes) and the build is for that monster.
+    app.popup = None;
+    app.data.monster = Some(Pick::new(ROSTER.len() - 1, false));
+    app.data.alt = Alt::Monster;
+    app.data.apply_variant();
+    h.frame(&mut app, size, 1.0);
+    assert_ne!(closed, h.frame(&mut app, size, 1.0).rgba);
 }

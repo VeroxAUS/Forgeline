@@ -487,3 +487,20 @@ Question: how many distinct skills, and how many set and group skills, does a re
 - Mechanics, from the [Switchblade skill system guide](https://www.switchbladegaming.com/monster-hunter-wilds/skill-system-guide/): set bonus skills activate at 2 and 4 pieces of the same armour set; group skills activate with any 3 pieces that share the group tag; both can be active at once; the largest decoration slot is size 3. The guide says nothing about different effects per tier and gives no numeric cap on how many set or group skills can be active. [Mobalytics on Gogma Artian](https://mobalytics.gg/mhw/guides/gogma-artian-weapons-explained): a Gogma Artian weapon adds one set bonus skill and one group skill, chosen at random and re-rollable.
 - **Not verified:** the real maximum number of active set and group skills; whether a weapon's set or group skill counts as a piece toward the thresholds; what each tier's effect text is; whether the game files hold tier effects.
 - Effect on the strip: at the 1000 by 700 design size the strip has about 506 points of height. Full tier lines for 3 or 4 set and group skills leave room for only about 11 to 14 normal skills, so a 22-skill build loses 4 to 5. See the review page for the measured table and the fix (automatic collapse of set and group rows, and a second strip column in wider windows).
+
+## Monster roster for the selector (2026-10-28)
+
+Question: which large monsters does Wilds have, with variants and the longest names, so the monster selector (UX element 9) is checked against a real-sized list? Names come from public community pages. They are **not** checked against the game files, and no weak elements are recorded (unknown until the extractor reads them).
+
+| Source | What it gave |
+|---|---|
+| [GamesRadar roster](https://www.gamesradar.com/games/monster-hunter/monster-list-roster-all/) | 30 monsters: 29 at launch plus Mizutsune (Title Update 1); includes the five Guardian ones |
+| [Game8, new monsters](https://game8.co/games/Monster-Hunter-Wilds/archives/481698) | Adds Lagiacrus, Seregios, Gogmazios and the five Arch-Tempered ones; says 40 named large monsters |
+| [Monster Hunter Wiki, MHWilds/Monsters](https://monsterhunterwiki.org/wiki/MHWilds/Monsters) | Arch-Tempered Rey Dau, Uth Duna, Nu Udra, Jin Dahaad (Title Updates 1 to 4) and Arch-Tempered Arkveld; every large monster except Zoh Shia, Guardian Arkveld and Gogmazios can be Tempered; Nerscylla Clone is a Title Update 3 crossover version |
+| [Wilds Builder, Title Update 4](https://wildsbuilder.com/blog/title-update-4-guide/) | The five Arch-Tempered quests, 18 February 2026 |
+| [Monster Hunter Fandom, Wilds](https://monsterhunter.fandom.com/wiki/Monster_Hunter_Wilds) | Mizutsune and Lagiacrus came in Title Updates; Tempered and Arch-Tempered exist |
+
+- **Roster used in `tools/ui-sample`:** 28 monsters (Ajarakan, Arkveld, Balahara, Blangonga, Chatacabra, Congalala, Doshaguma, Gogmazios, Gore Magala, Gravios, Gypceros, Hirabami, Jin Dahaad, Lagiacrus, Lala Barina, Mizutsune, Nerscylla, Nu Udra, Quematrice, Rathalos, Rathian, Rey Dau, Rompopolo, Seregios, Uth Duna, Xu Wu, Yian Kut-Ku, Zoh Shia), 5 Guardian (Arkveld, Doshaguma, Ebony Odogaron, Fulgur Anjanath, Rathalos) and 5 Arch-Tempered (Arkveld, Jin Dahaad, Nu Udra, Rey Dau, Uth Duna): **38 entries**. Tempered is a switch, not 28 more entries.
+- **Longest names:** `Guardian Fulgur Anjanath` (24 characters) and `Arch-Tempered Jin Dahaad` (24); with the switch on, `Tempered Guardian Fulgur Anjanath` (33) is the longest label.
+- **Not verified:** the real count and spelling in the game files; the sources disagree on late additions (one page also lists Lao-Shan Lung, Kushala Daora and Omega Planetes, which no other page confirms, so they are left out); whether Nerscylla Clone and any other crossover versions are separate monsters; weak elements (left unknown, never filled from memory).
+- Effect on the selector: 38 rows do not fit without scrolling, so it has a search field, groups and a short recent list. A row keeps five reserved cells for weak elements so the food plan's elemental matchup can fill them later without moving anything.
