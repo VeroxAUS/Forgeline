@@ -80,4 +80,4 @@ The window repaints only on input. The rail, the Solo and Multiplayer switch, th
 
 Screenshots are in [docs/ux/samples/skills/](../../docs/ux/samples/skills/). `build_shots` writes them too (`skills-empty.png` along with the build set).
 
-Long lists (endgame builds): the strip switches to one-line rows with the dots in a fixed column, holds about 22 skills at the base size (more in a larger window), and beyond that shows `+N more`. `sample_endgame_skills()` is a 22-skill sample including set and group skill levels.
+Long lists (endgame builds): normal skills switch to one-line rows with the dots in a fixed column, and what still does not fit is left out, least important first (must-haves, set and group skills never; optimizer weight when there is one, else lowest level), with a clickable `+N more on Why` line. Set and group skills are pinned at the top with a `SET` or `GROUP` tag and progress in words (`SetStyle::Text`, default) or numbered threshold circles (`SetStyle::Pips`). `sample_endgame_skills()` is a 22-skill sample.

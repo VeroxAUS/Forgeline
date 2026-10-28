@@ -248,14 +248,8 @@ fn skills_strip_draws_in_a_side_strip_or_under_the_card() {
     );
 
     // A window too narrow for the side strip puts it under the card and still draws.
-    app.data.skills = vec![
-        Skill {
-            name: "A skill with a name far too long to fit its column",
-            level: 2,
-            max: 7
-        };
-        3
-    ];
+    app.data.skills =
+        vec![Skill::normal("A skill with a name far too long to fit its column", 2, 7); 3];
     let narrow = h.frame(&mut app, Vec2::new(800.0, 900.0), 1.0);
     assert_eq!((narrow.width, narrow.height), (800, 900));
 }

@@ -41,20 +41,38 @@ fn main() -> std::io::Result<()> {
     // Element 5: the same strip with no skills, for the empty state.
     let skills = std::mem::take(&mut app.data.skills);
     save("skills-empty.png", h.frame(&mut app, size, ppp))?;
-    // Endgame: a long list, at the base size and a larger one.
-    app.data.skills = ui_sample::build_card::sample_endgame_skills();
+    // Endgame: a long list, at the base size and a larger one, with both set and group looks.
+    use ui_sample::build_card::{sample_endgame_skills, SetStyle, Skill};
+    app.data.skills = sample_endgame_skills();
     save("skills-endgame.png", h.frame(&mut app, size, ppp))?;
     save(
         "skills-endgame-large.png",
         h.frame(&mut app, Vec2::new(1400.0, 900.0), ppp),
     )?;
-    app.data.skills.truncate(14);
-    save("skills-14.png", h.frame(&mut app, size, ppp))?;
-    app.data.skills = ui_sample::build_card::sample_endgame_skills();
-    app.data
-        .skills
-        .extend(app.data.skills.clone().into_iter().take(4));
+    app.set_style = SetStyle::Pips;
+    save("skills-endgame-pips.png", h.frame(&mut app, size, ppp))?;
+    app.set_style = SetStyle::Text;
+    // More than fits: four low-weight extras, so the cut and the "+N more on Why" line show.
+    for (name, level, max) in [
+        ("Wide range", 1, 5),
+        ("Free meal", 1, 3),
+        ("Botanist", 1, 4),
+        ("Speed eating", 2, 3),
+    ] {
+        app.data.skills.push(Skill {
+            weight: Some(3),
+            ..Skill::normal(name, level, max)
+        });
+    }
     save("skills-26.png", h.frame(&mut app, size, ppp))?;
+    app.data.skills = sample_endgame_skills();
+    app.data.skills.truncate(4 + 10);
+    save("skills-14.png", h.frame(&mut app, size, ppp))?;
+    // The short default list in both set and group looks.
+    app.data.skills = skills.clone();
+    app.set_style = SetStyle::Pips;
+    save("skills-8-pips.png", h.frame(&mut app, size, ppp))?;
+    app.set_style = SetStyle::Text;
     app.data.skills = skills;
     save(
         "build-large.png",
