@@ -504,3 +504,13 @@ Question: which large monsters does Wilds have, with variants and the longest na
 - **Longest names:** `Guardian Fulgur Anjanath` (24 characters) and `Arch-Tempered Jin Dahaad` (24); with the switch on, `Tempered Guardian Fulgur Anjanath` (33) is the longest label.
 - **Not verified:** the real count and spelling in the game files; the sources disagree on late additions (one page also lists Lao-Shan Lung, Kushala Daora and Omega Planetes, which no other page confirms, so they are left out); whether Nerscylla Clone and any other crossover versions are separate monsters; weak elements (left unknown, never filled from memory).
 - Effect on the selector: 38 rows do not fit without scrolling, so it has a search field, groups and a short recent list. A row keeps five reserved cells for weak elements so the food plan's elemental matchup can fill them later without moving anything.
+
+## Real material names for the Shopping list (2026-10-28)
+
+Question: what do real Wilds crafting materials look like (length, repeats across pieces), so the Shopping list (UX element 10) is checked against realistic names and counts? Names from a public community page, **not** checked against the game files.
+
+- [Icy Veins, Guardian Fulgur Alpha armour set](https://icy-veins.com/monster-hunter-wilds/guardian-fulgur-alpha-armor-set) lists one combined cost for the five pieces: Guardian Fulgur Certificate S ×4, Guardian Fulgur Scale + ×14, Guardian Fulgur Fang + ×9, Guardian Fulgur Gem ×1, Guardian Fulgur Pelt + ×11, Guardian Fulgur Tail ×2, Guardian Blood + ×2, Guardian Fulgur Nosebone ×8, Thunder Sac ×3, Wyvern Gem ×1, Guardian Pelt + ×3 (and 25,000 zenny). It gives no per-piece split.
+- [Gamer Guides, equipment materials](https://www.gamerguides.com/monster-hunter-wilds/guide/items/equipment-materials) names Guardian Scale and Guardian Scale +, and shows armour such as the Guardian Rathalos Mail using them.
+- **Longest real name found:** `Guardian Fulgur Certificate S` (29 characters). Items repeat across pieces (the same scale, fang and pelt for every piece of a set), so a per-monster list adds counts up.
+- **Used in `tools/ui-sample`:** these names, spread over pieces and monsters by hand, plus one invented 53 character stress-test name. Which monster drops which item in the sample is illustrative, not from a drop table.
+- **Not verified:** per-piece costs, drop sources, whether materials can come from more than one monster, whether the game files hold per-item farm places (open question 12). The Shopping farm column therefore shows only when data exists, and the sample has none.

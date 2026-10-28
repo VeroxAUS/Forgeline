@@ -113,3 +113,13 @@ cargo run --release --bin monster_shots -- <out dir> 2                # screensh
 ```
 
 Screenshots are in [docs/ux/samples/monster/](../../docs/ux/samples/monster/).
+
+## Element 10: the Shopping list
+
+`src/build_card/shopping.rs`: the Shopping section, three views (`Monster`, `Piece`, `Upgrade`) on one 36 point row grid, driven by the save's counts so there is nothing to tick off, with an optional piece filter. A farm place column exists but draws only when some row has a confirmed farm place (open question 12); the sample has none. It also owns the `Missing N` word on the Build rows: hover lists the missing items (item, count, monster), click opens Shopping by piece filtered to that piece. Item names are real Wilds materials from a public page (docs/research.md); which monster drops what in the sample is illustrative.
+
+```
+cargo run --release --bin shopping_shots -- <out dir> 2               # screenshots, no GPU
+```
+
+Screenshots are in [docs/ux/samples/shopping/](../../docs/ux/samples/shopping/).
