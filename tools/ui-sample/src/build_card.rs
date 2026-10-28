@@ -17,9 +17,11 @@ use egui::{Align2, Color32, Context, Painter, Pos2, Rect, Stroke, Ui, Vec2};
 use std::sync::Arc;
 
 mod monster;
+pub mod shopping;
 pub use monster::{
     items as monster_items, remember, Element, Group, Monster, Pick, Selector, ROSTER,
 };
+pub use shopping::{Chain, Need, ShoppingState, Sort as ShopSort, View as ShopView};
 
 const MARGIN: f32 = 28.0;
 const ROW_H: f32 = 48.0;
@@ -468,6 +470,11 @@ pub struct BuildData {
     pub monster: Option<Pick>,
     /// The last few picks, newest first (the selector lists them on top).
     pub recent: Vec<Pick>,
+    /// The items the pieces still need (the Shopping list); a piece's `missing` is how many of
+    /// its items are not fully owned.
+    pub needs: Vec<Need>,
+    /// Upgrade chains of pieces that have one (the weapon), for the Shopping upgrade view.
+    pub chains: Vec<Chain>,
 }
 
 impl BuildData {
@@ -487,6 +494,41 @@ impl BuildData {
     /// How many pieces still need parts.
     pub fn pieces_missing(&self) -> usize {
         self.all().filter(|p| p.missing > 0).count()
+    }
+
+    /// The piece in slot `i`: 0 weapon, 1 to 5 armour, 6 charm.
+    pub fn piece_at(&self, i: usize) -> Option<&Piece> {
+        match i {
+            0 => self.weapon.as_ref(),
+            1..=5 => self.armour[i - 1].as_ref(),
+            6 => self.charm.as_ref(),
+            _ => None,
+        }
+    }
+
+    fn piece_at_mut(&mut self, i: usize) -> Option<&mut Piece> {
+        match i {
+            0 => self.weapon.as_mut(),
+            1..=5 => self.armour[i - 1].as_mut(),
+            6 => self.charm.as_mut(),
+            _ => None,
+        }
+    }
+
+    /// Replaces the shopping needs and keeps each piece's `Missing N` in step with them.
+    pub fn set_needs(&mut self, needs: Vec<Need>, chains: Vec<Chain>) {
+        self.needs = needs;
+        self.chains = chains;
+        for i in 0..shopping::PIECES {
+            let n = self
+                .needs
+                .iter()
+                .filter(|n| n.piece == i && n.missing() > 0)
+                .count() as u8;
+            if let Some(p) = self.piece_at_mut(i) {
+                p.missing = n;
+            }
+        }
     }
 
     fn all(&self) -> impl Iterator<Item = &Piece> {
@@ -600,6 +642,8 @@ impl BuildData {
             ],
             monster: None,
             recent: Vec::new(),
+            needs: shopping::sample::light(),
+            chains: Vec::new(),
         };
         d.sync_must();
         d
@@ -738,6 +782,14 @@ enum Hit {
     Alt(Alt),
     /// The monster named in the breadcrumb (its full name is in the tooltip).
     Crumb(Pick),
+    /// `Missing N` on a Build row (index of the piece): lists the missing items, opens Shopping.
+    Missing(usize),
+    /// One half of the Shopping view switch.
+    ShopView(ShopView),
+    /// One half of the Shopping by-monster sort toggle.
+    ShopSort(ShopSort),
+    /// The Shopping piece-filter chip (clears the filter).
+    ShopFilter,
 }
 
 /// The build card screen: shell state, the card's data and the icon cache.
@@ -751,6 +803,10 @@ pub struct BuildCard {
     pub popup: Option<Popup>,
     /// The monster selector's search text, cursor and Tempered switch.
     pub selector: Selector,
+    /// The Shopping screen's view and piece filter.
+    pub shopping: ShoppingState,
+    /// Review only: draws the `Missing N` hover for this piece without a pointer.
+    pub demo_missing_tip: Option<usize>,
     /// A recompute started by a chip change ends at this time. A real recompute would run on a
     /// background thread and report back; the sample only waits.
     recompute_until: Option<std::time::Instant>,
@@ -773,6 +829,8 @@ impl BuildCard {
             hits: Vec::new(),
             popup: None,
             selector: Selector::default(),
+            shopping: ShoppingState::default(),
+            demo_missing_tip: None,
             recompute_until: None,
         }
     }
@@ -808,21 +866,34 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
     let data = &app.data;
     let cache = &mut app.cache;
     let hits = &mut app.hits;
+    let shopping = &app.shopping;
     hits.clear();
+    let mut content_rect = Rect::NOTHING;
     shell::show_with(ui, &mut app.shell, &mut |p, content, shell| {
+        content_rect = content;
         shell::show_content(p, content, shell);
-        if shell.section == shell::Section::Build {
-            card(p, content, data, cache, hits, &shell.status);
-        } else {
-            placeholder(p, content);
+        match shell.section {
+            shell::Section::Build => card(p, content, data, cache, hits, &shell.status),
+            shell::Section::Shopping => shopping::header(p, hits, content, data, shopping),
+            _ => placeholder(p, content),
         }
     });
+    if app.shell.section == shell::Section::Shopping {
+        shopping::list(ui, content_rect, &app.data, &app.shopping, &mut app.cache);
+    }
     let hits = std::mem::take(&mut app.hits);
     for (i, (rect, hit)) in hits.iter().enumerate() {
         let sense = match hit {
-            Hit::Why | Hit::Chip(_) | Hit::Add | Hit::More | Hit::Mode(_) | Hit::Alt(_) => {
-                egui::Sense::click()
-            }
+            Hit::Why
+            | Hit::Chip(_)
+            | Hit::Add
+            | Hit::More
+            | Hit::Mode(_)
+            | Hit::Alt(_)
+            | Hit::Missing(_)
+            | Hit::ShopView(_)
+            | Hit::ShopSort(_)
+            | Hit::ShopFilter => egui::Sense::click(),
             _ => egui::Sense::hover(),
         };
         let tip = ui.interact(*rect, ui.scope_id().with(("hit", i)), sense);
@@ -870,6 +941,40 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
             Hit::Crumb(pick) => {
                 tip.on_hover_text(pick.label());
             }
+            Hit::Missing(i) => {
+                if tip.clicked() {
+                    app.shopping.show_piece(*i);
+                    app.shell.section = shell::Section::Shopping;
+                }
+                let data = &app.data;
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_ui(|ui| shopping::missing_tip(ui, data, *i));
+            }
+            Hit::ShopView(v) => {
+                if tip.clicked() {
+                    app.shopping.view = *v;
+                }
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text(v.tip());
+            }
+            Hit::ShopSort(o) => {
+                if tip.clicked() {
+                    app.shopping.sort = *o;
+                }
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text(o.tip());
+            }
+            Hit::ShopFilter => {
+                if tip.clicked() {
+                    app.shopping.filter = None;
+                }
+                let name = match app.shopping.filter {
+                    Some(i) => app.data.piece_at(i).map_or("", |p| p.name),
+                    None => "",
+                };
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text(format!("Only items for {name}. Click to show all pieces."));
+            }
             Hit::Alt(Alt::Monster) if app.data.unavailable[Alt::Monster.idx()].is_none() => {
                 // The Monster cell always opens the selector: picking is the only way to choose it.
                 if tip.clicked() {
@@ -911,6 +1016,26 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
         }
     }
     app.hits = hits;
+    if let Some(i) = app.demo_missing_tip {
+        let anchor = app.hits.iter().find_map(|(r, h)| match h {
+            Hit::Missing(j) if *j == i => Some(*r),
+            _ => None,
+        });
+        if let Some(a) = anchor {
+            let ctx = ui.ctx().clone();
+            let data = &app.data;
+            egui::Area::new(ui.scope_id().with("demo-missing-tip"))
+                .order(egui::Order::Tooltip)
+                .fade_in(false)
+                .constrain(true)
+                .fixed_pos(Pos2::new(a.left(), a.bottom() + 8.0))
+                .show(&ctx, |ui| {
+                    egui::Frame::popup(ui.style()).show(ui, |ui| {
+                        shopping::missing_tip(ui, data, i);
+                    });
+                });
+        }
+    }
     popup(ui, app);
 }
 
@@ -2211,6 +2336,15 @@ fn row(
         font("inter-medium", 12.0),
         col,
     );
+    if piece.missing > 0 {
+        hits.push((
+            Rect::from_min_size(
+                Pos2::new(right - STATUS_W, cy - 11.0),
+                Vec2::new(STATUS_W, 22.0),
+            ),
+            Hit::Missing(n - 1),
+        ));
+    }
     let ppp = p.ctx().pixels_per_point();
     let snap = |v: f32| (v * ppp).round() / ppp;
     let slots_left = right - STATUS_W - 28.0 - SLOT_COLS as f32 * SLOT_PITCH + SLOT_GAP;

@@ -187,6 +187,8 @@ fn build_card_shows_icons_once_loaded_and_keeps_the_build_while_recomputing() {
         unavailable: [None; 6],
         monster: None,
         recent: Vec::new(),
+        needs: Vec::new(),
+        chains: Vec::new(),
     };
     assert_ne!(ready.rgba, h.frame(&mut app, size, 1.0).rgba);
     let big = h.frame(&mut app, Vec2::new(1400.0, 900.0), 1.0);
@@ -395,4 +397,56 @@ fn monster_selector_opens_and_the_pick_names_the_build() {
     app.data.apply_variant();
     h.frame(&mut app, size, 1.0);
     assert_ne!(closed, h.frame(&mut app, size, 1.0).rgba);
+}
+
+#[test]
+fn shopping_views_filter_and_missing_click_through() {
+    use egui::Vec2;
+    use std::sync::Arc;
+    use std::time::Duration;
+    use ui_sample::build_card::shopping::sample;
+    use ui_sample::build_card::{BuildCard, Headless, ShopView};
+    use ui_sample::icons::SampleSource;
+    use ui_sample::shell::Section;
+
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    app.data
+        .set_needs(sample::endgame(), vec![(0, sample::CHAIN)]);
+    let size = Vec2::new(1000.0, 700.0);
+    h.frame(&mut app, size, 1.0);
+    assert!(app.cache.wait_idle(Duration::from_secs(5)));
+    let build = h.frame(&mut app, size, 1.0).rgba;
+    app.shell.section = Section::Shopping;
+    let mut frames = Vec::new();
+    for view in ShopView::ALL {
+        app.shopping.view = view;
+        h.frame(&mut app, size, 1.0);
+        frames.push(h.frame(&mut app, size, 1.0).rgba);
+    }
+    // The three views and the Build screen all look different.
+    for i in 0..frames.len() {
+        assert_ne!(build, frames[i]);
+        for j in i + 1..frames.len() {
+            assert_ne!(frames[i], frames[j], "{i} vs {j}");
+        }
+    }
+    // The click on `Missing N` opens Shopping by piece, filtered to that piece.
+    app.shopping.show_piece(2);
+    app.shell.section = Section::Shopping;
+    assert_eq!(app.shopping.view, ShopView::Piece);
+    assert_eq!(app.shopping.filter, Some(2));
+    h.frame(&mut app, size, 1.0);
+    let filtered = h.frame(&mut app, size, 1.0).rgba;
+    assert_ne!(filtered, frames[1]);
+    // Nothing missing: the list says so, at the largest scale too.
+    app.data.set_needs(Vec::new(), Vec::new());
+    app.shopping.filter = None;
+    h.frame(&mut app, Vec2::new(3000.0, 2100.0), 1.0);
+    h.frame(&mut app, size, 1.0);
 }
