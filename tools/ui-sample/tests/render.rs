@@ -175,6 +175,7 @@ fn build_card_shows_icons_once_loaded_and_keeps_the_build_while_recomputing() {
         weapon: None,
         armour: Default::default(),
         charm: None,
+        skills: Vec::new(),
     };
     assert_ne!(ready.rgba, h.frame(&mut app, size, 1.0).rgba);
     let big = h.frame(&mut app, Vec2::new(1400.0, 900.0), 1.0);
@@ -215,4 +216,46 @@ fn larger_window_scales_the_content() {
     assert_eq!(h.ctx().zoom_factor(), 1.0);
     h.frame(&mut app, Vec2::new(2000.0, 1400.0), 1.0);
     assert!((h.ctx().zoom_factor() - 2.0).abs() < 0.01);
+}
+
+#[test]
+fn skills_strip_draws_in_a_side_strip_or_under_the_card() {
+    use egui::Vec2;
+    use std::{sync::Arc, time::Duration};
+    use ui_sample::build_card::{BuildCard, Headless, Skill};
+    use ui_sample::icons::SampleSource;
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    h.frame(&mut app, Vec2::new(1000.0, 700.0), 1.0);
+    assert!(app.cache.wait_idle(Duration::from_secs(5)));
+    let with = h.frame(&mut app, Vec2::new(1000.0, 700.0), 1.0);
+
+    // Changing one skill's level changes the picture; a build with none shows the empty line.
+    app.data.skills[0].level -= 1;
+    assert_ne!(
+        with.rgba,
+        h.frame(&mut app, Vec2::new(1000.0, 700.0), 1.0).rgba
+    );
+    app.data.skills.clear();
+    assert_ne!(
+        with.rgba,
+        h.frame(&mut app, Vec2::new(1000.0, 700.0), 1.0).rgba
+    );
+
+    // A window too narrow for the side strip puts it under the card and still draws.
+    app.data.skills = vec![
+        Skill {
+            name: "A skill with a name far too long to fit its column",
+            level: 2,
+            max: 7
+        };
+        3
+    ];
+    let narrow = h.frame(&mut app, Vec2::new(800.0, 900.0), 1.0);
+    assert_eq!((narrow.width, narrow.height), (800, 900));
 }

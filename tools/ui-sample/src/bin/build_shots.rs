@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-//! Renders the element 4 build card without a window: `build_shots [out dir] [pixels per point]`.
+//! Renders the element 4 and 5 build card and skills strip without a window: `build_shots [out dir] [pixels per point]`.
 //! Writes the first frame (icons still loading), the ready frame, the recomputing state and a
 //! larger window.
 
@@ -38,6 +38,10 @@ fn main() -> std::io::Result<()> {
     app.shell.status = Status::Recomputing;
     save("build-recomputing.png", h.frame(&mut app, size, ppp))?;
     app.shell.status = Status::Synced;
+    // Element 5: the same strip with no skills, for the empty state.
+    let skills = std::mem::take(&mut app.data.skills);
+    save("skills-empty.png", h.frame(&mut app, size, ppp))?;
+    app.data.skills = skills;
     save(
         "build-large.png",
         h.frame(&mut app, Vec2::new(1400.0, 900.0), ppp),

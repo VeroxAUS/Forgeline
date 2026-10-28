@@ -73,3 +73,9 @@ The window repaints only on input. The rail, the Solo and Multiplayer switch, th
 
 - Fonts are Inter and JetBrains Mono (OFL), about 1.7 MB as bundled. The real app would subset them; that is a later element.
 - It is excluded from the workspace and has its own CI job, so it adds nothing to the app binary or its RAM check.
+
+## Element 5: the skills strip
+
+`src/build_card.rs` (`skills`): the build's skill totals as a side strip level with the weapon label. Each skill is a name, its level in mono at the right, and one round dot per possible level (accent when earned, outlined when not). All dots share one outer size and a fixed pitch, snapped to whole pixels, so they line up down the strip. Hover says `Name, level N of M`. In a window too narrow for the side strip it drops under the charm row; with no skills it shows a faint line. Sample data only, same label as the card.
+
+Screenshots are in [docs/ux/samples/skills/](../../docs/ux/samples/skills/). `build_shots` writes them too (`skills-empty.png` along with the build set).

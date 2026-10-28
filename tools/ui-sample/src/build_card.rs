@@ -2,9 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-//! Element 4 of docs/ux/design-plan.md: the build card, the weapon and armour slots with their
-//! icons, drawn in the D3 style (docs/ux/style-guide.md) inside the element 2 shell and fed by the
-//! element 3 icon cache.
+//! Elements 4 and 5 of docs/ux/design-plan.md: the build card, the weapon and armour slots with
+//! their icons, and the skills strip beside it, drawn in the D3 style (docs/ux/style-guide.md)
+//! inside the element 2 shell and fed by the element 3 icon cache.
 //!
 //! Everything shown is sample data with invented names, labelled as such. The real build arrives
 //! with the optimizer (Phase 4). Rows lay out from the width they get, so the card resizes. Nothing
@@ -28,6 +28,19 @@ const SLOT_PITCH: f32 = SLOT_R * 2.0 + SLOT_GAP;
 const SLOT_COLS: usize = 3;
 /// Width of the status column (`Missing 2` fits).
 const STATUS_W: f32 = 72.0;
+/// Skills strip: every dot has this outer radius (filled and outlined alike) and sits on a fixed
+/// pitch, so dots of different skills line up in columns.
+const DOT_R: f32 = 4.0;
+const DOT_PITCH: f32 = 13.0;
+const SKILL_ROW: f32 = 38.0;
+/// Width of the side strip, and the gap between it and the equipment rows.
+const SKILLS_W: f32 = 232.0;
+const SKILLS_GAP: f32 = 32.0;
+/// The equipment rows keep at least this width; below it the strip drops under the card.
+const EQUIP_MIN_W: f32 = 480.0;
+/// Each strip column is at least this wide (name, dots and level number).
+const SKILL_COL_MIN_W: f32 = 200.0;
+const ACCENT: Color32 = Color32::from_rgb(255, 138, 61);
 const BG: Color32 = Color32::from_rgb(10, 10, 11);
 
 const FG: Color32 = Color32::from_rgb(236, 236, 238);
@@ -58,12 +71,22 @@ pub struct Piece {
     pub missing: u8,
 }
 
+/// One skill in the build: its total level and the most it can reach.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Skill {
+    pub name: &'static str,
+    pub level: u8,
+    pub max: u8,
+}
+
 /// The card's data: the weapon, up to five armour pieces and the charm. `None` is an empty slot.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct BuildData {
     pub weapon: Option<Piece>,
     pub armour: [Option<Piece>; 5],
     pub charm: Option<Piece>,
+    /// Skill totals for the whole build, in the order to show them.
+    pub skills: Vec<Skill>,
 }
 
 impl BuildData {
@@ -135,8 +158,27 @@ impl BuildData {
                 }),
             ],
             charm: None,
+            skills: [
+                ("Weakness exploit", 4, 5),
+                ("Critical eye", 3, 5),
+                ("Sharpshot", 2, 3),
+                ("Marksman", 2, 3),
+                ("Ammo saver", 3, 3),
+                ("Stamina surge", 2, 3),
+                ("Evade window", 1, 5),
+                ("Rapid fire", 1, 1),
+            ]
+            .map(|(name, level, max)| Skill { name, level, max })
+            .to_vec(),
         }
     }
+}
+
+/// What a hover rectangle explains.
+#[derive(Clone, Copy)]
+enum Hit {
+    Slot(u8),
+    Skill(Skill),
 }
 
 /// The build card screen: shell state, the card's data and the icon cache.
@@ -145,7 +187,7 @@ pub struct BuildCard {
     pub data: BuildData,
     pub cache: IconCache,
     /// Slot circles drawn last frame, for the hover tooltip.
-    hits: Vec<(Rect, u8)>,
+    hits: Vec<(Rect, Hit)>,
 }
 
 impl BuildCard {
@@ -174,9 +216,14 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
             placeholder(p, content);
         }
     });
-    for (i, (rect, level)) in app.hits.iter().enumerate() {
-        ui.interact(*rect, ui.scope_id().with(("slot", i)), egui::Sense::hover())
-            .on_hover_text(format!("Decoration slot, level {level}"));
+    for (i, (rect, hit)) in app.hits.iter().enumerate() {
+        let tip = ui.interact(*rect, ui.scope_id().with(("hit", i)), egui::Sense::hover());
+        match hit {
+            Hit::Slot(level) => tip.on_hover_text(format!("Decoration slot, level {level}")),
+            Hit::Skill(k) => {
+                tip.on_hover_text(format!("{}, level {} of {}", k.name, k.level, k.max))
+            }
+        };
     }
 }
 
@@ -199,7 +246,7 @@ fn card(
     content: Rect,
     data: &BuildData,
     cache: &mut IconCache,
-    hits: &mut Vec<(Rect, u8)>,
+    hits: &mut Vec<(Rect, Hit)>,
     status: &Status,
 ) {
     let left = content.min.x + MARGIN;
@@ -228,7 +275,20 @@ fn card(
         DIM,
     );
 
-    let mut y = content.min.y + 120.0;
+    // Wide enough: the skills sit in a side strip level with the weapon label. Otherwise they go
+    // under the charm, full width.
+    let side = right - left - SKILLS_W - SKILLS_GAP >= EQUIP_MIN_W;
+    let top = content.min.y + 120.0;
+    let eq_right = if side {
+        right - SKILLS_W - SKILLS_GAP
+    } else {
+        right
+    };
+    if side {
+        skills(p, hits, right - SKILLS_W, right, top, &data.skills);
+    }
+    let right = eq_right;
+    let mut y = top;
     y = section(p, left, right, y, "WEAPON");
     y = row(
         p,
@@ -261,7 +321,7 @@ fn card(
     }
     y += 14.0;
     y = section(p, left, right, y, "CHARM");
-    row(
+    y = row(
         p,
         cache,
         hits,
@@ -272,6 +332,85 @@ fn card(
         data.charm.as_ref(),
         "No charm",
     );
+    if !side {
+        skills(p, hits, left, right, y + 14.0, &data.skills);
+    }
+}
+
+/// The skills strip: a section label with its hairline, then one block per skill (name, level
+/// number at the right, one dot per possible level underneath). Columns follow the width; dots
+/// and numbers sit on the same x in every block and are snapped to whole pixels.
+fn skills(p: &Painter, hits: &mut Vec<(Rect, Hit)>, left: f32, right: f32, y: f32, list: &[Skill]) {
+    let mut y = section(p, left, right, y, "SKILLS");
+    if list.is_empty() {
+        p.text(
+            Pos2::new(left, y + 12.0),
+            Align2::LEFT_CENTER,
+            "No skills yet",
+            font("inter", 13.0),
+            FAINT,
+        );
+        return;
+    }
+    let ppp = p.ctx().pixels_per_point();
+    let snap = |v: f32| (v * ppp).round() / ppp;
+    let cols = (((right - left) / SKILL_COL_MIN_W).floor() as usize).max(1);
+    let col_w = (right - left - (cols - 1) as f32 * 24.0) / cols as f32;
+    y += 6.0;
+    for (i, k) in list.iter().enumerate() {
+        let x = left + (i % cols) as f32 * (col_w + 24.0);
+        let ry = y + (i / cols) as f32 * SKILL_ROW;
+        // The level number takes the right edge; the name gives way to it with an ellipsis.
+        p.text(
+            Pos2::new(x + col_w, ry + 9.0),
+            Align2::RIGHT_CENTER,
+            k.level.to_string(),
+            mono(11.5),
+            DIM,
+        );
+        p.text(
+            Pos2::new(x, ry + 9.0),
+            Align2::LEFT_CENTER,
+            fit(p, k.name, col_w - 24.0),
+            font("inter", 12.5),
+            FG,
+        );
+        for d in 0..k.max {
+            let c = Pos2::new(snap(x + DOT_R + f32::from(d) * DOT_PITCH), snap(ry + 26.0));
+            if d < k.level {
+                p.circle_filled(c, DOT_R, ACCENT);
+            } else {
+                // Same outer diameter as the filled dot: the outline sits inside the radius.
+                p.circle_stroke(c, DOT_R - 0.5, Stroke::new(1.0, FAINT));
+            }
+        }
+        hits.push((
+            Rect::from_min_size(Pos2::new(x, ry), Vec2::new(col_w, SKILL_ROW - 4.0)),
+            Hit::Skill(*k),
+        ));
+    }
+}
+
+/// `text` shortened with an ellipsis until it fits `width` (Inter 12.5).
+fn fit(p: &Painter, text: &str, width: f32) -> String {
+    let fits = |t: &str| {
+        p.layout_no_wrap(t.to_string(), font("inter", 12.5), FG)
+            .size()
+            .x
+            <= width
+    };
+    if fits(text) {
+        return text.to_string();
+    }
+    let mut t: String = text.to_string();
+    while !t.is_empty() {
+        t.pop();
+        let cut = format!("{}\u{2026}", t.trim_end());
+        if fits(&cut) {
+            return cut;
+        }
+    }
+    String::new()
 }
 
 fn hair(p: &Painter, left: f32, right: f32, y: f32) {
@@ -299,7 +438,7 @@ fn section(p: &Painter, left: f32, right: f32, y: f32, label: &str) -> f32 {
 fn row(
     p: &Painter,
     cache: &mut IconCache,
-    hits: &mut Vec<(Rect, u8)>,
+    hits: &mut Vec<(Rect, Hit)>,
     left: f32,
     right: f32,
     y: f32,
@@ -367,7 +506,7 @@ fn row(
         );
         hits.push((
             Rect::from_center_size(c, Vec2::splat(SLOT_R * 2.0)),
-            slot.level,
+            Hit::Slot(slot.level),
         ));
     }
     let x = slots_left;
