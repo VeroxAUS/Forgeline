@@ -2,14 +2,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-//! Forgeline entry point. Step 1 only has the `--headless-check` mode used by CI; the window and
-//! the `--update` child mode arrive in steps 6 and 9.
+//! Forgeline entry point. Modes so far: `--headless-check` (used by CI) and `--update`, the
+//! short-lived child process the window starts to refresh the game data. The window itself arrives
+//! in step 9.
 
+use forgeline_core::datadir::DataDir;
+use forgeline_core::discovery;
 use forgeline_core::{memory, results::BenchResult};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-const USAGE: &str = "usage: forgeline --headless-check [<fixture dir>] [--results-dir <dir>] [--limit-mb <n>] [--ci]";
+const USAGE: &str = "usage: forgeline --headless-check [<fixture dir>] [--results-dir <dir>] [--limit-mb <n>] [--ci]\n       forgeline --update [--steam-dir <folder>] [--data-dir <folder>]";
 
 /// Private bytes the data and engine side may use with fixture data (section 3.4 of the Phase 2 plan).
 const DEFAULT_LIMIT_MB: u64 = 20;
@@ -18,6 +21,7 @@ fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
     match args.next().as_deref() {
         Some("--headless-check") => headless_check(args.collect()),
+        Some("--update") => update(args.collect()),
         Some("-h" | "--help") => {
             println!("{USAGE}");
             ExitCode::SUCCESS
@@ -98,6 +102,49 @@ fn headless_check(args: Vec<String>) -> ExitCode {
         return ExitCode::FAILURE;
     }
     ExitCode::SUCCESS
+}
+
+/// The update child process: finds the game and the save, extracts the needed files into the data
+/// folder's `staging/`, checks them and swaps them in. Runs at below-normal priority, writes only
+/// under the data folder, prints what it does and exits when done, so none of its memory stays.
+/// Exit code 0 for `Replaced` and `Unchanged`, 3 for `Rejected`, 1 for `Failed`.
+fn update(args: Vec<String>) -> ExitCode {
+    let (mut steam_dir, mut data_dir) = (None, None);
+    let mut it = args.into_iter();
+    while let Some(a) = it.next() {
+        let slot = match a.as_str() {
+            "--steam-dir" => &mut steam_dir,
+            "--data-dir" => &mut data_dir,
+            other => return usage_error(&format!("unknown flag {other}")),
+        };
+        match it.next() {
+            Some(v) => *slot = Some(PathBuf::from(v)),
+            None => return usage_error(&format!("{a} needs a folder")),
+        }
+    }
+    let Some(steam_root) = steam_dir.or_else(discovery::find_steam_root) else {
+        eprintln!("Steam was not found; pass --steam-dir <folder>");
+        return ExitCode::FAILURE;
+    };
+    let data = match DataDir::open(data_dir) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("{e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    forgeline_core::priority::set_below_normal();
+    let mut last = String::new();
+    let outcome = forgeline_update::update_from_steam(steam_root, &data, Vec::new(), &mut |p| {
+        if p.phase != last {
+            println!("{} ({}/{})", p.phase, p.done, p.total);
+            last = p.phase.to_string();
+        }
+    });
+    for line in outcome.describe() {
+        println!("{line}");
+    }
+    ExitCode::from(outcome.exit_code())
 }
 
 fn usage_error(msg: &str) -> ExitCode {

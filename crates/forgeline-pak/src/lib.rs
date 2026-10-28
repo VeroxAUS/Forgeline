@@ -15,6 +15,8 @@ pub mod exescan;
 pub mod index;
 pub mod paths;
 pub mod read;
+#[cfg(feature = "test-support")]
+pub mod testpack;
 
 use std::fmt;
 

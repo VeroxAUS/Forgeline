@@ -12,3 +12,10 @@ publish.workspace = true
 miniz_oxide = "0.8"
 num-bigint = "0.4"
 zstd = "0.13"
+
+[features]
+# Synthetic pack builder for tests in this and other crates (never in the app).
+test-support = []
+
+[dev-dependencies]
+forgeline-pak = { path = ".", features = ["test-support"] }

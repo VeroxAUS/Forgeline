@@ -94,3 +94,7 @@ The pack format facts (header, encrypted entry table, chunk table) and the 129-b
 > LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 > OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 > SOFTWARE.
+
+## crates/forgeline-update (the update flow, linked into the app's `--update` mode)
+
+No third-party crate beyond those already listed for `forgeline-pak`, `forgeline-save` and `forgeline-core` (serde and serde_json). The file hash used to notice changes (FNV-1a, 64 bit) is a few lines of our own code from the published algorithm.

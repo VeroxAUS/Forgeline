@@ -6,8 +6,8 @@
 //! pack and a fake exe: the needed files resolve and read, a missing one is named and fails the
 //! run, `pak_mods` is never opened, and the save's class names are rebuilt from the exe strings.
 
-use forgeline_pak::index::table_xor;
-use forgeline_pak::paths::{hash_pair, NEEDED};
+use forgeline_pak::paths::NEEDED;
+use forgeline_pak::testpack::{build, plain, Data, Item};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -20,33 +20,15 @@ fn fixture(name: &str) -> PathBuf {
 
 /// A pack with one stored entry per stem, under version 7, with an encrypted table.
 fn pack(stems: &[&str]) -> Vec<u8> {
-    let key = [9u8; 128];
-    let n = stems.len();
-    let mut at = (16 + n * 48 + 128) as u64;
-    let mut table = Vec::new();
-    let mut blob = Vec::new();
-    for s in stems {
-        let (lower, upper) = hash_pair(&format!("natives/stm/{s}.7"));
-        let data = s.as_bytes();
-        table.extend_from_slice(&lower.to_le_bytes());
-        table.extend_from_slice(&upper.to_le_bytes());
-        table.extend_from_slice(&at.to_le_bytes());
-        table.extend_from_slice(&(data.len() as u64).to_le_bytes());
-        table.extend_from_slice(&(data.len() as u64).to_le_bytes());
-        table.extend_from_slice(&0u64.to_le_bytes());
-        table.extend_from_slice(&[0; 8]);
-        at += data.len() as u64;
-        blob.extend_from_slice(data);
-    }
-    table_xor(&mut table, &key);
-    let mut out = b"KPKA".to_vec();
-    out.extend_from_slice(&[4, 1, 0x08, 0]);
-    out.extend_from_slice(&(n as u32).to_le_bytes());
-    out.extend_from_slice(&[0; 4]);
-    out.extend_from_slice(&table);
-    out.extend_from_slice(&key);
-    out.extend_from_slice(&blob);
-    out
+    build(&plain(
+        stems
+            .iter()
+            .map(|s| Item {
+                path: format!("natives/stm/{s}.7"),
+                data: Data::Stored(s.as_bytes().to_vec()),
+            })
+            .collect(),
+    ))
 }
 
 fn tree(tag: &str, stems: &[&str]) -> PathBuf {

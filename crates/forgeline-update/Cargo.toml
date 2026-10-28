@@ -1,0 +1,23 @@
+[package]
+name = "forgeline-update"
+description = "Forgeline update flow: extract the needed game files, stage, validate, swap, keep the last good data"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+forgeline-core = { path = "../forgeline-core" }
+forgeline-pak = { path = "../forgeline-pak" }
+forgeline-save = { path = "../forgeline-save" }
+serde.workspace = true
+serde_json.workspace = true
+
+[features]
+# Builds an invented Steam tree for tests in this and other crates (never in the app).
+test-support = ["forgeline-pak/test-support"]
+
+[dev-dependencies]
+forgeline-update = { path = ".", features = ["test-support"] }
