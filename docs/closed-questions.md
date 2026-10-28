@@ -212,3 +212,7 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Icons and images?** Read at runtime from the user's own install, never shipped or committed (approved 2026-10-28, UX feedback; recorded here because PR #40 was not merged). Whether the icon files are readable is open question 14.
 - **Shopping list ticking?** Fully save-driven, with no manual tick-off (2026-10-28, UX feedback).
 - **Presets and Safe?** Presets are Solo or Multiplayer; Safe is only an alternative build (2026-10-28).
+
+### UX element 1: sample screen (2026-10-28)
+- **Which style?** D3 (2026-10-28 07:39 UTC): A (Modern Dark) as the base, with C's orange accent, round skill dots, icon tiles, the static header gradient and the tinted rail item. The maintainer first picked "A with C's accents and round skill dots and the icon-led, game-like feel" (D), then asked for D with the gradient (D1), the tinted rail item (D2) and both (D3), and locked in D3. Looked at from screenshots in the cloud.
+- **Keep `tools/ui-sample`?** Yes ("The tool is OK to keep", 2026-10-28). It stays outside the workspace with its own lockfile and CI job, and only the optional `window` feature opens a real window.
