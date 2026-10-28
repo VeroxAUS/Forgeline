@@ -164,3 +164,7 @@ All answered 2026-10-27, in the order they were asked.
 ### Starter kit for new projects (2026-10-28)
 - **Can the starter-kit template repo be private?** Yes (2026-10-28). It is `VeroxAUS/verox-template`; each new project picks its own visibility.
 - **Should the kit's plan template improvements be ported to Forgeline?** Yes (2026-10-28): items 1 to 4 (hours in estimates, banner or phase label check, look check, actual-time-per-step table), merged in PR #25. Standing rule: every generic Forgeline rule or fix is mirrored to `verox-template`, and the `new-verox-project` skill is kept up to date.
+
+### Phase 2 plan approved (2026-10-28)
+- **Approve the Phase 2 plan (PR #21)?** Yes, at 2026-10-28 03:52 UTC. Merged at 03:52 UTC (PR #21; tested and approved by the maintainer in the cloud, docs only, CI green). Pass time for the plan review: 03:52 UTC.
+- **Budget changes (decision E)?** Still deferred: they are only looked at if needed (see `open-questions.md`).

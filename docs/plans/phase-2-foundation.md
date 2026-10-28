@@ -1,6 +1,6 @@
 # Phase 2: Foundation
 
-Target version: 0.2.0 · Status: draft (waiting for the maintainer's review)
+Target version: 0.2.0 · Status: approved 2026-10-28 (in progress)
 
 Each phase plan is written just before its phase, using what earlier phases found. The maintainer reviews and approves it before any work starts. Estimates are in threads, test rounds and hours; real durations go in the time log (section 10).
 
@@ -645,7 +645,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 ## 10. Time log
 | Event | Date and time |
 |-------|---------------|
-| Phase approved by the maintainer | |
+| Phase approved by the maintainer | 2026-10-28 03:52 UTC |
 | Step 1 PR merged | |
 | Step 2 PR merged | |
 | Step 3 PR merged | |
@@ -675,7 +675,7 @@ Filled at close-out. Actual hours run from the first thread start to the merge (
 | 7 | 4 | | |
 | 8 | 1.5 | | |
 | 9 | 2 | | |
-| 10 | 3.5 | | |
+| 10 | 4 | | |
 | 11 | 1.5 | | |
 | 12 | 0.5 | | |
 | 13 | 0.75 | | |
