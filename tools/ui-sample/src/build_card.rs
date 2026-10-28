@@ -58,9 +58,19 @@ const HEAD_BAR_H: f32 = 6.0;
 pub const CHIP_W: f32 = 116.0;
 const CHIP_H: f32 = 24.0;
 const CHIP_GAP: f32 = 8.0;
-const CHIPS_TOP: f32 = 106.0;
+const CHIPS_TOP: f32 = 114.0;
 /// Width of the Add and Edit popups.
 const POPUP_W: f32 = 200.0;
+/// Solo or Multiplayer switch: two equal halves, 30 high like the other header controls.
+const SWITCH_H: f32 = 30.0;
+const SWITCH_HALF_W: f32 = 88.0;
+/// The alternatives row: six equal icon cells in the header's left column, under the title.
+const ALT_W: f32 = 40.0;
+const ALT_H: f32 = 28.0;
+const ALT_TOP: f32 = 78.0;
+/// Clear space between the header controls and the damage block beside them.
+const HEAD_CLEAR: f32 = 24.0;
+const ACCENT_INK: Color32 = Color32::from_rgb(26, 12, 2);
 const CHIP_FILL: Color32 = Color32::from_rgb(20, 20, 23);
 const ACCENT: Color32 = Color32::from_rgb(255, 138, 61);
 const BG: Color32 = Color32::from_rgb(10, 10, 11);
@@ -253,6 +263,95 @@ pub enum Popup {
     More,
 }
 
+/// Who the build is for. Solo and Multiplayer change what the optimizer weighs; it is a switch, not
+/// an alternative.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum PlayMode {
+    #[default]
+    Solo,
+    Multiplayer,
+}
+
+impl PlayMode {
+    pub const ALL: [PlayMode; 2] = [PlayMode::Solo, PlayMode::Multiplayer];
+
+    fn name(self) -> &'static str {
+        match self {
+            PlayMode::Solo => "Solo",
+            PlayMode::Multiplayer => "Multiplayer",
+        }
+    }
+
+    fn tip(self) -> &'static str {
+        match self {
+            PlayMode::Solo => "Solo: built for hunting alone.",
+            PlayMode::Multiplayer => "Multiplayer: built for hunting with a group.",
+        }
+    }
+}
+
+/// The other builds worth showing next to the best one. Safe is an alternative, not a preset.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum Alt {
+    #[default]
+    Best,
+    Safe,
+    Defensive,
+    Monster,
+    General,
+    Gogma,
+}
+
+impl Alt {
+    pub const ALL: [Alt; 6] = [
+        Alt::Best,
+        Alt::Safe,
+        Alt::Defensive,
+        Alt::Monster,
+        Alt::General,
+        Alt::Gogma,
+    ];
+
+    fn name(self) -> &'static str {
+        match self {
+            Alt::Best => "Best",
+            Alt::Safe => "Safe",
+            Alt::Defensive => "Defensive",
+            Alt::Monster => "Monster",
+            Alt::General => "General hunting",
+            Alt::Gogma => "Gogma",
+        }
+    }
+
+    fn tip(self) -> &'static str {
+        match self {
+            Alt::Best => "The strongest build you can make now.",
+            Alt::Safe => "Gives up some damage to stay on your feet.",
+            Alt::Defensive => "Defence and resistances first.",
+            Alt::Monster => "Tuned for the monster you picked.",
+            Alt::General => "Steady against most monsters.",
+            Alt::Gogma => "Built around Gogma gear.",
+        }
+    }
+
+    fn idx(self) -> usize {
+        self as usize
+    }
+
+    /// Sample numbers for the headline blocks (damage, toughness as a share of the best the
+    /// unlocked pool allows). Invented: the optimizer does not exist yet.
+    fn sample_fill(self) -> (f32, f32) {
+        match self {
+            Alt::Best => (0.72, 0.64),
+            Alt::Safe => (0.60, 0.78),
+            Alt::Defensive => (0.52, 0.88),
+            Alt::Monster => (0.75, 0.62),
+            Alt::General => (0.66, 0.70),
+            Alt::Gogma => (0.78, 0.66),
+        }
+    }
+}
+
 /// Which of the two headline axes a block shows.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Axis {
@@ -353,6 +452,11 @@ pub struct BuildData {
     pub must_haves: Vec<MustHave>,
     /// Chip width in points. `CHIP_W` unless the review is comparing widths.
     pub chip_w: f32,
+    pub mode: PlayMode,
+    pub alt: Alt,
+    /// Why an alternative cannot be chosen yet (a plain sentence), by `Alt::idx`. Those cells are
+    /// dimmed and do nothing when clicked.
+    pub unavailable: [Option<&'static str>; 6],
 }
 
 impl BuildData {
@@ -473,9 +577,40 @@ impl BuildData {
                 MustHave::new("Ammo saver", 2, 3),
             ],
             chip_w: CHIP_W,
+            mode: PlayMode::default(),
+            alt: Alt::default(),
+            unavailable: [
+                None,
+                None,
+                None,
+                Some("Pick a monster first."),
+                None,
+                Some("No Gogma gear unlocked yet."),
+            ],
         };
         d.sync_must();
         d
+    }
+
+    /// An alternative that cannot be chosen falls back to Best.
+    pub fn sync_alt(&mut self) {
+        if self.unavailable[self.alt.idx()].is_some() {
+            self.alt = Alt::Best;
+        }
+    }
+
+    /// Moves the headline blocks to the sample numbers for the chosen mode and alternative.
+    /// Sample only: the real numbers come from the optimizer.
+    pub fn apply_variant(&mut self) {
+        let (mut dmg, mut tough) = self.alt.sample_fill();
+        if self.mode == PlayMode::Multiplayer {
+            dmg -= 0.03;
+            tough += 0.03;
+        }
+        for (h, fill) in [(&mut self.damage, dmg), (&mut self.toughness, tough)] {
+            h.fill = Some(fill);
+            h.delta = h.current.map(|c| ((fill - c) / c * 100.0) as i32);
+        }
     }
 }
 
@@ -584,6 +719,10 @@ enum Hit {
     Add,
     /// The "+N more" chip.
     More,
+    /// One half of the Solo or Multiplayer switch.
+    Mode(PlayMode),
+    /// One cell of the alternatives row.
+    Alt(Alt),
 }
 
 /// The build card screen: shell state, the card's data and the icon cache.
@@ -663,7 +802,9 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
     let hits = std::mem::take(&mut app.hits);
     for (i, (rect, hit)) in hits.iter().enumerate() {
         let sense = match hit {
-            Hit::Why | Hit::Chip(_) | Hit::Add | Hit::More => egui::Sense::click(),
+            Hit::Why | Hit::Chip(_) | Hit::Add | Hit::More | Hit::Mode(_) | Hit::Alt(_) => {
+                egui::Sense::click()
+            }
             _ => egui::Sense::hover(),
         };
         let tip = ui.interact(*rect, ui.scope_id().with(("hit", i)), sense);
@@ -698,6 +839,33 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
                 }
                 tip.on_hover_cursor(egui::CursorIcon::PointingHand)
                     .on_hover_text("Show the other must-haves");
+            }
+            Hit::Mode(m) => {
+                if tip.clicked() && app.data.mode != *m {
+                    app.data.mode = *m;
+                    app.data.apply_variant();
+                    app.start_recompute();
+                }
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text(m.tip());
+            }
+            Hit::Alt(a) => {
+                let why = app.data.unavailable[a.idx()];
+                if tip.clicked() && why.is_none() && app.data.alt != *a {
+                    app.data.alt = *a;
+                    app.data.apply_variant();
+                    app.start_recompute();
+                }
+                let text = match why {
+                    Some(why) => format!("{}. Not available yet: {why}", a.name()),
+                    None => format!("{}. {}", a.name(), a.tip()),
+                };
+                tip.on_hover_cursor(if why.is_some() {
+                    egui::CursorIcon::NotAllowed
+                } else {
+                    egui::CursorIcon::PointingHand
+                })
+                .on_hover_text(text);
             }
             Hit::Why => {
                 if tip.clicked() {
@@ -1011,21 +1179,11 @@ fn card(
         (_, 1) => "1 piece needs parts".to_string(),
         (_, n) => format!("{n} pieces need parts"),
     };
-    // The line stops before the damage block, whatever it says.
-    let summary = fit(
-        p,
-        &summary,
-        right - 2.0 * HEAD_W - SKILL_GAP - 12.0 - left,
-        "inter",
-        12.5,
-    );
-    p.text(
-        Pos2::new(left, content.min.y + 86.0),
-        Align2::LEFT_CENTER,
-        summary,
-        font("inter", 12.5),
-        DIM,
-    );
+    // Header controls sit in the column left of the damage block, so they stop short of it.
+    let head_stop = right - 2.0 * HEAD_W - SKILL_GAP - HEAD_CLEAR;
+    crumb_alt(p, left, content.min.y + 30.0, data.alt);
+    mode_switch(p, hits, head_stop, content.min.y + 58.0, data.mode);
+    alternatives(p, hits, left, head_stop, content.min.y + ALT_TOP, data);
 
     // Wide enough: the skills sit in a side strip level with the weapon label. Otherwise they go
     // under the charm, full width.
@@ -1087,6 +1245,16 @@ fn card(
     }
     let right = eq_right;
     let mut y = top;
+    // The one quiet line (what is missing, in words) sits at the right end of the first section
+    // label. While the build recomputes the last build stays on screen, so this line notes it.
+    let summary = fit(p, &summary, right - left - 120.0, "inter", 12.0);
+    p.text(
+        Pos2::new(right, y + 8.0),
+        Align2::RIGHT_CENTER,
+        summary,
+        font("inter", 12.0),
+        DIM,
+    );
     y = section(p, left, right, y, "WEAPON");
     y = row(
         p,
@@ -1141,6 +1309,196 @@ fn card(
             &data.skills,
             data.pinned_style,
         );
+    }
+}
+
+/// The alternative's name after the breadcrumb (`BUILD · LIGHT BOWGUN · SAFE`), so the active one
+/// is named in words as well as marked in the row.
+fn crumb_alt(p: &Painter, left: f32, y: f32, alt: Alt) {
+    let base = p
+        .layout_no_wrap("BUILD \u{b7} LIGHT BOWGUN".to_string(), mono(10.5), DIM)
+        .size()
+        .x;
+    p.text(
+        Pos2::new(left + base, y),
+        Align2::LEFT_CENTER,
+        format!(" \u{b7} {}", alt.name().to_uppercase()),
+        mono(10.5),
+        ACCENT,
+    );
+}
+
+/// The Solo or Multiplayer switch: two equal halves, the chosen one a filled accent block. Its
+/// right edge is `right`; `cy` is the centre line of the title.
+fn mode_switch(p: &Painter, hits: &mut Vec<(Rect, Hit)>, right: f32, cy: f32, mode: PlayMode) {
+    let ppp = p.ctx().pixels_per_point();
+    let snap = |v: f32| (v * ppp).round() / ppp;
+    let hover = p.ctx().pointer_hover_pos();
+    let left = snap(right - 2.0 * SWITCH_HALF_W);
+    let top = snap(cy - SWITCH_H / 2.0);
+    let whole = Rect::from_min_size(
+        Pos2::new(left, top),
+        Vec2::new(2.0 * SWITCH_HALF_W, SWITCH_H),
+    );
+    p.rect_stroke(whole, 2.0, Stroke::new(1.0, LINE), egui::StrokeKind::Inside);
+    for (i, m) in PlayMode::ALL.iter().enumerate() {
+        let r = Rect::from_min_size(
+            Pos2::new(left + i as f32 * SWITCH_HALF_W, top),
+            Vec2::new(SWITCH_HALF_W, SWITCH_H),
+        );
+        let on = *m == mode;
+        let hot = hover.is_some_and(|h| r.contains(h));
+        if on {
+            p.rect_filled(r, 2.0, ACCENT);
+        }
+        p.text(
+            r.center(),
+            Align2::CENTER_CENTER,
+            fit(p, m.name(), SWITCH_HALF_W - 12.0, "inter-medium", 12.5),
+            font("inter-medium", 12.5),
+            if on {
+                ACCENT_INK
+            } else if hot {
+                FG
+            } else {
+                DIM
+            },
+        );
+        hits.push((r, Hit::Mode(*m)));
+    }
+}
+
+/// The alternatives row: six equal icon cells on a fixed grid (the name is in the breadcrumb and
+/// the tooltip). The chosen one is accent with a 2 px underline; ones that cannot be chosen yet
+/// are faint. A hairline runs under the row.
+fn alternatives(
+    p: &Painter,
+    hits: &mut Vec<(Rect, Hit)>,
+    left: f32,
+    right: f32,
+    y: f32,
+    data: &BuildData,
+) {
+    let ppp = p.ctx().pixels_per_point();
+    let snap = |v: f32| (v * ppp).round() / ppp;
+    let hover = p.ctx().pointer_hover_pos();
+    let cell_w = ALT_W.min(((right - left) / Alt::ALL.len() as f32).floor());
+    let top = snap(y);
+    hair(p, left, left + cell_w * Alt::ALL.len() as f32, top + ALT_H);
+    for (i, a) in Alt::ALL.iter().enumerate() {
+        let r = Rect::from_min_size(
+            Pos2::new(snap(left + i as f32 * cell_w), top),
+            Vec2::new(cell_w, ALT_H),
+        );
+        let on = *a == data.alt;
+        let off = data.unavailable[a.idx()].is_some();
+        let hot = !off && hover.is_some_and(|h| r.contains(h));
+        let col = if off {
+            FAINT
+        } else if on {
+            ACCENT
+        } else if hot {
+            FG
+        } else {
+            DIM
+        };
+        alt_glyph(
+            p,
+            Rect::from_center_size(
+                Pos2::new(r.center().x, r.center().y - 1.0),
+                Vec2::splat(16.0),
+            ),
+            *a,
+            col,
+        );
+        if on {
+            p.rect_filled(
+                Rect::from_min_size(
+                    Pos2::new(r.left(), r.bottom() - 2.0),
+                    Vec2::new(r.width(), 2.0),
+                ),
+                0.0,
+                ACCENT,
+            );
+        }
+        hits.push((r, Hit::Alt(*a)));
+    }
+}
+
+/// Placeholder glyphs for the alternatives, plain shapes like the rail icons.
+fn alt_glyph(p: &Painter, r: Rect, a: Alt, col: Color32) {
+    let c = r.center();
+    let u = r.width() / 16.0;
+    let st = Stroke::new(1.4, col);
+    let pt = |x: f32, y: f32| c + Vec2::new(x, y) * u;
+    match a {
+        Alt::Best => {
+            // A five-point star.
+            let pts: Vec<Pos2> = (0..10)
+                .map(|k| {
+                    let ang = -std::f32::consts::FRAC_PI_2 + k as f32 * std::f32::consts::PI / 5.0;
+                    let rad = if k % 2 == 0 { 7.5 } else { 3.2 };
+                    pt(rad * ang.cos(), rad * ang.sin())
+                })
+                .collect();
+            for k in 0..pts.len() {
+                p.line_segment([pts[k], pts[(k + 1) % pts.len()]], st);
+            }
+        }
+        Alt::Safe => {
+            // A heart.
+            p.circle_filled(pt(-3.0, -2.0), 3.4 * u, col);
+            p.circle_filled(pt(3.0, -2.0), 3.4 * u, col);
+            p.add(egui::Shape::convex_polygon(
+                vec![pt(-6.2, -0.2), pt(6.2, -0.2), pt(0.0, 7.0)],
+                col,
+                Stroke::NONE,
+            ));
+        }
+        Alt::Defensive => {
+            // A shield.
+            p.add(egui::Shape::closed_line(
+                vec![
+                    pt(-6.0, -6.5),
+                    pt(6.0, -6.5),
+                    pt(6.0, 1.0),
+                    pt(0.0, 7.5),
+                    pt(-6.0, 1.0),
+                ],
+                st,
+            ));
+        }
+        Alt::Monster => {
+            // A target.
+            p.circle_stroke(pt(0.0, 0.0), 5.5 * u, st);
+            p.circle_filled(pt(0.0, 0.0), 1.5 * u, col);
+            for (dx, dy) in [(0.0, -1.0), (0.0, 1.0), (-1.0, 0.0), (1.0, 0.0)] {
+                p.line_segment([pt(dx * 5.5, dy * 5.5), pt(dx * 8.0, dy * 8.0)], st);
+            }
+        }
+        Alt::General => {
+            // Four squares: a bit of everything.
+            for (x, y) in [(-6.0, -6.0), (0.5, -6.0), (-6.0, 0.5), (0.5, 0.5)] {
+                p.rect_stroke(
+                    Rect::from_min_size(pt(x, y), Vec2::splat(5.5 * u)),
+                    0.5,
+                    st,
+                    egui::StrokeKind::Inside,
+                );
+            }
+        }
+        Alt::Gogma => {
+            // A diamond with a filled core.
+            p.add(egui::Shape::closed_line(
+                vec![pt(0.0, -7.5), pt(6.0, 0.0), pt(0.0, 7.5), pt(-6.0, 0.0)],
+                st,
+            ));
+            p.add(egui::Shape::convex_polygon(
+                vec![pt(0.0, -3.0), pt(2.5, 0.0), pt(0.0, 3.0), pt(-2.5, 0.0)],
+                col,
+                Stroke::NONE,
+            ));
+        }
     }
 }
 
