@@ -183,3 +183,6 @@ All answered 2026-10-27, in the order they were asked.
 
 ### Phase 2 step 5 merged (2026-10-28)
 - **Merge the step 5 PR (#36)?** Yes ("Yes you can", 2026-10-28 05:30 UTC). Merged at 05:30:48 UTC after the cloud and PC test round (Wilds not running): CI green on Ubuntu and Windows (check, RAM check); on the real install 32 packs and 349,348 files, `pak_mods` never opened, all 34 needed paths resolved and read, index built in 97 ms, exe scan 1.59 s, names rebuilt for 186 of 187 classes and 972 of 973 fields, peak memory 35.9 MB private, read-only throughout.
+
+### Phase 2 step 6 merged (2026-10-28)
+- **Merge the step 6 PR (#38)?** Yes ("You are good to merge.", 2026-10-28 05:50 UTC). Merged at 05:51:19 UTC after the cloud and PC test round: CI green on Ubuntu and Windows (check, RAM check); on the real install the first update said `Replaced` in 1.9 s (34 files, build 25921695, 186 classes, 35.2 MB peak), the second `Unchanged`, a simulated missing file `Rejected` with 3 findings and `current/` unchanged; with Wilds running `Replaced` in 2.3 s and no hitching seen, including on a frametime graph; read-only throughout. Below-normal priority was not measured separately (the check tool runs in-process).

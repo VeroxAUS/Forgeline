@@ -651,7 +651,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 | Step 3 PR merged (#32) | 2026-10-28 04:40 UTC |
 | Step 4 PR merged (#34) | 2026-10-28 05:18:51 UTC |
 | Step 5 PR merged (#36) | 2026-10-28 05:30:48 UTC |
-| Step 6 PR merged | |
+| Step 6 PR merged (#38) | 2026-10-28 05:51:19 UTC |
 | Step 7 PR merged | |
 | Step 8 PR merged | |
 | Step 9 PR merged | |
