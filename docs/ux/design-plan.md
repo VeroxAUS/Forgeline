@@ -12,7 +12,7 @@ Done means:
 
 - [ ] Every element in section 6 is built in the real egui app and reviewed by the maintainer from a screenshot.
 - [ ] Each element has passed the look check and the performance check (cold start, idle CPU, RAM against the budget) on the maintainer's PC with Wilds running.
-- [ ] The style rules in `docs/ux/style-guide.md` exist, written after the sample screen (element 1) and not before.
+- [x] The style rules in `docs/ux/style-guide.md` exist, written after the sample screen (element 1) and not before.
 - [ ] The two open design items in section 7 are decided.
 
 ## 2. Principles
@@ -128,3 +128,4 @@ UI elements land in minor versions with the phase that supplies their data. Each
 | Element | Thread | Result |
 |---|---|---|
 | 1. Sample screen | 2026-10-28, started 07:16 UTC, look check passed 07:39 UTC, merged 07:43:49 UTC (about 25 min of thread time, against the 4 h estimate; cloud, CI green on Ubuntu and Windows) | Built as `tools/ui-sample` (PR #47): variants A to C, then D and its three variants. The maintainer locked in **D3** (see the review log). Reviewed from screenshots in the cloud; not run on the PC. |
+| 2. Style guide | 2026-10-28, started 07:44 UTC, merged 08:06:00 UTC as PR #49 (about 22 min of thread time, including a re-apply onto the rewritten main; cloud, docs only, CI green on Ubuntu and Windows) | `docs/ux/style-guide.md` written from the locked D3 sample and also published as an Artifact page. Not run on the PC. |
