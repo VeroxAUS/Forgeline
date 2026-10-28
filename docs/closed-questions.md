@@ -177,3 +177,6 @@ All answered 2026-10-27, in the order they were asked.
 
 ### Phase 2 step 3 merged (2026-10-28)
 - **Merge the step 3 PR (#32)?** Yes ("Merge", 2026-10-28 04:40 UTC). Cloud test round: CI green on Ubuntu and Windows (check, RAM check). Fixtures are about 99 KB each, not a few KB; the plan wording is corrected.
+
+### Phase 2 step 4 merged (2026-10-28)
+- **Merge the step 4 PR (#34)?** Yes ("Yes you can", 2026-10-28 05:17 UTC). Merged at 05:18:51 UTC after the cloud and PC test round with Wilds running: CI green on Ubuntu and Windows (check, RAM check); the final PC run matched the game (16 weapons including 3 light bowguns, 40 armour entries, 1 talisman, 2 mantles, read in 51 ms, 34.9 MB peak); the quest-accept diff showed 23 changes out of 1,139,979 values without identifying a quest field; the craft test took the light bowgun count from 3 to 4. Meanings of the weapon id, its small arrays and the weapon flag bitsets stay unverified (see `research.md`).
