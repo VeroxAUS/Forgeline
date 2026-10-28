@@ -159,7 +159,7 @@ Files are listed by step. Every source file starts with the MPL-2.0 Exhibit A no
 - **Purpose:** build small synthetic saves in the real container format (encrypted, deflated, class stream) with known contents.
 - **Inputs and outputs:** in, a Steam ID and a recipe (slots, equipment, items, flags). Out, a `data001Slot.bin`-shaped file and an expected-values JSON next to it.
 - **Depends on:** `research.md` notes for the container; the type-name fixture table.
-- **Notes:** contents are invented and say so (fixed fake Steam ID, no hunter IDs, round numbers). Nothing is derived from the maintainer's save. Files are a few KB. Output goes to `fixtures/saves/`.
+- **Notes:** contents are invented and say so (fixed fake Steam ID, no hunter IDs, round numbers). Nothing is derived from the maintainer's save. Files are about 99 KB each (the first real block is 6 x 16 KiB). Output goes to `fixtures/saves/`.
 
 #### `crates/forgeline-save/src/container.rs` (step 4)
 - **Purpose:** decrypt with the Steam ID and inflate.
@@ -442,7 +442,7 @@ GitHub Actions on Ubuntu and Windows, fixtures only. Nothing touches the real sa
 - Pass: it never writes inside the Steam folders, the install or `win64_save`.
 
 **Step 3, fixture builder**
-- Pass: every fixture is a few KB, invented, deterministic, and listed in `fixtures/README.md`.
+- Pass: every fixture is about 99 KB, invented, deterministic, and listed in `fixtures/README.md`.
 - Pass: the builder runs offline and writes only into the repo checkout.
 
 **Step 4, save reader**
@@ -648,7 +648,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 | Phase approved by the maintainer | 2026-10-28 03:52 UTC |
 | Step 1 PR merged (#28) | 2026-10-28 04:03 UTC |
 | Step 2 PR merged (#30) | 2026-10-28 04:12 UTC |
-| Step 3 PR merged | |
+| Step 3 PR merged (#32) | 2026-10-28 04:40 UTC |
 | Step 4 PR merged | |
 | Step 5 PR merged | |
 | Step 6 PR merged | |
