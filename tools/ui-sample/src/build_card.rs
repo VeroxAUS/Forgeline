@@ -21,7 +21,7 @@ pub mod shopping;
 pub use monster::{
     items as monster_items, remember, Element, Group, Monster, Pick, Selector, ROSTER,
 };
-pub use shopping::{Chain, Need, ShoppingState, View as ShopView};
+pub use shopping::{Chain, Need, ShoppingState, Sort as ShopSort, View as ShopView};
 
 const MARGIN: f32 = 28.0;
 const ROW_H: f32 = 48.0;
@@ -786,6 +786,8 @@ enum Hit {
     Missing(usize),
     /// One half of the Shopping view switch.
     ShopView(ShopView),
+    /// One half of the Shopping by-monster sort toggle.
+    ShopSort(ShopSort),
     /// The Shopping piece-filter chip (clears the filter).
     ShopFilter,
 }
@@ -890,6 +892,7 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
             | Hit::Alt(_)
             | Hit::Missing(_)
             | Hit::ShopView(_)
+            | Hit::ShopSort(_)
             | Hit::ShopFilter => egui::Sense::click(),
             _ => egui::Sense::hover(),
         };
@@ -953,6 +956,13 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
                 }
                 tip.on_hover_cursor(egui::CursorIcon::PointingHand)
                     .on_hover_text(v.tip());
+            }
+            Hit::ShopSort(o) => {
+                if tip.clicked() {
+                    app.shopping.sort = *o;
+                }
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text(o.tip());
             }
             Hit::ShopFilter => {
                 if tip.clicked() {

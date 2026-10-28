@@ -32,6 +32,11 @@ const VIEW_TOP: f32 = 78.0;
 /// The filter chip beside the switch.
 const CHIP_H: f32 = 24.0;
 const FILTER_W: f32 = 200.0;
+/// The sort toggle beside the summary: two equal halves, quieter than the view switch.
+/// Room kept for the summary at the right, so the toggle never moves when the numbers change.
+const SUMMARY_W: f32 = 200.0;
+const SORT_W: f32 = 104.0;
+const SORT_H: f32 = 24.0;
 const LIST_TOP: f32 = 126.0;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
@@ -58,6 +63,36 @@ impl View {
             View::Monster => "By monster: what to hunt next, and every item it gives.",
             View::Piece => "By piece: the items each piece of the build still needs.",
             View::Path => "By upgrade path: the items for each step of a piece's upgrade chain.",
+        }
+    }
+}
+
+/// How the by-monster view orders the monsters.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum Sort {
+    /// The monster with the most missing items (summed counts) first.
+    #[default]
+    Items,
+    /// The monster whose items would finish the most pieces first.
+    Pieces,
+}
+
+impl Sort {
+    pub const ALL: [Sort; 2] = [Sort::Items, Sort::Pieces];
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Sort::Items => "Most items",
+            Sort::Pieces => "Finishes pieces",
+        }
+    }
+
+    pub fn tip(self) -> &'static str {
+        match self {
+            Sort::Items => "Monster with the most missing items first.",
+            Sort::Pieces => {
+                "Monster that finishes the most pieces first. A piece counts when every item it still needs comes from that monster."
+            }
         }
     }
 }
@@ -94,6 +129,8 @@ pub struct ShoppingState {
     pub view: View,
     /// Only items for this piece (set by clicking `Missing N` on the Build screen).
     pub filter: Option<usize>,
+    /// The by-monster order. Hidden (and moot) while a piece filter is set.
+    pub sort: Sort,
     /// Review only: draws an invented farm place on every row, to show the column filled.
     pub demo_farm: bool,
     /// Review only: scrolls the list to this offset (points) so a screenshot can show the middle.
@@ -192,7 +229,24 @@ fn rows(data: &BuildData, st: &ShoppingState) -> Vec<Row> {
                     .sum()
             };
             // The monster with the most missing parts first: that is what to hunt next.
-            monsters.sort_by(|a, b| total(b).cmp(&total(a)).then(a.cmp(b)));
+            let finishes = |m: &str| -> usize {
+                (0..PIECES)
+                    .filter(|p| {
+                        let mine: Vec<&&Need> = needs.iter().filter(|n| n.piece == *p).collect();
+                        !mine.is_empty() && mine.iter().all(|n| n.monster == m)
+                    })
+                    .count()
+            };
+            match st.sort {
+                Sort::Items => monsters.sort_by(|a, b| total(b).cmp(&total(a)).then(a.cmp(b))),
+                // Ties (often all zero) fall back to the most missing items.
+                Sort::Pieces => monsters.sort_by(|a, b| {
+                    finishes(b)
+                        .cmp(&finishes(a))
+                        .then(total(b).cmp(&total(a)))
+                        .then(a.cmp(b))
+                }),
+            }
             let mut out = Vec::new();
             for m in monsters {
                 let mut mine: Vec<&Line> = lines.iter().filter(|l| l.first.monster == m).collect();
@@ -201,10 +255,20 @@ fn rows(data: &BuildData, st: &ShoppingState) -> Vec<Row> {
                         .cmp(&missing(a))
                         .then(a.first.item.cmp(b.first.item))
                 });
+                let done = finishes(m);
+                let items = plural(mine.len(), "ITEM", "ITEMS");
                 out.push(Row::Head {
                     title: m.to_string(),
-                    tail: plural(mine.len(), "ITEM", "ITEMS"),
-                    tip: format!("{m}: {}.", plural(mine.len(), "item", "items")),
+                    tail: if st.sort == Sort::Pieces && done > 0 {
+                        format!("FINISHES {done} \u{b7} {items}")
+                    } else {
+                        items
+                    },
+                    tip: format!(
+                        "{m}: {}, finishes {}.",
+                        plural(mine.len(), "item", "items"),
+                        plural(done, "piece", "pieces")
+                    ),
                 });
                 for (i, l) in mine.iter().enumerate() {
                     let names: Vec<&str> = l
@@ -411,6 +475,43 @@ pub(super) fn header(
         mono(10.5),
         DIM,
     );
+    // The sort toggle only means something by monster, with no single piece in view.
+    if st.view == View::Monster && st.filter.is_none() && !data.needs.is_empty() {
+        let w = SORT_W * Sort::ALL.len() as f32;
+        let left = snap(right - SUMMARY_W - 20.0 - w);
+        let t = snap(top + (VIEW_H - SORT_H) / 2.0);
+        p.rect_stroke(
+            Rect::from_min_size(Pos2::new(left, t), Vec2::new(w, SORT_H)),
+            2.0,
+            Stroke::new(1.0, LINE),
+            egui::StrokeKind::Inside,
+        );
+        for (i, o) in Sort::ALL.iter().enumerate() {
+            let r = Rect::from_min_size(
+                Pos2::new(left + i as f32 * SORT_W, t),
+                Vec2::new(SORT_W, SORT_H),
+            );
+            let on = *o == st.sort;
+            let hot = hover.is_some_and(|h| r.contains(h));
+            if on {
+                p.rect_filled(r, 2.0, ACCENT);
+            }
+            p.text(
+                r.center(),
+                Align2::CENTER_CENTER,
+                o.name(),
+                font("inter-medium", 12.0),
+                if on {
+                    ACCENT_INK
+                } else if hot {
+                    FG
+                } else {
+                    DIM
+                },
+            );
+            hits.push((r, Hit::ShopSort(*o)));
+        }
+    }
 }
 
 /// The list. Drawn into `ui` after the shell, in the content area under the header.
@@ -701,6 +802,19 @@ pub mod sample {
         ]
     }
 
+    /// Where the two by-monster orders disagree: the Anjanath has the most missing items, but
+    /// Rathalos alone finishes two pieces (the helm and the coil) and the Anjanath one.
+    pub fn finish() -> Vec<Need> {
+        vec![
+            need(1, "Wyvern Gem", 22, "Rathalos", 2, 0, 0),
+            need(4, "Wyvern Gem", 22, "Rathalos", 1, 0, 0),
+            need(2, "Guardian Fulgur Scale +", 24, GFA, 14, 6, 0),
+            need(2, "Guardian Pelt +", 25, "Guardian Doshaguma", 3, 0, 0),
+            need(5, "Guardian Fulgur Fang +", 21, GFA, 9, 4, 0),
+            need(5, "Guardian Fulgur Tail", 26, GFA, 2, 0, 0),
+        ]
+    }
+
     /// A full endgame build: six pieces, many items, shared items and the longest names.
     pub fn endgame() -> Vec<Need> {
         let mut v = vec![
@@ -828,6 +942,46 @@ mod tests {
             .unwrap();
         // The weapon needs 2, the helm 1 and the mail 1.
         assert_eq!((line.need, line.owned), (4, 0));
+    }
+
+    #[test]
+    fn the_sort_can_put_the_monster_that_finishes_pieces_first() {
+        // Helm needs only Rathalos; the Coil needs two monsters; Rathalos has fewer missing items.
+        let mut d = BuildData::sample();
+        let n = |piece, item, monster, need| Need {
+            piece,
+            item,
+            icon_id: 0,
+            monster,
+            need,
+            owned: 0,
+            step: 0,
+            farm: None,
+        };
+        d.set_needs(
+            vec![
+                n(1, "A", "Rathalos", 1),
+                n(3, "B", "Doshaguma", 9),
+                n(3, "C", "Rathalos", 1),
+            ],
+            Vec::new(),
+        );
+        let head = |sort| {
+            let r = rows(
+                &d,
+                &ShoppingState {
+                    sort,
+                    ..Default::default()
+                },
+            );
+            match &r[0] {
+                Row::Head { title, .. } => title.clone(),
+                _ => panic!("head first"),
+            }
+        };
+        // Most items: Doshaguma (9) before Rathalos (2). Finishes pieces: Rathalos finishes the helm.
+        assert_eq!(head(Sort::Items), "Doshaguma");
+        assert_eq!(head(Sort::Pieces), "Rathalos");
     }
 
     #[test]

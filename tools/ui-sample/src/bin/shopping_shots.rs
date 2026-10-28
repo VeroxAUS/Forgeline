@@ -11,7 +11,7 @@ use egui::Vec2;
 use std::sync::Arc;
 use std::time::Duration;
 use ui_sample::build_card::shopping::sample;
-use ui_sample::build_card::{BuildCard, ShopView};
+use ui_sample::build_card::{BuildCard, ShopSort, ShopView};
 use ui_sample::icons::SampleSource;
 use ui_sample::shell::Section;
 
@@ -80,6 +80,16 @@ fn main() -> std::io::Result<()> {
             1.0,
         )?;
     }
+
+    // The other by-monster order: the monster that finishes the most pieces first.
+    app.shopping.view = ShopView::Monster;
+    app.data.set_needs(sample::finish(), chains.clone());
+    shot(&mut app, &mut h, "shop-sort-items.png", base, ppp)?;
+    app.shopping.sort = ShopSort::Pieces;
+    shot(&mut app, &mut h, "shop-sort-pieces.png", base, ppp)?;
+    shot(&mut app, &mut h, "shop-sort-pieces-16x9.png", wide, 1.0)?;
+    app.shopping.sort = ShopSort::Items;
+    app.data.set_needs(sample::endgame(), chains.clone());
 
     // Scrolled into the middle of the long list.
     app.shopping.view = ShopView::Monster;
