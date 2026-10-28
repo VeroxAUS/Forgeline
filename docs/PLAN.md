@@ -1,6 +1,6 @@
 # Forgeline: MH Wilds Build Planner, project plan and handover
 
-Written from the design conversation with the maintainer on 2026-10-27 and updated with every decision made that day. **Phase 1 (spikes) is closed (version 0.1.0); no product code exists yet.** Phase 2 (foundation) is planned in [plans/phase-2-foundation.md](plans/phase-2-foundation.md), awaiting the maintainer's approval. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
+Written from the design conversation with the maintainer on 2026-10-27 and updated with every decision made that day. **Phase 1 (spikes) is closed (version 0.1.0).** Phase 2 (foundation) is planned in [plans/phase-2-foundation.md](plans/phase-2-foundation.md), approved on 2026-10-28 and in progress. Everything below is either marked **verified** (we saw it ourselves), **reported** (from a web source, unchecked) or **open**. Standing rules are in [CLAUDE.md](../CLAUDE.md); this file is the context behind them. Answered questions are in [closed-questions.md](closed-questions.md), unanswered ones in [open-questions.md](open-questions.md), findings in [research.md](research.md).
 
 ## 1. Goal
 

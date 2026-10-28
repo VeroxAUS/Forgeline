@@ -228,3 +228,10 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Disk cache for icons?** No: memory only for now, to be revisited only if the performance budget grows and memory needs clearing (2026-10-28 08:30 UTC).
 - **Look check?** Passed ("it looks fine I guess", 2026-10-28 08:31 UTC), reviewed from screenshots in the cloud; not run on the PC.
 
+### UX element 4: build card (2026-10-28)
+- **Group the build as weapon, armour and charm?** Yes (2026-10-28 08:50 UTC).
+- **How are decoration slots shown?** All circles one size, with the slot level as a number inside and a hover tooltip "Decoration slot, level N"; fixed slot and status columns so every row lines up (2026-10-28 08:50 to 09:05 UTC). The maintainer first read the circles as skill circles and wanted one standard size.
+- **Scale the whole window with its size?** Yes, 1 to 3 times the 1000 by 700 design size, to be revisited in the real app; a manual override in Settings may come later (2026-10-28 08:50 and 09:02 UTC).
+- **Charm slot with no data?** Shows "No charm" for now (2026-10-28 08:50 UTC); owned talismans in the save stay an open question.
+- **Look check?** Passed ("Okay it looks right now", 2026-10-28 09:05 UTC), reviewed from screenshots in the cloud; not run on the PC.
+- **Merge PR #54?** Yes ("merge when you can", 2026-10-28 09:05 UTC). Merged at 09:07:24 UTC (cloud, CI green on Ubuntu and Windows).
