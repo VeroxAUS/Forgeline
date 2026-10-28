@@ -8,5 +8,6 @@
 pub mod datadir;
 pub mod discovery;
 pub mod memory;
+pub mod priority;
 pub mod results;
 pub mod vdf;

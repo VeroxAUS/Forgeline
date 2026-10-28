@@ -93,6 +93,8 @@ name = "forgeline-app"
 version = "0.2.0-dev"
 dependencies = [
  "forgeline-core",
+ "forgeline-pak",
+ "forgeline-update",
 ]
 
 [[package]]
@@ -102,6 +104,7 @@ dependencies = [
  "forgeline-core",
  "forgeline-pak",
  "forgeline-save",
+ "forgeline-update",
 ]
 
 [[package]]
@@ -117,6 +120,7 @@ dependencies = [
 name = "forgeline-pak"
 version = "0.2.0-dev"
 dependencies = [
+ "forgeline-pak",
  "miniz_oxide",
  "num-bigint",
  "zstd",
@@ -128,6 +132,18 @@ version = "0.2.0-dev"
 dependencies = [
  "aes",
  "miniz_oxide",
+ "serde_json",
+]
+
+[[package]]
+name = "forgeline-update"
+version = "0.2.0-dev"
+dependencies = [
+ "forgeline-core",
+ "forgeline-pak",
+ "forgeline-save",
+ "forgeline-update",
+ "serde",
  "serde_json",
 ]
 
