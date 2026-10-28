@@ -358,7 +358,13 @@ pub fn equipment_dump(stream: &[u8]) -> Result<Vec<String>, SaveError> {
                                 None => format!("t{}s{}={}", sc.code, sc.size, sc.as_i64()),
                             }
                         }
-                        Value::Scalar(sc) => format!("t{}s{}=wide", sc.code, sc.size),
+                        // Wide values (such as 64-bit ids) are not printed, only whether they are zero.
+                        Value::Scalar(sc) => format!(
+                            "t{}s{}={}",
+                            sc.code,
+                            sc.size,
+                            if sc.as_u64() == 0 { "wide0" } else { "wide!=0" }
+                        ),
                         Value::Str(_) => "text".to_string(),
                         Value::Struct(b) => format!("struct{}", b.len()),
                         Value::Class(_) => "class".to_string(),
