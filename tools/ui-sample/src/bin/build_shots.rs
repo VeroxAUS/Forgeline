@@ -65,6 +65,39 @@ fn main() -> std::io::Result<()> {
     app.data.skills = sample_endgame_skills();
     app.data.skills.truncate(4 + 10);
     save("skills-14.png", h.frame(&mut app, size, ppp))?;
+    // Research: builds shaped like the real endgame builds found in public guides (counts only).
+    use ui_sample::build_card::{sample_shaped_skills, PinnedStyle};
+    println!("shape            style     size        shown/total");
+    for (label, n, sets, groups) in [
+        ("typical-16", 12, 2, 2),
+        ("gogma-22", 19, 2, 1),
+        ("big-24", 20, 2, 2),
+    ] {
+        for style in [
+            PinnedStyle::Auto,
+            PinnedStyle::Tiers,
+            PinnedStyle::Summary,
+            PinnedStyle::OneLine,
+        ] {
+            for (sz_label, sz) in [("1000x700", size), ("1920x1080", Vec2::new(1920.0, 1080.0))] {
+                app.data.skills = sample_shaped_skills(n, sets, groups);
+                app.data.pinned_style = style;
+                let f = h.frame(&mut app, sz, if sz == size { ppp } else { 1.0 });
+                println!(
+                    "{label:<16} {style:<9?} {sz_label:<11} {}/{}",
+                    app.skills_shown(),
+                    app.data.skills.len()
+                );
+                if label != "big-24" || style == PinnedStyle::Auto {
+                    save(
+                        &format!("shape-{label}-{style:?}-{sz_label}.png").to_lowercase(),
+                        f,
+                    )?;
+                }
+            }
+        }
+    }
+    app.data.pinned_style = PinnedStyle::default();
     app.data.skills = skills;
     save(
         "build-large.png",

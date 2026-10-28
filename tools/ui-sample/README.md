@@ -81,3 +81,5 @@ The window repaints only on input. The rail, the Solo and Multiplayer switch, th
 Screenshots are in [docs/ux/samples/skills/](../../docs/ux/samples/skills/). `build_shots` writes them too (`skills-empty.png` along with the build set).
 
 Long lists (endgame builds): normal skills switch to one-line rows with the dots in a fixed column, and what still does not fit is left out, least important first (must-haves, set and group skills never; optimizer weight when there is one, else lowest level), with a clickable `+N more on Why` line. Set and group skills are pinned at the top with a `SET` or `GROUP` tag and one line per tier (reached tiers green, the next muted with the pieces it still needs, full text in the tooltip); the tier text is invented sample text. `sample_endgame_skills()` is a 22-skill sample.
+
+Set and group skill drawing is automatic (`PinnedStyle::Auto`): full tiers while everything fits, then name plus one summary line, then one row each. In a window at least about 1245 points wide (16:9 at the design height) the strip gets a second column. `sample_shaped_skills` builds the sample shapes used for the research in `docs/research.md` (counts only).

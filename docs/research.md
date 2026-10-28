@@ -470,3 +470,20 @@ Question: can an in-game shopping-list overlay learn the current target monster 
 - Strongest form: a separate small executable the overlay starts only when live reading is enabled, so the main download holds no code that opens the game process. A new executable is a new tool and needs the maintainer's yes; Nexus's stance on an optional reader file is unchecked.
 - Boundary: a "target provider" interface returning game build, quest-active flag, monster id or none, status (off, unsupported build, ok, failed) and timestamp. The reader knows nothing about saves or shopping lists. Transport: overlay launches the reader as a child process and reads an anonymous pipe, so there is no listener (fits the project rule). Screen reading and memory reading are interchangeable providers; a "none" provider (top shopping-list items) is the fallback.
 - **Decision (2026-10-27):** the maintainer adopted the two-halves split with live reading (`forgeline-live`) opt-in and strictly read-only, and approved changing the no-memory-reading rule for it.
+
+## Skill counts in endgame builds, for the skills strip (2026-10-28)
+
+Question: how many distinct skills, and how many set and group skills, does a real endgame build carry, so the Build screen's skills strip can be sized? All figures are from public community guides, read from their published build lists on 2026-10-28; none is from game files, and the guides themselves may differ from the game. Skill names are not copied into the repo; only counts.
+
+| Source | Build | Distinct skills | Of which set / group |
+|---|---|---|---|
+| [Mobalytics, endgame dual blades (TU3.5)](https://mobalytics.gg/mhw/builds/endgame-dual-blades-meta) | Dual blades, fire | 16 | 12 normal, 2 set, 2 group (the page labels them) |
+| [Icy Veins, light bowgun](https://www.icy-veins.com/monster-hunter-wilds/light-bowgun-high-rank-builds) | HR builds | 9 and 15 | not labelled |
+| same | three endgame light bowgun builds | 17, 15 and 22 | the 22-skill (Gogmazios) build names one group skill and a "Gogma active skill"; the rest are not labelled |
+| [Icy Veins, heavy bowgun](https://www.icy-veins.com/monster-hunter-wilds/heavy-bowgun-high-rank-builds) | three endgame builds | 17, 16 and 21 | only one group skill is labelled |
+| [Switchblade Gaming, best builds](https://www.switchbladegaming.com/monster-hunter-wilds/best-builds-all-weapons/) | one "best build" per weapon | 4 to 6 | lists only the headline skills, so not a full count |
+
+- Typical full endgame build: about 15 to 17 skills. Largest found: 22 (Icy Veins, Gogmazios light bowgun), of which about 19 are normal skills and about 3 are set or group skills. Set and group count found where labelled: 4 (2 set and 2 group).
+- Mechanics, from the [Switchblade skill system guide](https://www.switchbladegaming.com/monster-hunter-wilds/skill-system-guide/): set bonus skills activate at 2 and 4 pieces of the same armour set; group skills activate with any 3 pieces that share the group tag; both can be active at once; the largest decoration slot is size 3. The guide says nothing about different effects per tier and gives no numeric cap on how many set or group skills can be active. [Mobalytics on Gogma Artian](https://mobalytics.gg/mhw/guides/gogma-artian-weapons-explained): a Gogma Artian weapon adds one set bonus skill and one group skill, chosen at random and re-rollable.
+- **Not verified:** the real maximum number of active set and group skills; whether a weapon's set or group skill counts as a piece toward the thresholds; what each tier's effect text is; whether the game files hold tier effects.
+- Effect on the strip: at the 1000 by 700 design size the strip has about 506 points of height. Full tier lines for 3 or 4 set and group skills leave room for only about 11 to 14 normal skills, so a 22-skill build loses 4 to 5. See the review page for the measured table and the fix (automatic collapse of set and group rows, and a second strip column in wider windows).

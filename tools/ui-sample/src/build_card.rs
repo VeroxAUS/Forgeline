@@ -41,6 +41,8 @@ const COMPACT_DOTS_X: f32 = 120.0;
 /// Width of the side strip, and the gap between it and the equipment rows.
 const SKILLS_W: f32 = 232.0;
 const SKILLS_GAP: f32 = 32.0;
+/// Gap between strip columns.
+const SKILL_GAP: f32 = 24.0;
 /// The equipment rows keep at least this width; below it the strip drops under the card.
 const EQUIP_MIN_W: f32 = 480.0;
 /// Each strip column is at least this wide (name, dots and level number).
@@ -83,6 +85,22 @@ pub enum SkillKind {
     Normal,
     Set,
     Group,
+}
+
+/// How tall set and group skills are drawn in the strip (the options compared for the long-list
+/// question).
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum PinnedStyle {
+    /// The tallest of the three below that still lets every skill show; the one-row style if
+    /// none does. Short lists get the full tiers, long ones collapse.
+    #[default]
+    Auto,
+    /// Name, then one line per tier.
+    Tiers,
+    /// Name, then one line: the highest active tier and what is next.
+    Summary,
+    /// One row like a normal skill: name, tag and pieces worn. Tiers on hover and on Why.
+    OneLine,
 }
 
 /// One tier of a set or group skill: the effect that starts at `pieces` worn.
@@ -164,6 +182,8 @@ pub struct BuildData {
     pub charm: Option<Piece>,
     /// Skill totals for the whole build, in the order to show them.
     pub skills: Vec<Skill>,
+    /// How the set and group skills are drawn.
+    pub pinned_style: PinnedStyle,
 }
 
 impl BuildData {
@@ -248,6 +268,7 @@ impl BuildData {
                 Skill::normal("Ammo saver", 3, 3),
                 Skill::normal("Stamina surge", 2, 3),
             ],
+            pinned_style: PinnedStyle::default(),
         }
     }
 }
@@ -311,6 +332,37 @@ pub fn sample_endgame_skills() -> Vec<Skill> {
     v
 }
 
+/// A build shaped like the real endgame builds found for the research (counts only, invented
+/// names): `normal` normal skills, then `sets` set skills and `groups` group skills, each with
+/// tiers, some active.
+pub fn sample_shaped_skills(normal: usize, sets: usize, groups: usize) -> Vec<Skill> {
+    const NAMES: [&str; 24] = [
+        "Skill A", "Skill B", "Skill C", "Skill D", "Skill E", "Skill F", "Skill G", "Skill H",
+        "Skill I", "Skill J", "Skill K", "Skill L", "Skill M", "Skill N", "Skill O", "Skill P",
+        "Skill Q", "Skill R", "Skill S", "Skill T", "Skill U", "Skill V", "Skill W", "Skill X",
+    ];
+    const SETS: [&str; 3] = ["Set bonus Alpha", "Set bonus Beta", "Set bonus Gamma"];
+    const GROUPS: [&str; 3] = [
+        "Group skill Delta",
+        "Group skill Epsilon",
+        "Group skill Zeta",
+    ];
+    let mut v = Vec::new();
+    for (i, name) in SETS.iter().take(sets).enumerate() {
+        v.push(Skill::bonus(SkillKind::Set, name, [4, 2, 2][i], TWO_FOUR));
+    }
+    for (i, name) in GROUPS.iter().take(groups).enumerate() {
+        v.push(Skill::bonus(SkillKind::Group, name, [3, 2, 3][i], THREE));
+    }
+    for (i, name) in NAMES.iter().take(normal).enumerate() {
+        v.push(Skill {
+            weight: Some(100 - 4 * i as u8),
+            ..Skill::normal(name, [5, 5, 3, 3, 3, 2, 2, 3][i % 8], 5)
+        });
+    }
+    v
+}
+
 /// What a hover rectangle explains.
 #[derive(Clone, Copy)]
 enum Hit {
@@ -330,6 +382,14 @@ pub struct BuildCard {
 }
 
 impl BuildCard {
+    /// How many skills the strip drew last frame (the rest are behind "+N more on Why").
+    pub fn skills_shown(&self) -> usize {
+        self.hits
+            .iter()
+            .filter(|(_, h)| matches!(h, Hit::Skill(_)))
+            .count()
+    }
+
     pub fn new(ctx: &Context, source: Arc<dyn IconSource>) -> Self {
         BuildCard {
             shell: Shell::new(),
@@ -444,10 +504,17 @@ fn card(
 
     // Wide enough: the skills sit in a side strip level with the weapon label. Otherwise they go
     // under the charm, full width.
-    let side = right - left - SKILLS_W - SKILLS_GAP >= EQUIP_MIN_W;
+    // In a wider window (a 16:9 screen is about 1245 points wide at the 700 point design height)
+    // the strip gets a second column and the equipment rows keep their width.
+    let strip_w = if right - left - 2.0 * SKILLS_W - SKILL_GAP - SKILLS_GAP >= EQUIP_MIN_W {
+        2.0 * SKILLS_W + SKILL_GAP
+    } else {
+        SKILLS_W
+    };
+    let side = right - left - strip_w - SKILLS_GAP >= EQUIP_MIN_W;
     let top = content.min.y + 120.0;
     let eq_right = if side {
-        right - SKILLS_W - SKILLS_GAP
+        right - strip_w - SKILLS_GAP
     } else {
         right
     };
@@ -455,11 +522,12 @@ fn card(
         skills(
             p,
             hits,
-            right - SKILLS_W,
+            right - strip_w,
             right,
             top,
             content.max.y - 16.0,
             &data.skills,
+            data.pinned_style,
         );
     }
     let right = eq_right;
@@ -516,6 +584,7 @@ fn card(
             y + 14.0,
             content.max.y - 16.0,
             &data.skills,
+            data.pinned_style,
         );
     }
 }
@@ -539,6 +608,7 @@ fn skills(
     y: f32,
     bottom: f32,
     list: &[Skill],
+    pinned_style: PinnedStyle,
 ) {
     let mut y = section(p, left, right, y, "SKILLS");
     if list.is_empty() {
@@ -554,37 +624,62 @@ fn skills(
     let ppp = p.ctx().pixels_per_point();
     let snap = |v: f32| (v * ppp).round() / ppp;
     let cols = (((right - left) / SKILL_COL_MIN_W).floor() as usize).max(1);
-    let col_w = (right - left - (cols - 1) as f32 * 24.0) / cols as f32;
-    let col_x = |i: usize| left + (i % cols) as f32 * (col_w + 24.0);
+    let col_w = (right - left - (cols - 1) as f32 * SKILL_GAP) / cols as f32;
+    let col_x = |i: usize| left + (i % cols) as f32 * (col_w + SKILL_GAP);
     y += 6.0;
 
     // Set and group skills first: the name and kind tag, then one line per tier. The active tiers
     // are green, the next one is muted with how many pieces it still needs, later ones fainter.
     // Blocks are as tall as their tiers; columns follow the width like the normal skills.
     let pinned: Vec<&Skill> = list.iter().filter(|k| k.pinned()).collect();
+    let pinned_style = if pinned_style == PinnedStyle::Auto {
+        let n_normal = list.len() - pinned.len();
+        [PinnedStyle::Tiers, PinnedStyle::Summary]
+            .into_iter()
+            .find(|st| everything_fits(&pinned, n_normal, *st, cols, y, bottom))
+            .unwrap_or(PinnedStyle::OneLine)
+    } else {
+        pinned_style
+    };
     let mut col_y = vec![y; cols];
+    let one_line = pinned_style == PinnedStyle::OneLine;
     for (i, k) in pinned.iter().enumerate() {
         let x = col_x(i);
         let ry = col_y[i % cols];
+        // Name, with the kind tag: an outlined mono label, so the block reads as a different kind
+        // of thing at a glance without using the accent. In a one-line row the tag sits in the
+        // same column as the dots of a normal compact row.
+        let cy = if one_line {
+            ry + COMPACT_ROW / 2.0 - 2.0
+        } else {
+            ry + 9.0
+        };
+        let name_w = if one_line {
+            COMPACT_DOTS_X - 8.0
+        } else {
+            col_w - 56.0
+        };
         p.text(
-            Pos2::new(x, ry + 9.0),
+            Pos2::new(x, cy),
             Align2::LEFT_CENTER,
-            fit(p, k.name, col_w - 56.0, "inter-medium", 12.5),
+            fit(p, k.name, name_w, "inter-medium", 12.5),
             font("inter-medium", 12.5),
             FG,
         );
-        // The kind tag: a small outlined mono label at the right, so the block reads as a
-        // different kind of thing at a glance without using the accent.
         let tag = if k.kind == SkillKind::Set {
             "SET"
         } else {
             "GROUP"
         };
         let g = p.layout_no_wrap(tag.to_string(), mono(9.0), DIM);
-        let tag_rect = Rect::from_center_size(
-            Pos2::new(snap(x + col_w - (g.size().x + 10.0) / 2.0), snap(ry + 9.0)),
-            Vec2::new(g.size().x + 10.0, 15.0),
-        );
+        let tag_w = g.size().x + 10.0;
+        let tag_cx = if one_line {
+            x + COMPACT_DOTS_X + tag_w / 2.0
+        } else {
+            x + col_w - tag_w / 2.0
+        };
+        let tag_rect =
+            Rect::from_center_size(Pos2::new(snap(tag_cx), snap(cy)), Vec2::new(tag_w, 15.0));
         p.rect_stroke(
             tag_rect,
             2.0,
@@ -594,32 +689,44 @@ fn skills(
         p.galley(tag_rect.center() - g.size() / 2.0, g, DIM);
 
         let mut next_seen = false;
-        for (j, t) in k.tiers.iter().enumerate() {
-            let (text, color) = if k.level >= t.pieces {
-                (format!("{} pcs: {}", t.pieces, t.effect), OK)
-            } else if !next_seen {
-                next_seen = true;
-                let n = t.pieces - k.level;
-                let more = if n == 1 {
-                    "1 more piece".to_string()
-                } else {
-                    format!("{n} more pieces")
+        let lines: Vec<(String, Color32)> = k
+            .tiers
+            .iter()
+            .map(|t| tier_text(k, t, &mut next_seen))
+            .collect();
+        let h = match pinned_style {
+            PinnedStyle::Tiers | PinnedStyle::Auto => {
+                for (j, (text, color)) in lines.iter().enumerate() {
+                    tier_line(p, x, ry + 26.0 + j as f32 * TIER_ROW, col_w, text, *color);
+                }
+                20.0 + lines.len().max(1) as f32 * TIER_ROW + 6.0
+            }
+            PinnedStyle::Summary => {
+                // The highest tier reached, then the next one after it.
+                let reached = k.tiers.iter().filter(|t| k.level >= t.pieces).count();
+                let text = match (reached.checked_sub(1), k.tiers.get(reached)) {
+                    (Some(a), Some(n)) => format!("{} \u{b7} next {} pcs", lines[a].0, n.pieces),
+                    (Some(a), None) => lines[a].0.clone(),
+                    (None, _) => lines.first().map(|l| l.0.clone()).unwrap_or_default(),
                 };
-                (format!("{} pcs: {}, {more}", t.pieces, t.effect), DIM)
-            } else {
-                (format!("{} pcs: {}", t.pieces, t.effect), FAINT)
-            };
-            p.text(
-                Pos2::new(x, ry + 26.0 + j as f32 * TIER_ROW),
-                Align2::LEFT_CENTER,
-                fit(p, &text, col_w, "inter", 11.5),
-                font("inter", 11.5),
-                color,
-            );
-        }
-        let h = 20.0 + k.tiers.len().max(1) as f32 * TIER_ROW + 6.0;
+                let color = if reached > 0 { OK } else { DIM };
+                tier_line(p, x, ry + 26.0, col_w, &text, color);
+                42.0
+            }
+            PinnedStyle::OneLine => {
+                let active = k.tiers.iter().any(|t| k.level >= t.pieces);
+                p.text(
+                    Pos2::new(x + col_w, cy),
+                    Align2::RIGHT_CENTER,
+                    format!("{} pcs", k.level),
+                    mono(11.5),
+                    if active { OK } else { DIM },
+                );
+                COMPACT_ROW
+            }
+        };
         hits.push((
-            Rect::from_min_size(Pos2::new(x, ry), Vec2::new(col_w, h - 4.0)),
+            Rect::from_min_size(Pos2::new(x, ry), Vec2::new(col_w, h - 2.0)),
             Hit::Skill(**k),
         ));
         col_y[i % cols] += h;
@@ -719,6 +826,69 @@ fn hide_least_important(normal: &[&Skill], n_cut: usize) -> Vec<bool> {
         }
     }
     hidden
+}
+
+/// Height of one set or group skill block in the given style.
+fn pinned_height(k: &Skill, style: PinnedStyle) -> f32 {
+    match style {
+        PinnedStyle::Tiers | PinnedStyle::Auto => {
+            20.0 + k.tiers.len().max(1) as f32 * TIER_ROW + 6.0
+        }
+        PinnedStyle::Summary => 42.0,
+        PinnedStyle::OneLine => COMPACT_ROW,
+    }
+}
+
+/// Whether the pinned blocks in `style` and `n_normal` compact normal rows fit between `y` and
+/// `bottom`, so nothing has to be left out.
+fn everything_fits(
+    pinned: &[&Skill],
+    n_normal: usize,
+    style: PinnedStyle,
+    cols: usize,
+    y: f32,
+    bottom: f32,
+) -> bool {
+    let mut col_h = vec![0.0f32; cols];
+    for (i, k) in pinned.iter().enumerate() {
+        col_h[i % cols] += pinned_height(k, style);
+    }
+    let pinned_h = col_h.into_iter().fold(0.0, f32::max);
+    let gap = if pinned.is_empty() || n_normal == 0 {
+        0.0
+    } else {
+        12.0
+    };
+    y + pinned_h + gap + n_normal.div_ceil(cols) as f32 * COMPACT_ROW <= bottom
+}
+
+/// The line for one tier and its colour: reached tiers green, the first one not reached muted with
+/// how many pieces it still needs, later ones fainter. `next_seen` carries across a skill's tiers.
+fn tier_text(k: &Skill, t: &Tier, next_seen: &mut bool) -> (String, Color32) {
+    if k.level >= t.pieces {
+        (format!("{} pcs: {}", t.pieces, t.effect), OK)
+    } else if !*next_seen {
+        *next_seen = true;
+        let n = t.pieces - k.level;
+        let more = if n == 1 {
+            "1 more piece".to_string()
+        } else {
+            format!("{n} more pieces")
+        };
+        (format!("{} pcs: {}, {more}", t.pieces, t.effect), DIM)
+    } else {
+        (format!("{} pcs: {}", t.pieces, t.effect), FAINT)
+    }
+}
+
+fn tier_line(p: &Painter, x: f32, cy: f32, width: f32, text: &str, color: Color32) {
+    p.text(
+        Pos2::new(x, cy),
+        Align2::LEFT_CENTER,
+        fit(p, text, width, "inter", 11.5),
+        font("inter", 11.5),
+        color,
+    );
 }
 
 /// `text` shortened with an ellipsis until it fits `width` (in the named face and size).
