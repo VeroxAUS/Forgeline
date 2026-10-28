@@ -1,0 +1,16 @@
+[package]
+name = "forgeline-save"
+description = "Forgeline save reader: opens the save container and reads a summary of the class stream (read-only)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+aes = "0.8"
+miniz_oxide = "0.8"
+
+[dev-dependencies]
+serde_json.workspace = true

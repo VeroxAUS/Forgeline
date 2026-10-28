@@ -49,3 +49,11 @@ Licences read from each crate's `Cargo.toml` (`cargo metadata`). No GPL crate is
 | Source | Licence | Use |
 |---|---|---|
 | [eigeen/ree-pak-rs](https://github.com/eigeen/ree-pak-rs) | MIT | The 129-byte pak table modulus constant in `spikes/step5-extract/extract/src/pak.rs` on the `spikes-archive` branch, and the pak format facts behind our own reader. Credit retained. If this constant enters the product, copy the MIT notice here in full. |
+
+## crates/forgeline-save (the save reader, linked into the app)
+
+| Crate | Licence | Use |
+|---|---|---|
+| aes, miniz_oxide | MIT OR Apache-2.0, MIT OR Zlib OR Apache-2.0 | AES-128 (OFB mode) to decrypt the save container, raw deflate to inflate it |
+
+Their own dependencies are the ones listed for `tools/fixture-builder` above (same versions, same lockfile). The container and class-stream readers are written from our own notes in `docs/research.md`; no code from MHWeditor or any other unlicensed project is used.

@@ -10,22 +10,40 @@
   "slots": [
     {
       "active": true,
+      "armor_distinct_series_pieces": 3,
+      "armor_entries": 4,
+      "armor_entries_by_piece": {
+        "1": 1,
+        "3": 3
+      },
       "boss_entries": 3,
       "bosses_with_kills": 2,
       "box_item_types_in_use": 4,
       "equipment_by_category": {
-        "1": 2,
-        "13": 3,
-        "21": 1
+        "0": 3,
+        "1": 1,
+        "13": 4,
+        "21": 1,
+        "37": 1
       },
-      "equipment_in_use": 6,
+      "equipment_in_use": 10,
       "found_flag_bits_set": 4,
       "has_data": true,
+      "mantles": 1,
       "pouch_entries": 2,
-      "slot": 1
+      "slot": 1,
+      "talismans": 1,
+      "weapons_by_type": {
+        "0": 1,
+        "13": 2,
+        "3": 1
+      }
     },
     {
       "active": false,
+      "armor_distinct_series_pieces": 0,
+      "armor_entries": 0,
+      "armor_entries_by_piece": {},
       "boss_entries": 0,
       "bosses_with_kills": 0,
       "box_item_types_in_use": 0,
@@ -33,11 +51,17 @@
       "equipment_in_use": 0,
       "found_flag_bits_set": 0,
       "has_data": false,
+      "mantles": 0,
       "pouch_entries": 0,
-      "slot": 2
+      "slot": 2,
+      "talismans": 0,
+      "weapons_by_type": {}
     },
     {
       "active": false,
+      "armor_distinct_series_pieces": 0,
+      "armor_entries": 0,
+      "armor_entries_by_piece": {},
       "boss_entries": 0,
       "bosses_with_kills": 0,
       "box_item_types_in_use": 0,
@@ -45,8 +69,11 @@
       "equipment_in_use": 0,
       "found_flag_bits_set": 0,
       "has_data": false,
+      "mantles": 0,
       "pouch_entries": 0,
-      "slot": 3
+      "slot": 3,
+      "talismans": 0,
+      "weapons_by_type": {}
     }
   ],
   "slots_with_data": 1,

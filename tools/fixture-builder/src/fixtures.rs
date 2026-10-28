@@ -17,9 +17,13 @@ use std::collections::BTreeMap;
 /// The fake Steam account number every fixture uses.
 pub const ACCOUNT_ID: u64 = 4242;
 
+/// One equipment box entry. As in the real save: the category, then two numbers whose meaning
+/// depends on it (weapon: type and id within the type; armour: series and piece number; talisman
+/// and mantle: an id and 0).
 pub struct EquipEntry {
     pub category: u8,
-    pub id: u32,
+    pub first: i32,
+    pub second: i32,
 }
 
 #[derive(Default)]
@@ -47,14 +51,21 @@ pub struct Fixture {
 const EMPTY_CATEGORY: u8 = 141;
 
 fn work(e: &EquipEntry) -> Class {
+    // The real field names of this class are unknown, so these are invented; the reader takes the
+    // first three fields by position. The other fields keep the real order, types and defaults.
     Class::new("app.savedata.cEquipWork")
-        .with("Category_Gender", Value::U8(e.category))
-        .with("EquipIdFixed", Value::U32(e.id))
-        .with("BonusByCreating", Value::U32(0))
-        .with("BonusByGrinding", Value::U32(0))
-        .with("GrindingNum", Value::U8(0))
-        .with("BowgunCustomizeId", Value::ArrayS16(vec![-1; 4]))
-        .with("EquipmentAccessoryIdArray", Value::ArrayS16(vec![-1; 3]))
+        .with("_Cat", Value::U8(e.category))
+        .with("_First", Value::S32(e.first))
+        .with("_Second", Value::S32(e.second))
+        .with("_Third", Value::S32(0))
+        .with("_Fourth", Value::U32(0))
+        .with("_Wide", Value::U64(0))
+        .with("_Small", Value::U8(0))
+        .with("_Slots4", Value::ArrayS16(vec![-1; 4]))
+        .with("_Slots3", Value::ArrayS16(vec![-1; 3]))
+        .with("_Extra", Value::S32(0))
+        .with("_FlagA", Value::U8(0))
+        .with("_FlagB", Value::U8(0))
 }
 
 fn item_work(i: &(i32, i32)) -> Class {
@@ -142,12 +153,22 @@ pub fn save_bytes(f: &Fixture) -> Vec<u8> {
     build_file(&deflate_wrapper(&stream_for(f)), STEAM_ID_BASE + ACCOUNT_ID)
 }
 
-/// Light bowgun entries (category 13) with the given ids.
-fn weapons(ids: &[u32]) -> std::vec::IntoIter<EquipEntry> {
-    ids.iter()
-        .map(|&id| EquipEntry { category: 13, id })
-        .collect::<Vec<_>>()
-        .into_iter()
+const WEAPON: u8 = 13;
+const ARMOR_A: u8 = 0;
+const ARMOR_B: u8 = 1;
+const TALISMAN: u8 = 21;
+const MANTLE: u8 = 37;
+
+fn entry(category: u8, first: i32, second: i32) -> EquipEntry {
+    EquipEntry {
+        category,
+        first,
+        second,
+    }
+}
+
+fn empty_entry() -> EquipEntry {
+    entry(EMPTY_CATEGORY, 0, 0)
 }
 
 fn empty_slot() -> Slot {
@@ -160,27 +181,22 @@ pub fn all() -> Vec<Fixture> {
         used: true,
         name: "Fixture Hunter",
         hunter_id: "FIXT-0001-NOPE",
-        equip: weapons(&[0, 1, 2])
-            .chain([
-                EquipEntry { category: 1, id: 4 },
-                EquipEntry {
-                    category: 1,
-                    id: 25,
-                },
-                EquipEntry {
-                    category: 21,
-                    id: 57,
-                },
-                EquipEntry {
-                    category: EMPTY_CATEGORY,
-                    id: 0,
-                },
-                EquipEntry {
-                    category: EMPTY_CATEGORY,
-                    id: 0,
-                },
-            ])
-            .collect(),
+        equip: vec![
+            // Two base weapons, then two light bowguns (weapon type 13) of different ids.
+            entry(WEAPON, 0, 0),
+            entry(WEAPON, 3, 0),
+            entry(WEAPON, 13, 2),
+            entry(WEAPON, 13, 16),
+            // Armour: series 2 piece 3 in both looks (A and B), series 21 pieces 3 and 1 in look A.
+            entry(ARMOR_A, 2, 3),
+            entry(ARMOR_B, 2, 3),
+            entry(ARMOR_A, 21, 3),
+            entry(ARMOR_A, 21, 1),
+            entry(TALISMAN, 57, 1),
+            entry(MANTLE, 10, 0),
+            empty_entry(),
+            empty_entry(),
+        ],
         box_items: vec![(1, 10), (2, 5), (5, 99), (805, 1), (7, 0)],
         pouch: vec![(1, 3), (2, 2)],
         found_flags: vec![0b1011, 0, 0x8000_0000],
@@ -191,9 +207,7 @@ pub fn all() -> Vec<Fixture> {
         used: true,
         name: "Fixture Alt",
         hunter_id: "FIXT-0002-NOPE",
-        equip: weapons(&[7])
-            .chain([EquipEntry { category: 1, id: 9 }])
-            .collect(),
+        equip: vec![entry(WEAPON, 12, 0), entry(ARMOR_A, 9, 0)],
         box_items: vec![(3, 1)],
         pouch: vec![],
         found_flags: vec![1],
@@ -204,18 +218,12 @@ pub fn all() -> Vec<Fixture> {
         used: true,
         name: "Fixture Third",
         hunter_id: "FIXT-0003-NOPE",
-        equip: weapons(&[3, 4])
-            .chain([
-                EquipEntry {
-                    category: 21,
-                    id: 12,
-                },
-                EquipEntry {
-                    category: EMPTY_CATEGORY,
-                    id: 0,
-                },
-            ])
-            .collect(),
+        equip: vec![
+            entry(WEAPON, 13, 2),
+            entry(WEAPON, 13, 17),
+            entry(MANTLE, 0, 0),
+            empty_entry(),
+        ],
         box_items: vec![(10, 2), (11, 4)],
         pouch: vec![(10, 1)],
         found_flags: vec![0xF, 0xF0],
@@ -237,18 +245,40 @@ pub fn all() -> Vec<Fixture> {
 }
 
 fn slot_expected(index: usize, s: &Slot) -> Json {
+    let in_use: Vec<&EquipEntry> = s
+        .equip
+        .iter()
+        .filter(|e| e.category != EMPTY_CATEGORY)
+        .collect();
     let mut by_category: BTreeMap<String, usize> = BTreeMap::new();
-    for e in s.equip.iter().filter(|e| e.category != EMPTY_CATEGORY) {
+    let mut weapons_by_type: BTreeMap<String, usize> = BTreeMap::new();
+    let mut armor_by_piece: BTreeMap<String, usize> = BTreeMap::new();
+    let mut distinct = std::collections::BTreeSet::new();
+    for e in &in_use {
         *by_category.entry(e.category.to_string()).or_default() += 1;
+        match e.category {
+            WEAPON => *weapons_by_type.entry(e.first.to_string()).or_default() += 1,
+            ARMOR_A | ARMOR_B => {
+                *armor_by_piece.entry(e.second.to_string()).or_default() += 1;
+                distinct.insert((e.first, e.second));
+            }
+            _ => {}
+        }
     }
     json!({
         "slot": index + 1,
         "has_data": s.used,
         "active": s.active,
-        "equipment_in_use": s.equip.iter().filter(|e| e.category != EMPTY_CATEGORY).count(),
+        "equipment_in_use": in_use.len(),
         "equipment_by_category": by_category,
+        "weapons_by_type": weapons_by_type,
+        "armor_entries": in_use.iter().filter(|e| matches!(e.category, ARMOR_A | ARMOR_B)).count(),
+        "armor_entries_by_piece": armor_by_piece,
+        "armor_distinct_series_pieces": distinct.len(),
+        "talismans": in_use.iter().filter(|e| e.category == TALISMAN).count(),
+        "mantles": in_use.iter().filter(|e| e.category == MANTLE).count(),
         "box_item_types_in_use": s.box_items.iter().filter(|i| i.1 > 0).count(),
-        "pouch_entries": s.pouch.len(),
+        "pouch_entries": s.pouch.iter().filter(|i| i.1 > 0).count(),
         "found_flag_bits_set": s.found_flags.iter().map(|w| w.count_ones()).sum::<u32>(),
         "boss_entries": s.bosses.len(),
         "bosses_with_kills": s.bosses.iter().filter(|b| b.1 > 0).count(),
@@ -319,8 +349,11 @@ mod tests {
         }
         let one = all().remove(0);
         let v: Json = serde_json::from_str(&expected_json(&one)).unwrap();
-        assert_eq!(v["slots"][0]["equipment_in_use"], 6);
-        assert_eq!(v["slots"][0]["equipment_by_category"]["13"], 3);
+        assert_eq!(v["slots"][0]["equipment_in_use"], 10);
+        assert_eq!(v["slots"][0]["equipment_by_category"]["13"], 4);
+        assert_eq!(v["slots"][0]["weapons_by_type"]["13"], 2);
+        assert_eq!(v["slots"][0]["armor_entries_by_piece"]["3"], 3);
+        assert_eq!(v["slots"][0]["armor_distinct_series_pieces"], 3);
         assert_eq!(v["slots"][0]["box_item_types_in_use"], 4);
         assert_eq!(v["slots"][0]["found_flag_bits_set"], 4);
         assert_eq!(v["slots"][0]["bosses_with_kills"], 2);
