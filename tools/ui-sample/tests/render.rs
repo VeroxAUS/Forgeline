@@ -18,5 +18,10 @@ fn every_variant_renders_something_distinct() {
     }
     assert_ne!(frames[0].rgba, frames[1].rgba);
     assert_ne!(frames[1].rgba, frames[2].rgba);
-    assert_ne!(frames[0].rgba, frames[3].rgba);
+    // Every variant, the D family included, is visibly different from the others.
+    for i in 0..frames.len() {
+        for j in i + 1..frames.len() {
+            assert_ne!(frames[i].rgba, frames[j].rgba, "{i} vs {j}");
+        }
+    }
 }

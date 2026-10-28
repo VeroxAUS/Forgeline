@@ -30,14 +30,23 @@ pub enum Variant {
     Ember,
     /// The maintainer's pick: A as the base with C's orange accent, round skill dots and icon tiles.
     ModernEmber,
+    /// D plus C's header gradient.
+    ModernEmberGradient,
+    /// D plus C's tinted rail item.
+    ModernEmberRail,
+    /// D plus both.
+    ModernEmberBoth,
 }
 
 impl Variant {
-    pub const ALL: [Variant; 4] = [
+    pub const ALL: [Variant; 7] = [
         Variant::ModernDark,
         Variant::Slate,
         Variant::Ember,
         Variant::ModernEmber,
+        Variant::ModernEmberGradient,
+        Variant::ModernEmberRail,
+        Variant::ModernEmberBoth,
     ];
 
     pub fn slug(self) -> &'static str {
@@ -46,6 +55,9 @@ impl Variant {
             Variant::Slate => "b-slate",
             Variant::Ember => "c-ember",
             Variant::ModernEmber => "d-modern-ember",
+            Variant::ModernEmberGradient => "d1-modern-ember-gradient",
+            Variant::ModernEmberRail => "d2-modern-ember-rail",
+            Variant::ModernEmberBoth => "d3-modern-ember-both",
         }
     }
 
@@ -55,6 +67,9 @@ impl Variant {
             Variant::Slate => "B. Slate",
             Variant::Ember => "C. Ember",
             Variant::ModernEmber => "D. Modern Ember",
+            Variant::ModernEmberGradient => "D1. Modern Ember + header gradient",
+            Variant::ModernEmberRail => "D2. Modern Ember + tinted rail item",
+            Variant::ModernEmberBoth => "D3. Modern Ember + both",
         }
     }
 
@@ -101,13 +116,32 @@ impl Variant {
                 headline: Headline::Plain,
                 ..base
             },
-            Variant::ModernEmber => Style {
-                accent: c(255, 138, 61),
-                accent_ink: c(26, 12, 2),
-                icon_tiles: true,
-                skills: SkillStyle::Dots,
-                ..base
-            },
+            Variant::ModernEmber
+            | Variant::ModernEmberGradient
+            | Variant::ModernEmberRail
+            | Variant::ModernEmberBoth => {
+                let d = Style {
+                    accent: c(255, 138, 61),
+                    accent_ink: c(26, 12, 2),
+                    icon_tiles: true,
+                    skills: SkillStyle::Dots,
+                    ..base
+                };
+                let gradient = Some((c(38, 24, 16), d.bg));
+                match self {
+                    Variant::ModernEmberGradient => Style { gradient, ..d },
+                    Variant::ModernEmberRail => Style {
+                        tinted_rail: true,
+                        ..d
+                    },
+                    Variant::ModernEmberBoth => Style {
+                        gradient,
+                        tinted_rail: true,
+                        ..d
+                    },
+                    _ => d,
+                }
+            }
             Variant::Ember => Style {
                 bg: c(12, 10, 9),
                 fg: c(242, 236, 230),
