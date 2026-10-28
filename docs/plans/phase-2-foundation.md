@@ -647,7 +647,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 |-------|---------------|
 | Phase approved by the maintainer | 2026-10-28 03:52 UTC |
 | Step 1 PR merged (#28) | 2026-10-28 04:03 UTC |
-| Step 2 PR merged | |
+| Step 2 PR merged (#30) | 2026-10-28 04:12 UTC |
 | Step 3 PR merged | |
 | Step 4 PR merged | |
 | Step 5 PR merged | |

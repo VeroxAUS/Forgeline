@@ -171,3 +171,6 @@ All answered 2026-10-27, in the order they were asked.
 
 ### Phase 2 step 1 merged (2026-10-28)
 - **Merge the step 1 PR (#28)?** Yes (2026-10-28 04:03 UTC, "You are good to merge"). Merged at 04:03 UTC after the cloud test round: CI green on Ubuntu and Windows (check, RAM check, plan-page).
+
+### Phase 2 step 2 merged (2026-10-28)
+- **Merge the step 2 PR (#30)?** Yes ("merge", 2026-10-28 04:12 UTC). PC round passed at 04:11:49 UTC with Wilds not running: discovery found the Steam folder through the registry, the library, the install and build 25921695, listed the 3 mod markers without opening them, showed only the last 4 digits of the Steam ID, and left all 81 recorded files unchanged. Cloud CI green on Ubuntu and Windows.
