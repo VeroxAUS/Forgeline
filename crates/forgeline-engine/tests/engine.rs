@@ -213,3 +213,35 @@ fn refresh_picks_up_the_extracted_data_and_flags_nothing_without_a_game() {
         "no game build to compare with"
     );
 }
+
+#[test]
+fn a_swap_cut_short_is_recovered_when_the_engine_starts() {
+    let rig = Rig::new("recover");
+    let manifest = Manifest {
+        schema: SCHEMA,
+        build_id: "100".into(),
+        exe_size: 1,
+        exe_modified: None,
+        tool_version: "test".into(),
+        created: "2026-01-01T00:00:00Z".into(),
+        files: vec![],
+        missing: vec![],
+        classes: vec!["a".into()],
+    };
+    // The state after a crash between the two renames: `previous` holds the data, no `current`.
+    let previous = rig.root.join("data-dir").join("data").join("previous");
+    std::fs::create_dir_all(&previous).unwrap();
+    std::fs::write(previous.join("manifest.json"), manifest.to_json()).unwrap();
+
+    let (engine, rx) = rig.start();
+    wait_for(&engine, &rx, "recovered data seen", |s| {
+        s.data.manifest.is_some()
+    });
+    assert!(rig
+        .root
+        .join("data-dir")
+        .join("data")
+        .join("current")
+        .join("manifest.json")
+        .is_file());
+}
