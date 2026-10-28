@@ -182,6 +182,9 @@ fn build_card_shows_icons_once_loaded_and_keeps_the_build_while_recomputing() {
         must_haves: Vec::new(),
         chip_w: ui_sample::build_card::CHIP_W,
         headline_style: Default::default(),
+        mode: Default::default(),
+        alt: Default::default(),
+        unavailable: [None; 6],
     };
     assert_ne!(ready.rgba, h.frame(&mut app, size, 1.0).rgba);
     let big = h.frame(&mut app, Vec2::new(1400.0, 900.0), 1.0);
@@ -328,4 +331,26 @@ fn headline_options_draw_differently_and_unknown_draws_no_fill() {
     app.data.headline_style = HeadlineStyle::Compare;
     app.data.damage.fill = None;
     assert_ne!(seen[1], h.frame(&mut app, size, 1.0).rgba);
+}
+
+#[test]
+fn alternatives_fall_back_and_move_the_headline() {
+    use ui_sample::build_card::{Alt, BuildData, PlayMode};
+    let mut d = BuildData::sample();
+    let best = d.damage.fill;
+    d.alt = Alt::Gogma; // not unlocked in the sample
+    d.sync_alt();
+    assert_eq!(
+        d.alt,
+        Alt::Best,
+        "an unavailable alternative falls back to Best"
+    );
+    d.alt = Alt::Safe;
+    d.apply_variant();
+    assert!(d.damage.fill < best, "Safe gives up damage");
+    assert!(d.toughness.fill > BuildData::sample().toughness.fill);
+    let solo = d.toughness.fill;
+    d.mode = PlayMode::Multiplayer;
+    d.apply_variant();
+    assert!(d.toughness.fill > solo);
 }

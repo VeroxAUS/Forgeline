@@ -58,7 +58,9 @@ Minimum readable text is 12 px at the target size (design plan principle 8); the
 
 **Header.** Mono caps breadcrumb (`BUILD · LIGHT BOWGUN`), title, and the controls on the right: monster selector and Solo/Multiplayer switch, both 30 high. The selected half of the switch is a filled accent block with `accent_ink` text. A `warn` dot plus mono caps notice appears when data is sample or stale. The header sits on the one static gradient.
 
-**Tabs (alternatives).** Inter Medium 12.5, 28 high. The active tab has a 2 px accent underline; inactive tabs are `dim`. A hairline runs under the row.
+**Solo or Multiplayer switch (Build header).** 30 high, two equal 88 wide halves, 1 px `line` outline, radius 2. The chosen half is a filled accent block with `accent_ink` text (Inter Medium 12.5); the other is `dim`, `fg` on hover. Its right edge stops 24 short of the damage block, centred on the title line. Changing it recomputes without blocking (status line says updating).
+
+**Alternatives row (Build header).** Six equal 40 by 28 icon cells on a fixed grid under the title, in the column left of the damage block: Best (star), Safe (heart), Defensive (shield), Monster (target), General hunting (four squares), Gogma (diamond). The chosen cell is accent with a 2 px accent underline; others are `dim` (`fg` on hover); a cell that cannot be chosen yet is `faint`, shows a not-allowed cursor and its tooltip says why. The name is in the tooltip and in accent after the breadcrumb (`BUILD · LIGHT BOWGUN · SAFE`). A hairline runs under the row. If the chosen alternative becomes unavailable the build falls back to Best. The what-is-missing summary line moved to the right end of the WEAPON label row to make room.
 
 **Equipment row.** Row number (mono, `faint`), 34 px icon tile, name in Inter Medium with skills in `dim` underneath, then slot circles, then a status word on the right: `Owned` in `ok`, `Missing N` in `warn`.
 
