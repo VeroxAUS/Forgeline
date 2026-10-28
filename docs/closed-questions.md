@@ -263,6 +263,15 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Look check?** Passed after three review rounds, reviewed from screenshots in the cloud; not run on the PC.
 - **Merge PR #58?** Yes ("you can merge", 2026-10-28 10:33 UTC). Merged at 10:33:34 UTC (cloud, CI green on Ubuntu and Windows).
 
+### UX element 8: Solo or Multiplayer switch and alternatives row (2026-10-28)
+- **Alternatives as icon cells with a tooltip and the name in the breadcrumb, not text tabs?** Yes (2026-10-28 10:55 UTC). Text tabs do not fit beside the damage block.
+- **Summary line moved to the WEAPON label row?** Yes (10:55 UTC).
+- **Placeholder icons for now?** Yes, refined in visual polish (10:55 UTC).
+- **Sample marks Monster and Gogma unavailable?** Yes, as sample only; what makes an alternative unavailable is a Phase 4 question (10:55 UTC).
+- **Can `Missing N` on the equipment rows expand to show what is missing, without clutter?** The maintainer asked (10:55 UTC). Answer: hover lists the missing parts and click opens Shopping by piece, both owned by element 10, the row stays as is. Added to the element 10 row of the design plan.
+- **Look check?** Passed, reviewed from screenshots in the cloud; not run on the PC.
+- **Merge PR #61?** Yes ("You can merge", 2026-10-28 10:56 UTC). Merged at 10:56:49 UTC (cloud, CI green on Ubuntu and Windows).
+
 ### Food and item loadouts scope (2026-10-28)
 - **Add food and item loadouts?** Yes. The optimizer weights meals (ration type and guaranteed food skills); feasts, ticket meals and random food skills stay out of the maths. Item loadouts stay generic advice, with community opinions for every stage of the game (early, mid, high rank, endgame) where they exist (2026-10-28 10:47 UTC).
 - **When?** Meal model in Phase 4, "Eat and bring" card in Phase 6, save-aware lines after Phase 3 item mapping; about 14 to 20 h in three PRs ("This seems pretty good", 10:47 UTC).
