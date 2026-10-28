@@ -126,40 +126,66 @@ body[data-look=pro] tr:nth-child(even) td{background:#12161b}
 .hm{border-collapse:collapse}.hm td,.hm th{padding:6px 12px;text-align:center;border:1px solid var(--bg)}
 .hm .a{background:#3a2c0f;color:var(--accent);font-weight:700}.hm .b{background:#102a3a;color:#6fb3e0}
 
-body[data-look^=modern]{--bg:#09090b;--surface:#0f0f12;--surface-2:#16161a;--line:rgba(255,255,255,.08);--text:#ededf0;--dim:#8b8b95;--accent:#7c8cff;--ok:#3fcf8e;--warn:#f5a524;--error:#f2555a;font-family:Inter,'Segoe UI',system-ui,sans-serif;font-size:13.5px;letter-spacing:-.005em}
-body[data-look=modern2]{--accent:#e8a33d}
-body[data-look^=modern] .note{background:var(--bg);border-bottom:1px solid var(--line)}
-body[data-look^=modern] .lookbar{background:var(--bg)}
-body[data-look^=modern] nav{background:var(--bg);width:200px;border-right:1px solid var(--line);padding:12px 10px}
-body[data-look^=modern] nav h1{font-size:12px;letter-spacing:.14em;color:var(--text);margin:6px 10px 14px}
-body[data-look^=modern] nav button{border-radius:6px;padding:6px 10px;font-size:13px;color:var(--dim)}
-body[data-look^=modern] nav button.on{background:rgba(255,255,255,.06);color:var(--text);font-weight:500;box-shadow:inset 2px 0 0 var(--accent)}
-body[data-look^=modern] main{padding:0 28px 32px;max-width:1280px}
-body[data-look^=modern] .status{border-bottom:1px solid var(--line);font-size:12px;padding:12px 0;margin-bottom:20px}
-body[data-look^=modern] h2{font-size:20px;font-weight:600;letter-spacing:-.02em;margin-bottom:16px}
-body[data-look^=modern] .panel,body[data-look^=modern] .tile,body[data-look^=modern] .card,body[data-look^=modern] .detail,body[data-look^=modern] .dlg{background:var(--surface);border:1px solid var(--line);border-radius:6px;box-shadow:none;padding:14px 16px}
-body[data-look^=modern] .tile{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 60%),var(--surface)}
-body[data-look^=modern] .tile small,body[data-look^=modern] th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);font-weight:500}
-body[data-look^=modern] .tile b{font-size:28px;font-weight:600;letter-spacing:-.03em;color:var(--text);font-variant-numeric:tabular-nums}
-body[data-look^=modern] .tile em{color:var(--dim)}
-body[data-look^=modern] .tiles{gap:12px}
-body[data-look^=modern] th{background:transparent;border-bottom:1px solid var(--line);padding:8px 12px}
-body[data-look^=modern] td{padding:9px 12px;border-top:1px solid var(--line)}
+body[data-look^=modern]{--bg:#121212;--surface:#1b1b1b;--surface-2:#222;--line:rgba(255,255,255,.09);--text:#e8e8e6;--dim:#8d8d8d;--accent:#3ee0c0;--ok:#3ee0c0;--warn:#e5a94b;--error:#ef6a62;font-family:'Segoe UI Variable Display','Helvetica Neue',Arial,system-ui,sans-serif;font-size:14px;--mono:ui-monospace,'SF Mono',Consolas,'Courier New',monospace;background:radial-gradient(ellipse 600px 380px at 62% 140px,rgba(255,255,255,.06),transparent 70%),#121212}
+body[data-look=modern2]{--accent:#e8b05a;--ok:#9ccf7a}
+body[data-look^=modern] .note,body[data-look^=modern] .lookbar{background:#121212;border-bottom:1px solid var(--line)}
+body[data-look^=modern] nav{background:transparent;width:190px;border-right:0;padding:20px 12px}
+body[data-look^=modern] nav h1{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--text);font-weight:400;margin:0 10px 22px}
+body[data-look^=modern] nav button{border-radius:0;padding:7px 10px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+body[data-look^=modern] nav button:hover{background:none;color:var(--text)}
+body[data-look^=modern] nav button.on{background:none;color:var(--text);font-weight:400}
+body[data-look^=modern] nav button.on::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle}
+body[data-look^=modern] nav .sep{background:var(--line)}
+body[data-look^=modern] main{padding:0 40px 56px;max-width:1180px}
+body[data-look^=modern] .status{border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:16px 0;margin-bottom:0}
+body[data-look^=modern] h2{font-size:12px;font-family:var(--mono);font-weight:400;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin:28px 0 20px}
+.hero{display:none}
+body[data-look^=modern] .hero{display:block;margin:56px 0 44px}
+.hero h1{font-size:clamp(34px,5.4vw,64px);font-weight:300;letter-spacing:-.035em;line-height:1.04;margin:0 0 20px;max-width:15em}
+.hero h1 span{color:var(--dim)}
+.hero p{color:var(--dim);max-width:34em;margin:0 0 24px;line-height:1.6}
+.hero .acts{display:flex;gap:10px;flex-wrap:wrap}
+body[data-look^=modern] .btn{background:var(--text);color:#121212;border-radius:99px;font-weight:400;padding:9px 20px;font-size:13px}
+body[data-look^=modern] .btn.sec,body[data-look^=modern] .seg button,body[data-look^=modern] select{background:transparent;border:1px solid rgba(255,255,255,.18);color:var(--text);border-radius:99px;font-weight:400;padding:6px 14px;font-size:12px}
+body[data-look^=modern] .seg{gap:6px}
+body[data-look^=modern] .seg button,body[data-look^=modern] .tg .seg button{border-radius:99px!important}
+body[data-look^=modern] .seg button.on{background:var(--text);color:#121212;border-color:var(--text)}
+body[data-look^=modern] .tg label,body[data-look^=modern] .legend,body[data-look^=modern] small{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+body[data-look^=modern] .tiles{display:flex;gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 0 56px}
+body[data-look^=modern] .tile{flex:1;background:none;border:0;border-left:1px solid var(--line);border-radius:0;padding:18px 20px}
+body[data-look^=modern] .tile:first-child{border-left:0;padding-left:0}
+body[data-look^=modern] .tile small{display:block;margin-bottom:8px}
+body[data-look^=modern] .tile b{font-family:var(--mono);font-size:30px;font-weight:400;letter-spacing:-.02em;color:var(--text)}
+body[data-look^=modern] .tile em{font-size:12px;color:var(--dim);margin-top:4px}
+body[data-look^=modern] .panel,body[data-look^=modern] .detail,body[data-look^=modern] .dlg{background:var(--surface);border:1px solid var(--line);border-radius:6px;box-shadow:none;padding:20px 24px}
+body[data-look^=modern] .cards{display:block;border-top:1px solid var(--line);counter-reset:n;margin-bottom:24px}
+body[data-look^=modern] .card{display:grid;grid-template-columns:44px 40px 1fr;align-items:center;gap:12px;background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:16px 0;width:100%;counter-increment:n}
+body[data-look^=modern] .card::before{content:counter(n,decimal-leading-zero);font-family:var(--mono);font-size:11px;color:var(--dim)}
+body[data-look^=modern] .card .ibox{order:2}
+body[data-look^=modern] .card:hover,body[data-look^=modern] .card.sel{background:rgba(255,255,255,.025);border-color:var(--line)}
+body[data-look^=modern] .card.sel::before{color:var(--accent)}
+body[data-look^=modern] .card b{font-size:17px;font-weight:400;letter-spacing:-.01em}
+body[data-look^=modern] .card small{text-transform:none;letter-spacing:0;font-family:inherit;font-size:13px}
+body[data-look^=modern] .ibox{width:34px;height:34px;border-radius:6px;background:transparent;border:1px solid var(--line);color:var(--text)}
+body[data-look^=modern] .ibox i{display:none}
+body[data-look^=modern] svg.ic{width:18px;height:18px}
+body[data-look^=modern] .detail{margin-bottom:56px}
+body[data-look^=modern] .detail h3{font-weight:400;font-size:22px;letter-spacing:-.02em}
+body[data-look^=modern] th{background:transparent;border-bottom:1px solid var(--line);padding:10px 12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:400}
+body[data-look^=modern] td{padding:14px 12px;border-top:1px solid var(--line)}
+body[data-look^=modern] td.n,body[data-look^=modern] .n,body[data-look^=modern] .hi{font-family:var(--mono)}
+body[data-look^=modern] .hi{color:var(--text)}
 body[data-look^=modern] tr:hover td{background:rgba(255,255,255,.02)}
-body[data-look^=modern] .btn{background:var(--text);color:#09090b;border-radius:6px;font-weight:500;padding:6px 12px}
-body[data-look^=modern] .btn.sec,body[data-look^=modern] .seg button,body[data-look^=modern] select{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:6px;font-weight:400;padding:5px 11px}
-body[data-look^=modern] .seg{gap:0}body[data-look^=modern] .seg button{border-radius:0}
-body[data-look^=modern] .seg button.on{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16);color:var(--text)}
-body[data-look^=modern] .chip{border-radius:4px;font-size:11px;padding:0 7px;border-color:transparent;background:rgba(255,255,255,.06)}
-body[data-look^=modern] .chip.ok{background:rgba(63,207,142,.12)}body[data-look^=modern] .chip.warn{background:rgba(245,165,36,.12)}
-body[data-look^=modern] .ibox{width:36px;height:36px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line)}
-body[data-look^=modern] svg.ic{width:20px;height:20px}
-body[data-look^=modern] .cards{gap:10px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
-body[data-look^=modern] .card:hover,body[data-look^=modern] .card.sel{border-color:var(--accent);background:var(--surface-2)}
-body[data-look^=modern] .bar{height:4px;border-radius:2px}
+body[data-look^=modern] .chip{border-radius:99px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:1px 9px;border:1px solid var(--line);color:var(--dim)}
+body[data-look^=modern] .chip.ok{color:var(--accent)}body[data-look^=modern] .chip.warn{color:var(--warn)}
+body[data-look^=modern] .bar{height:3px;border-radius:0;background:rgba(255,255,255,.08)}
+body[data-look^=modern] .bar>span{background:var(--text)}
+body[data-look^=modern] .pips,body[data-look^=modern] .tile b,body[data-look^=modern] .hi,body[data-look^=modern] .tile+.tile{color:var(--text)}
+body[data-look^=modern] .pips{color:var(--text)}
 body[data-look^=modern] .banner{border-radius:6px;background:var(--surface);font-size:13px}
-body[data-look^=modern] .iconnote{background:transparent;border:1px dashed var(--line);border-radius:6px}
+body[data-look^=modern] .iconnote{background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;padding:10px 0;font-size:12px}
 body[data-look^=modern] .stage{border-radius:6px}
+body[data-look^=modern] .cols{gap:24px}
 .kbd{font:11px Consolas,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--dim)}
 .wn{display:none}body[data-look^=modern] .wn{display:block}
 </style>
@@ -177,7 +203,7 @@ body[data-look^=modern] .stage{border-radius:6px}
 <symbol id="g-gem" viewBox="0 0 28 28"><path d="M8 5h12l5 7-11 13L3 12z"/><path d="M3 12h22M10 5l4 20M18 5l-4 20"/></symbol>
 <symbol id="g-coin" viewBox="0 0 28 28"><circle cx="14" cy="14" r="10"/><path d="M10 14h8M14 10v8"/></symbol>
 </defs></svg><div class="note">Mock-up with invented sample data. No Capcom names, art or data. Looks and flow only, not performance. Click the screens on the left.</div>
-<div class="lookbar"><b>Look:</b><span class="seg" id="lk"><button class="on" data-l="current">Current</button><button data-l="pro">Pro (picked)</button><button data-l="modern1">Modern Dark A: Graphite</button><button data-l="modern2">Modern Dark B: Amber</button></span><span class="t" id="lknote"></span></div>
+<div class="lookbar"><b>Look:</b><span class="seg" id="lk"><button class="on" data-l="current">Current</button><button data-l="pro">Pro (picked)</button><button data-l="modern1">Modern Dark A: teal</button><button data-l="modern2">Modern Dark B: amber</button></span><span class="t" id="lknote"></span></div>
 <div class="app">
 <nav>
 <h1>FORGELINE</h1>
@@ -193,13 +219,6 @@ body[data-look^=modern] .stage{border-radius:6px}
 <div class="status"><span>Save read 12:41</span><span>Game build 12345678</span><span class="chip ok">&#10003; up to date</span><span>Preset: Solo</span><span>Weapon: Light bowgun (generic)</span></div>
 
 <section class="screen on" id="best">
-<div class="panel wn" style="margin:16px 0"><b>What we took from where</b>
-<ul class="clean" style="margin-top:6px"><li><b>Reference you gave:</b> I could not open designprompts.dev from the cloud (the host is blocked), so none of it is used. What follows is from general knowledge of current dark app UIs.</li>
-<li><b>Linear:</b> layered near-black surfaces separated by hairline borders instead of boxes and shadows; a quiet sidebar with the selected item marked by a thin accent edge.</li>
-<li><b>Vercel:</b> a strict type scale, small uppercase labels over large tabular numbers, white primary button, tight 6 px corners.</li>
-<li><b>Raycast:</b> keyboard hints (<span class="kbd">F8</span>), compact rows with hover highlight, restraint with colour.</li>
-<li><b>Dropped:</b> bubbles, big radii and glows. Status uses small flat tags, not pills.</li></ul>
-<b>Cost in egui:</b> hairlines, flat fills, hover highlights and a single gradient on tiles are cheap. Not used: blur or glass, drop shadows and glows (extra layers to draw), animated gradients. Fonts: Inter would need its licence recorded (SIL OFL); the system font is the fallback.</div>
 <div class="tg" id="toggles">
 <span><label id="plabel">Playstyle</label><span class="seg" id="preset"></span></span>
 <span><label>Mode</label><select id="mode"><option value="gen">General hunting</option><option value="mon">Per monster: Sample Monster A</option><option value="mon2">Per monster: Sample Monster B</option></select></span>
@@ -211,6 +230,7 @@ body[data-look^=modern] .stage{border-radius:6px}
 <div><b>Skill weights</b> <small style="color:var(--dim)">how much a skill is worth; tick marks show the researched baseline</small><div id="sl"></div></div>
 <div><b>Assumptions</b> <small style="color:var(--dim)">used for modelled numbers</small><div id="as"></div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sec" id="reset">Reset all to baseline</button><button class="btn" id="savep">Save as preset&hellip;</button></div></div>
 </div></div>
+<div class="hero"><h1>Light bowgun build, ready in two hunts. <span>Ashen Mail and Coil are the last pieces missing.</span></h1><p>The best build you can make from your current save. Numbers are modelled from 60% uptime and a 50% weak-spot rate.</p><div class="acts"><button class="btn">Show the shopping list</button><button class="btn sec">Why this build</button></div></div>
 <h2 id="bt">Best build you can make now</h2>
 <div class="iconnote">Icon boxes are <b>placeholder glyphs of our own</b>. With the maintainer's yes, the real item icons are read from the user's own game install at update time (see brief). Click a piece for details.</div>
 <div class="tiles">
@@ -260,6 +280,10 @@ body[data-look^=modern] .stage{border-radius:6px}
 <p style="margin:8px 0">Head <span class="slots"><u class="f"></u><u class="f"></u><u></u></span> &nbsp; Chest <span class="slots"><u class="f"></u><u></u></span> &nbsp; Weapon <span class="slots"><u class="f"></u><u class="f"></u></span></p>
 <small style="color:var(--dim)">Filled slots hold Sample Jewel 1 (Attack) and Sample Jewel 2 (Crit). Empty slots could not be improved from owned decorations.</small></div>
 </div>
+<div class="panel wn" style="margin:40px 0 0"><b>What we took from where</b>
+<ul class="clean" style="margin-top:6px"><li><b>Your screenshots:</b> near-monochrome #121212 with one tiny accent dot; a large light headline with a dim second sentence; small uppercase mono labels and mono numerals; a stat strip divided by vertical hairlines; numbered rows (01, 02) split by hairlines instead of cards; pill buttons (light fill for the primary, outline for the rest); 1 px bordered panels with a small radius; one soft radial glow. (I could not open the site itself from the cloud, so this comes from the screenshots only. No text or assets are copied.)</li>
+<li><b>Our own:</b> the content, the teal or amber accent choice, the sidebar, and the item and shopping layouts.</li></ul>
+<b>Cost in egui:</b> hairlines, flat fills, mono text and hover rows are cheap. The glow is one static radial gradient: draw it once as a cached texture or one vertex-coloured mesh, so it adds no per-frame work. Not used: blur or glass, drop shadows, animated gradients. The large light headline wants a light or variable font, whose licence must be recorded in THIRD-PARTY-NOTICES.md; a system font is the fallback.</div>
 </section>
 
 <section class="screen" id="why">
@@ -455,8 +479,8 @@ vsw('svt');vsw('wvt');
 
 var LN={current:"The look so far.",
 pro:"Pro as picked: dense, thin lines, monospace numbers. The baseline to compare against.",
-modern1:"Modern Dark A, Graphite: near-black layers, hairline borders, one indigo accent used sparingly, crisp type scale, 6 px corners. In egui: flat fills, 1 px strokes, one tiled vertical gradient on stat tiles.",
-modern2:"Modern Dark B, Amber: same structure, but the accent is the amber from the game-side direction so the app feels tied to Wilds without using its art."};
+modern1:"Modern Dark A, matched to your screenshots (teal dot): near-monochrome #121212 with one tiny teal accent, light large headline with a dim second sentence, mono labels and numerals, numbered hairline rows, stat strip with vertical hairlines, pill buttons, one static soft radial glow. In egui: flat fills and 1 px strokes; the glow is one pre-rendered texture or a single mesh with vertex colours, drawn once and cached, so it is cheap; large light text needs a variable or light font (licence to record).",
+modern2:"Modern Dark B, same layout with an amber dot instead of teal, to tie the app to the game side without using its art."};
 document.querySelectorAll('#lk button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#lk button').forEach(function(x){x.classList.toggle('on',x===b)});document.body.dataset.look=b.dataset.l;document.getElementById('lknote').textContent=LN[b.dataset.l];};});
 document.getElementById('lknote').textContent=LN.current;
 </script>
