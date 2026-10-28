@@ -155,3 +155,21 @@ fn garbage_streams_fail_cleanly() {
         let _ = forgeline_save::model::summarize(&stream[..cut]);
     }
 }
+
+#[test]
+fn collected_hashes_include_the_classes_and_fields_the_reader_looks_up() {
+    use forgeline_save::hash::name_hash;
+    use forgeline_save::hashes::collect;
+    let (bin, expected) = load("one-slot");
+    let stream = container::open(&bin, steam_id(&expected)).unwrap();
+    let h = collect(&stream).unwrap();
+    assert!(h.classes.contains(&name_hash("app.savedata.cUserSaveData")));
+    assert!(h.classes.contains(&name_hash("app.savedata.cEquipWork")));
+    assert!(h.fields.contains(&name_hash("_Data")));
+    assert!(h.fields.contains(&name_hash("Active")));
+    // Field and class sets are separate, and `all` is their union.
+    assert!(!h.classes.contains(&name_hash("_Data")));
+    assert_eq!(h.all().len(), h.classes.len() + h.fields.len());
+    // Garbage fails cleanly.
+    assert!(collect(&[1, 2, 3, 4, 5, 6, 7, 8, 9]).is_err());
+}

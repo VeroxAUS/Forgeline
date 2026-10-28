@@ -11,6 +11,7 @@
 pub mod container;
 pub mod flatten;
 pub mod hash;
+pub mod hashes;
 pub mod model;
 pub mod names;
 pub mod stream;

@@ -5,10 +5,16 @@
 //! Developer report for PC test rounds. Prints what the foundation sees as counts and names only:
 //! never a hunter name or ID, never file contents.
 //!
+//! `pak` indexes the install's original packs, resolves and reads the needed game files and (with
+//! `--names`) rebuilds the save's class names from the exe; it only reads the install and prints
+//! counts, pack names and the needed paths.
+//!
 //! `discover` reads nothing from the save or the install beyond folder listings and two small
 //! Steam text files, and writes nothing at all. `save` copies the save file to its own work folder
 //! (the only thing it writes) and reads the copy; it never reads or writes the live save in place
 //! and refuses a work folder inside Steam, the install or a save folder.
+
+mod pak;
 
 use forgeline_core::datadir::is_protected;
 use forgeline_core::discovery::{self, DiscoveryEnv, SaveAccount};
@@ -23,13 +29,14 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use std::time::Instant;
 
-const USAGE: &str = "usage: forgeline-check discover [--steam-dir <folder>]\n       forgeline-check save [--steam-dir <folder>] [--work-dir <folder>]\n       forgeline-check save --file <copy of the save> --steam-id <id>\n       add --equip-dump to `save` to list the equipment box entries, or --equip-layout for the fields of the equipment class (numbers only)";
+const USAGE: &str = "usage: forgeline-check discover [--steam-dir <folder>]\n       forgeline-check save [--steam-dir <folder>] [--work-dir <folder>]\n       forgeline-check save --file <copy of the save> --steam-id <id>\n       forgeline-check pak [--steam-dir <folder>] [--names [--file <copy of the save> --steam-id <id>] [--exe <file>] [--names-out <file>]]\n       add --equip-dump to `save` to list the equipment box entries, or --equip-layout for the fields of the equipment class (numbers only)";
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
     match args.next().as_deref() {
         Some("discover") => discover(args.collect()),
         Some("save") => save(args.collect()),
+        Some("pak") => pak::run(args.collect()),
         Some("-h" | "--help") => {
             println!("{USAGE}");
             ExitCode::SUCCESS
@@ -114,7 +121,7 @@ fn discover(args: Vec<String>) -> ExitCode {
 }
 
 /// A path for display with the user's home folder replaced, so a pasted report holds no user name.
-fn shown(p: &Path) -> String {
+pub(crate) fn shown(p: &Path) -> String {
     let text = p.display().to_string();
     for var in ["USERPROFILE", "HOME"] {
         if let Some(home) = std::env::var_os(var).filter(|h| !h.is_empty()) {
@@ -242,14 +249,14 @@ fn save(args: Vec<String>) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-fn parse_steam_id(raw: &str) -> Option<u64> {
+pub(crate) fn parse_steam_id(raw: &str) -> Option<u64> {
     const BASE: u64 = 76_561_197_960_265_728;
     let v: u64 = raw.parse().ok()?;
     Some(if v < (1 << 32) { BASE + v } else { v })
 }
 
 /// Finds the save, copies it into the work folder and returns the copy and the Steam ID.
-fn copy_live_save(
+pub(crate) fn copy_live_save(
     steam_dir: Option<PathBuf>,
     work_dir: Option<PathBuf>,
 ) -> Result<(PathBuf, u64), String> {
