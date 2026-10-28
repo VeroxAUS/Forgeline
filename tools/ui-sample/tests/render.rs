@@ -180,3 +180,39 @@ fn build_card_shows_icons_once_loaded_and_keeps_the_build_while_recomputing() {
     let big = h.frame(&mut app, Vec2::new(1400.0, 900.0), 1.0);
     assert_eq!((big.width, big.height), (1400, 900));
 }
+
+#[test]
+fn window_scale_follows_size_within_limits() {
+    use egui::Vec2;
+    use ui_sample::shell::{scale_for, MAX_SCALE};
+    assert_eq!(scale_for(Vec2::new(1000.0, 700.0)), 1.0);
+    assert_eq!(
+        scale_for(Vec2::new(800.0, 500.0)),
+        1.0,
+        "never below the design size"
+    );
+    assert!((scale_for(Vec2::new(2000.0, 1400.0)) - 2.0).abs() < 1e-6);
+    // The tighter axis decides, so a wide window does not overflow vertically.
+    assert!((scale_for(Vec2::new(3000.0, 1050.0)) - 1.5).abs() < 1e-6);
+    assert_eq!(scale_for(Vec2::new(9000.0, 9000.0)), MAX_SCALE);
+}
+
+#[test]
+fn larger_window_scales_the_content() {
+    use egui::Vec2;
+    use std::sync::Arc;
+    use std::time::Duration;
+    use ui_sample::build_card::{BuildCard, Headless};
+    use ui_sample::icons::SampleSource;
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    h.frame(&mut app, Vec2::new(1000.0, 700.0), 1.0);
+    assert_eq!(h.ctx().zoom_factor(), 1.0);
+    h.frame(&mut app, Vec2::new(2000.0, 1400.0), 1.0);
+    assert!((h.ctx().zoom_factor() - 2.0).abs() < 0.01);
+}

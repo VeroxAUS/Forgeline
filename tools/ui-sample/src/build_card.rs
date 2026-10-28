@@ -20,6 +20,9 @@ const MARGIN: f32 = 28.0;
 const ROW_H: f32 = 48.0;
 const ROW_STEP: f32 = 54.0;
 const TILE: f32 = 34.0;
+/// Every decoration slot circle is this size; its level is the number inside.
+const SLOT_R: f32 = 7.0;
+const BG: Color32 = Color32::from_rgb(10, 10, 11);
 
 const FG: Color32 = Color32::from_rgb(236, 236, 238);
 const DIM: Color32 = Color32::from_rgb(140, 140, 148);
@@ -135,6 +138,8 @@ pub struct BuildCard {
     pub shell: Shell,
     pub data: BuildData,
     pub cache: IconCache,
+    /// Slot circles drawn last frame, for the hover tooltip.
+    hits: Vec<(Rect, u8)>,
 }
 
 impl BuildCard {
@@ -143,6 +148,7 @@ impl BuildCard {
             shell: Shell::new(),
             data: BuildData::sample(),
             cache: IconCache::new(ctx, source),
+            hits: Vec::new(),
         }
     }
 }
@@ -152,14 +158,20 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
     app.cache.poll();
     let data = &app.data;
     let cache = &mut app.cache;
+    let hits = &mut app.hits;
+    hits.clear();
     shell::show_with(ui, &mut app.shell, &mut |p, content, shell| {
         shell::show_content(p, content, shell);
         if shell.section == shell::Section::Build {
-            card(p, content, data, cache, &shell.status);
+            card(p, content, data, cache, hits, &shell.status);
         } else {
             placeholder(p, content);
         }
     });
+    for (i, (rect, level)) in app.hits.iter().enumerate() {
+        ui.interact(*rect, ui.scope_id().with(("slot", i)), egui::Sense::hover())
+            .on_hover_text(format!("Decoration slot, level {level}"));
+    }
 }
 
 fn mono(size: f32) -> egui::FontId {
@@ -176,7 +188,14 @@ fn placeholder(p: &Painter, content: Rect) {
     );
 }
 
-fn card(p: &Painter, content: Rect, data: &BuildData, cache: &mut IconCache, status: &Status) {
+fn card(
+    p: &Painter,
+    content: Rect,
+    data: &BuildData,
+    cache: &mut IconCache,
+    hits: &mut Vec<(Rect, u8)>,
+    status: &Status,
+) {
     let left = content.min.x + MARGIN;
     let right = content.max.x - MARGIN;
     p.text(
@@ -208,6 +227,7 @@ fn card(p: &Painter, content: Rect, data: &BuildData, cache: &mut IconCache, sta
     y = row(
         p,
         cache,
+        hits,
         left,
         right,
         y,
@@ -218,14 +238,34 @@ fn card(p: &Painter, content: Rect, data: &BuildData, cache: &mut IconCache, sta
     y += 14.0;
     y = section(p, left, right, y, "ARMOUR");
     for (i, piece) in data.armour.iter().enumerate() {
-        y = row(p, cache, left, right, y, i + 2, piece.as_ref(), "No piece");
+        y = row(
+            p,
+            cache,
+            hits,
+            left,
+            right,
+            y,
+            i + 2,
+            piece.as_ref(),
+            "No piece",
+        );
         if i + 1 < data.armour.len() {
             hair(p, left, right, y - 3.0);
         }
     }
     y += 14.0;
     y = section(p, left, right, y, "CHARM");
-    row(p, cache, left, right, y, 7, data.charm.as_ref(), "No charm");
+    row(
+        p,
+        cache,
+        hits,
+        left,
+        right,
+        y,
+        7,
+        data.charm.as_ref(),
+        "No charm",
+    );
 }
 
 fn hair(p: &Painter, left: f32, right: f32, y: f32) {
@@ -253,6 +293,7 @@ fn section(p: &Painter, left: f32, right: f32, y: f32, label: &str) -> f32 {
 fn row(
     p: &Painter,
     cache: &mut IconCache,
+    hits: &mut Vec<(Rect, u8)>,
     left: f32,
     right: f32,
     y: f32,
@@ -299,14 +340,26 @@ fn row(
     );
     let mut x = status.left() - 28.0;
     for slot in piece.slots.iter().rev() {
-        let r = 2.8 + slot.level as f32 * 0.7;
-        let c = Pos2::new(x - r, cy);
-        if slot.filled {
-            p.circle_filled(c, r, DIM);
+        let c = Pos2::new(x - SLOT_R, cy);
+        let ink = if slot.filled {
+            p.circle_filled(c, SLOT_R, DIM);
+            BG
         } else {
-            p.circle_stroke(c, r, Stroke::new(1.0, FAINT));
-        }
-        x -= r * 2.0 + 6.0;
+            p.circle_stroke(c, SLOT_R, Stroke::new(1.0, FAINT));
+            DIM
+        };
+        p.text(
+            c,
+            Align2::CENTER_CENTER,
+            slot.level.to_string(),
+            mono(9.0),
+            ink,
+        );
+        hits.push((
+            Rect::from_center_size(c, Vec2::splat(SLOT_R * 2.0)),
+            slot.level,
+        ));
+        x -= SLOT_R * 2.0 + 6.0;
     }
 
     p.text(

@@ -525,30 +525,43 @@ impl Headless {
         self.run(size, ppp, |ui| show(ui, demo))
     }
 
-    /// One frame of any screen.
+    /// One frame of any screen. Runs a second pass when the screen asked for a different window
+    /// scale (see `shell::auto_scale`), because a new zoom takes effect on the pass after.
     pub fn run(&mut self, size: Vec2, ppp: f32, mut f: impl FnMut(&mut Ui)) -> render::Frame {
-        let input = egui::RawInput {
-            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size)),
-            viewports: std::iter::once((
-                egui::ViewportId::ROOT,
-                egui::ViewportInfo {
-                    native_pixels_per_point: Some(ppp),
-                    ..Default::default()
-                },
-            ))
-            .collect(),
-            ..Default::default()
-        };
-        let mut out = self.ctx.run_ui(input, |ui| f(ui));
-        self.rast.apply(std::mem::take(&mut out.textures_delta));
-        let prims = self.ctx.tessellate(out.shapes, out.pixels_per_point);
-        self.rast.paint(
-            &prims,
-            out.pixels_per_point,
-            (size.x * ppp) as usize,
-            (size.y * ppp) as usize,
-            BG,
-        )
+        let mut zoom = self.ctx.zoom_factor();
+        let mut frame = None;
+        for _ in 0..2 {
+            let input = egui::RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, size / zoom)),
+                viewports: std::iter::once((
+                    egui::ViewportId::ROOT,
+                    egui::ViewportInfo {
+                        native_pixels_per_point: Some(ppp),
+                        ..Default::default()
+                    },
+                ))
+                .collect(),
+                ..Default::default()
+            };
+            let mut out = self.ctx.run_ui(input, |ui| f(ui));
+            self.rast.apply(std::mem::take(&mut out.textures_delta));
+            let prims = self.ctx.tessellate(out.shapes, out.pixels_per_point);
+            frame = Some(self.rast.paint(
+                &prims,
+                out.pixels_per_point,
+                (size.x * ppp) as usize,
+                (size.y * ppp) as usize,
+                BG,
+            ));
+            let wanted = self
+                .ctx
+                .data(|d| d.get_temp::<f32>(egui::Id::NULL.with(super::shell::WANTED_ZOOM)));
+            match wanted {
+                Some(w) if (w - zoom).abs() > 0.005 => zoom = w,
+                _ => break,
+            }
+        }
+        frame.expect("one pass ran")
     }
 }
 

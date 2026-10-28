@@ -42,5 +42,9 @@ fn main() -> std::io::Result<()> {
         "build-large.png",
         h.frame(&mut app, Vec2::new(1400.0, 900.0), ppp),
     )?;
+    save(
+        "build-xl.png",
+        h.frame(&mut app, Vec2::new(2000.0, 1300.0), 1.0),
+    )?;
     Ok(())
 }

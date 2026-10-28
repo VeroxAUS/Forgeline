@@ -146,8 +146,36 @@ pub fn show(ui: &mut Ui, shell: &mut Shell) {
     });
 }
 
+/// Largest scale the window grows to; past this the extra room is just room.
+pub const MAX_SCALE: f32 = 3.0;
+
+/// The scale for a window of `size` physical-independent points at zoom 1: how many times
+/// bigger than the 1000 by 700 design size it fits, never below 1 and never above `MAX_SCALE`.
+pub fn scale_for(size: Vec2) -> f32 {
+    (size.x / MIN_SIZE.x)
+        .min(size.y / MIN_SIZE.y)
+        .clamp(1.0, MAX_SCALE)
+}
+
+pub(crate) const WANTED_ZOOM: &str = "forgeline-wanted-zoom";
+
+/// Scales the whole UI with the window (text, icons and spacing together) by driving egui's zoom
+/// factor from the window size. Changes the factor only when it moved, so an idle window repaints
+/// nothing; a resize already repaints.
+pub fn auto_scale(ctx: &egui::Context) {
+    let zoom = ctx.zoom_factor();
+    let size = ctx.content_rect().size() * zoom;
+    let want = scale_for(size);
+    // Kept so a headless renderer knows what the next pass will be at.
+    ctx.data_mut(|d| d.insert_temp(egui::Id::NULL.with(WANTED_ZOOM), want));
+    if (want - zoom).abs() > 0.005 {
+        ctx.set_zoom_factor(want);
+    }
+}
+
 /// Like `show`, but `body` draws the content area (header gradient included) itself.
 pub fn show_with(ui: &mut Ui, shell: &mut Shell, body: &mut dyn FnMut(&Painter, Rect, &Shell)) {
+    auto_scale(ui.ctx());
     let screen = ui.max_rect();
     let painter = ui.painter_at(screen);
     painter.rect_filled(screen, 0.0, BG);
