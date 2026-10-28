@@ -246,3 +246,10 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Window shape?** The maintainer uses a 16:9 window that is usually not maximised, as do most second-monitor users, they expect (2026-10-28 09:52 UTC). The collapse path at the base size matters most; the second column appears from about 1232 points of width (a 16:9 window at the 700 point design height is about 1244).
 - **Look check?** Passed after four review rounds ("Okay we can do this", 2026-10-28 09:52 UTC), reviewed from screenshots in the cloud; not run on the PC.
 - **Merge PR #55?** Yes ("Merge it", 2026-10-28 09:53 UTC). Merged at 09:55:51 UTC (cloud, CI green on Ubuntu and Windows). The maintainer will also test the strip with real skills and tier texts in a full UI/UX testing pass once real game data is available.
+
+### UX element 6: headline damage and toughness (2026-10-28)
+- **Which display option for damage and toughness (open item A)?** Compare: a word, a bar, a tick for current gear and the change against it (2026-10-28 10:06 UTC).
+- **What does the bar mean?** Fill is the share of the best the unlocked pool allows, the tick is current gear (2026-10-28 10:06 UTC). Provisional until the optimizer exists.
+- **Which words?** Against gear: damage MUCH HIGHER, HIGHER, SIMILAR, LOWER; toughness MUCH TANKIER, TANKIER, SOLID, SQUISHIER; cut-offs at plus or minus 5% and plus 20%. Without gear the word comes from the bar position (2026-10-28 10:06 UTC).
+- **Look check?** Passed ("Okay I like all of those", 2026-10-28 10:06 UTC), reviewed from screenshots in the cloud; not run on the PC.
+- **Merge PR #56?** Yes ("merge when ready", 2026-10-28 10:06 UTC). Merged at 10:06:47 UTC (cloud, CI green on Ubuntu and Windows).

@@ -102,4 +102,4 @@ These apply to every element (design plan principle 7, `docs/performance-budget.
 
 ## 7. Open items
 
-Damage and toughness display (design plan section 7, A) and the overlay look are not covered here; add them when decided. This guide is not set in stone: a later element may change a rule, and the change updates this file.
+The overlay look is not covered here; add it when decided. Headline blocks (design plan section 7, A, decided at element 6) sit in the Build header, one skills column wide each, on the same columns as the equipment rows and the skills strip, with the Compare detail line (`+24% vs your gear`, `ok`; worse than gear in `warn`; `Same as your gear` in `dim`). Unknown shows `UNKNOWN` in `faint`, an empty bar and the reason in `dim`. This guide is not set in stone: a later element may change a rule, and the change updates this file.
