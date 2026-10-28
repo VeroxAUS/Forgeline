@@ -106,24 +106,6 @@ svg.chart text{fill:var(--dim);font-size:11px}
 .dl{color:var(--ok)}.dn{color:var(--warn)}
 
 /* looks */
-body[data-look=forge]{--bg:#13100c;--surface:#1c1812;--surface-2:#27211a;--line:#4a3b25;--text:#ece0c8;--dim:#b4a58a;--accent:#d29a3c;--ok:#8fbf6a;--warn:#df8a3d;--error:#d9675a;font-family:Georgia,'Times New Roman',serif}
-body[data-look=forge] .panel,body[data-look=forge] .tile,body[data-look=forge] .card,body[data-look=forge] .detail,body[data-look=forge] .dlg{border-radius:3px;box-shadow:inset 0 0 0 3px var(--bg),inset 0 0 0 4px var(--line);border-color:var(--line);padding:16px 20px}
-body[data-look=forge] h2,body[data-look=forge] nav h1{letter-spacing:.08em;text-transform:uppercase;font-weight:600}
-body[data-look=forge] th{text-transform:uppercase;letter-spacing:.06em;font-size:11px}
-body[data-look=forge] .btn,body[data-look=forge] .seg button,body[data-look=forge] nav button,body[data-look=forge] .chip,body[data-look=forge] select{border-radius:2px}
-body[data-look=forge] .ibox{border-radius:50%;border:2px solid var(--line);background:radial-gradient(#352c20,#1c1812)}
-body[data-look=forge] .tile b{font-family:Georgia,serif}
-body[data-look=clean]{--bg:#0d1015;--surface:#151a21;--surface-2:#1c222b;--line:#232a34;--text:#eef1f6;--dim:#97a1b0;--accent:#5aa9ff;--ok:#4fd1a1;--warn:#ffb454;--error:#ff6b6b}
-body[data-look=clean] .panel,body[data-look=clean] .tile,body[data-look=clean] .card,body[data-look=clean] .detail,body[data-look=clean] .dlg{border-radius:14px;border-color:transparent;background:var(--surface)}
-body[data-look=clean] .tile{padding:16px}
-body[data-look=clean] .tile b{font-size:32px;font-weight:600;color:var(--text)}
-body[data-look=clean] nav{background:var(--bg);border-right:0}
-body[data-look=clean] nav button{border-radius:10px;padding:11px 12px}
-body[data-look=clean] th{background:transparent;border-bottom:1px solid var(--line)}
-body[data-look=clean] td{border-top:1px solid #1c222b}
-body[data-look=clean] .btn,body[data-look=clean] .seg button,body[data-look=clean] .chip,body[data-look=clean] select{border-radius:99px}
-body[data-look=clean] .ibox{border-radius:12px;border:0;background:#1f2732}
-body[data-look=clean] .bar{height:6px}
 body[data-look=pro]{--bg:#0a0c0f;--surface:#101318;--surface-2:#161a20;--line:#242a33;--text:#d7dde6;--dim:#8793a3;--accent:#3fd0c9;--ok:#6bd06b;--warn:#e8b13a;--error:#f0605a;font-size:13px;font-family:'Segoe UI',system-ui,sans-serif}
 body[data-look=pro] .panel,body[data-look=pro] .tile,body[data-look=pro] .card,body[data-look=pro] .detail,body[data-look=pro] .dlg{border-radius:2px;padding:8px 10px}
 body[data-look=pro] .tile b{font-family:Consolas,'Courier New',monospace;font-size:22px}
@@ -143,6 +125,43 @@ body[data-look=pro] tr:nth-child(even) td{background:#12161b}
 .lookbar span.t{color:var(--dim);font-size:13px}
 .hm{border-collapse:collapse}.hm td,.hm th{padding:6px 12px;text-align:center;border:1px solid var(--bg)}
 .hm .a{background:#3a2c0f;color:var(--accent);font-weight:700}.hm .b{background:#102a3a;color:#6fb3e0}
+
+body[data-look^=modern]{--bg:#09090b;--surface:#0f0f12;--surface-2:#16161a;--line:rgba(255,255,255,.08);--text:#ededf0;--dim:#8b8b95;--accent:#7c8cff;--ok:#3fcf8e;--warn:#f5a524;--error:#f2555a;font-family:Inter,'Segoe UI',system-ui,sans-serif;font-size:13.5px;letter-spacing:-.005em}
+body[data-look=modern2]{--accent:#e8a33d}
+body[data-look^=modern] .note{background:var(--bg);border-bottom:1px solid var(--line)}
+body[data-look^=modern] .lookbar{background:var(--bg)}
+body[data-look^=modern] nav{background:var(--bg);width:200px;border-right:1px solid var(--line);padding:12px 10px}
+body[data-look^=modern] nav h1{font-size:12px;letter-spacing:.14em;color:var(--text);margin:6px 10px 14px}
+body[data-look^=modern] nav button{border-radius:6px;padding:6px 10px;font-size:13px;color:var(--dim)}
+body[data-look^=modern] nav button.on{background:rgba(255,255,255,.06);color:var(--text);font-weight:500;box-shadow:inset 2px 0 0 var(--accent)}
+body[data-look^=modern] main{padding:0 28px 32px;max-width:1280px}
+body[data-look^=modern] .status{border-bottom:1px solid var(--line);font-size:12px;padding:12px 0;margin-bottom:20px}
+body[data-look^=modern] h2{font-size:20px;font-weight:600;letter-spacing:-.02em;margin-bottom:16px}
+body[data-look^=modern] .panel,body[data-look^=modern] .tile,body[data-look^=modern] .card,body[data-look^=modern] .detail,body[data-look^=modern] .dlg{background:var(--surface);border:1px solid var(--line);border-radius:6px;box-shadow:none;padding:14px 16px}
+body[data-look^=modern] .tile{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 60%),var(--surface)}
+body[data-look^=modern] .tile small,body[data-look^=modern] th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);font-weight:500}
+body[data-look^=modern] .tile b{font-size:28px;font-weight:600;letter-spacing:-.03em;color:var(--text);font-variant-numeric:tabular-nums}
+body[data-look^=modern] .tile em{color:var(--dim)}
+body[data-look^=modern] .tiles{gap:12px}
+body[data-look^=modern] th{background:transparent;border-bottom:1px solid var(--line);padding:8px 12px}
+body[data-look^=modern] td{padding:9px 12px;border-top:1px solid var(--line)}
+body[data-look^=modern] tr:hover td{background:rgba(255,255,255,.02)}
+body[data-look^=modern] .btn{background:var(--text);color:#09090b;border-radius:6px;font-weight:500;padding:6px 12px}
+body[data-look^=modern] .btn.sec,body[data-look^=modern] .seg button,body[data-look^=modern] select{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:6px;font-weight:400;padding:5px 11px}
+body[data-look^=modern] .seg{gap:0}body[data-look^=modern] .seg button{border-radius:0}
+body[data-look^=modern] .seg button.on{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16);color:var(--text)}
+body[data-look^=modern] .chip{border-radius:4px;font-size:11px;padding:0 7px;border-color:transparent;background:rgba(255,255,255,.06)}
+body[data-look^=modern] .chip.ok{background:rgba(63,207,142,.12)}body[data-look^=modern] .chip.warn{background:rgba(245,165,36,.12)}
+body[data-look^=modern] .ibox{width:36px;height:36px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line)}
+body[data-look^=modern] svg.ic{width:20px;height:20px}
+body[data-look^=modern] .cards{gap:10px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+body[data-look^=modern] .card:hover,body[data-look^=modern] .card.sel{border-color:var(--accent);background:var(--surface-2)}
+body[data-look^=modern] .bar{height:4px;border-radius:2px}
+body[data-look^=modern] .banner{border-radius:6px;background:var(--surface);font-size:13px}
+body[data-look^=modern] .iconnote{background:transparent;border:1px dashed var(--line);border-radius:6px}
+body[data-look^=modern] .stage{border-radius:6px}
+.kbd{font:11px Consolas,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--dim)}
+.wn{display:none}body[data-look^=modern] .wn{display:block}
 </style>
 </head>
 <body>
@@ -158,7 +177,7 @@ body[data-look=pro] tr:nth-child(even) td{background:#12161b}
 <symbol id="g-gem" viewBox="0 0 28 28"><path d="M8 5h12l5 7-11 13L3 12z"/><path d="M3 12h22M10 5l4 20M18 5l-4 20"/></symbol>
 <symbol id="g-coin" viewBox="0 0 28 28"><circle cx="14" cy="14" r="10"/><path d="M10 14h8M14 10v8"/></symbol>
 </defs></svg><div class="note">Mock-up with invented sample data. No Capcom names, art or data. Looks and flow only, not performance. Click the screens on the left.</div>
-<div class="lookbar"><b>Look:</b><span class="seg" id="lk"><button class="on" data-l="current">Current</button><button data-l="forge">1 Forge</button><button data-l="clean">2 Clean</button><button data-l="pro">3 Pro</button></span><span class="t" id="lknote"></span></div>
+<div class="lookbar"><b>Look:</b><span class="seg" id="lk"><button class="on" data-l="current">Current</button><button data-l="pro">Pro (picked)</button><button data-l="modern1">Modern Dark A: Graphite</button><button data-l="modern2">Modern Dark B: Amber</button></span><span class="t" id="lknote"></span></div>
 <div class="app">
 <nav>
 <h1>FORGELINE</h1>
@@ -174,6 +193,13 @@ body[data-look=pro] tr:nth-child(even) td{background:#12161b}
 <div class="status"><span>Save read 12:41</span><span>Game build 12345678</span><span class="chip ok">&#10003; up to date</span><span>Preset: Solo</span><span>Weapon: Light bowgun (generic)</span></div>
 
 <section class="screen on" id="best">
+<div class="panel wn" style="margin:16px 0"><b>What we took from where</b>
+<ul class="clean" style="margin-top:6px"><li><b>Reference you gave:</b> I could not open designprompts.dev from the cloud (the host is blocked), so none of it is used. What follows is from general knowledge of current dark app UIs.</li>
+<li><b>Linear:</b> layered near-black surfaces separated by hairline borders instead of boxes and shadows; a quiet sidebar with the selected item marked by a thin accent edge.</li>
+<li><b>Vercel:</b> a strict type scale, small uppercase labels over large tabular numbers, white primary button, tight 6 px corners.</li>
+<li><b>Raycast:</b> keyboard hints (<span class="kbd">F8</span>), compact rows with hover highlight, restraint with colour.</li>
+<li><b>Dropped:</b> bubbles, big radii and glows. Status uses small flat tags, not pills.</li></ul>
+<b>Cost in egui:</b> hairlines, flat fills, hover highlights and a single gradient on tiles are cheap. Not used: blur or glass, drop shadows and glows (extra layers to draw), animated gradients. Fonts: Inter would need its licence recorded (SIL OFL); the system font is the fallback.</div>
 <div class="tg" id="toggles">
 <span><label id="plabel">Playstyle</label><span class="seg" id="preset"></span></span>
 <span><label>Mode</label><select id="mode"><option value="gen">General hunting</option><option value="mon">Per monster: Sample Monster A</option><option value="mon2">Per monster: Sample Monster B</option></select></span>
@@ -427,10 +453,10 @@ rerender();
 function vsw(id,cls){document.querySelectorAll('#'+id+' button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#'+id+' button').forEach(function(x){x.classList.toggle('on',x===b)});var sec=document.getElementById(id).parentNode;sec.querySelectorAll('.vw').forEach(function(v){v.classList.toggle('on',v.id===b.dataset.w)});};});}
 vsw('svt');vsw('wvt');
 
-var LN={current:"The look so far. Neutral dark grey with an amber accent.",
-forge:"Game-inspired: warm bronze and parchment tones, serif headings, framed panels, round icon medallions. Our own shapes and colours, no Capcom art. In egui: flat fills and 1 px strokes, plus a system serif or a licensed font.",
-clean:"Modern dashboard: cool blue accent, big numbers, large rounded cards, no borders, lots of space. Easiest in egui: rounded rects and flat colours.",
-pro:"Dense pro-tool: small type, monospace numbers, tight rows, thin lines, teal accent. Most information per screen; best for a second monitor. Cheapest in egui."};
+var LN={current:"The look so far.",
+pro:"Pro as picked: dense, thin lines, monospace numbers. The baseline to compare against.",
+modern1:"Modern Dark A, Graphite: near-black layers, hairline borders, one indigo accent used sparingly, crisp type scale, 6 px corners. In egui: flat fills, 1 px strokes, one tiled vertical gradient on stat tiles.",
+modern2:"Modern Dark B, Amber: same structure, but the accent is the amber from the game-side direction so the app feels tied to Wilds without using its art."};
 document.querySelectorAll('#lk button').forEach(function(b){b.onclick=function(){document.querySelectorAll('#lk button').forEach(function(x){x.classList.toggle('on',x===b)});document.body.dataset.look=b.dataset.l;document.getElementById('lknote').textContent=LN[b.dataset.l];};});
 document.getElementById('lknote').textContent=LN.current;
 </script>
