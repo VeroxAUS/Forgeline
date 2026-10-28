@@ -1,0 +1,15 @@
+[package]
+name = "fixture-builder"
+description = "Builds small synthetic Wilds-format save files (invented contents) for tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+forgeline-core = { path = "../../crates/forgeline-core" }
+aes = "0.8"
+miniz_oxide = "0.8"
+serde_json.workspace = true

@@ -1,0 +1,56 @@
+{
+  "active_slot": 1,
+  "description": "Slot 1 holds data and is the active one; slots 2 and 3 are empty.",
+  "fixture": "one-slot",
+  "never_in_summary": [
+    "Fixture Hunter",
+    "FIXT-0001-NOPE"
+  ],
+  "slot_count": 3,
+  "slots": [
+    {
+      "active": true,
+      "boss_entries": 3,
+      "bosses_with_kills": 2,
+      "box_item_types_in_use": 4,
+      "equipment_by_category": {
+        "1": 2,
+        "13": 3,
+        "21": 1
+      },
+      "equipment_in_use": 6,
+      "found_flag_bits_set": 4,
+      "has_data": true,
+      "pouch_entries": 2,
+      "slot": 1
+    },
+    {
+      "active": false,
+      "boss_entries": 0,
+      "bosses_with_kills": 0,
+      "box_item_types_in_use": 0,
+      "equipment_by_category": {},
+      "equipment_in_use": 0,
+      "found_flag_bits_set": 0,
+      "has_data": false,
+      "pouch_entries": 0,
+      "slot": 2
+    },
+    {
+      "active": false,
+      "boss_entries": 0,
+      "bosses_with_kills": 0,
+      "box_item_types_in_use": 0,
+      "equipment_by_category": {},
+      "equipment_in_use": 0,
+      "found_flag_bits_set": 0,
+      "has_data": false,
+      "pouch_entries": 0,
+      "slot": 3
+    }
+  ],
+  "slots_with_data": 1,
+  "steam_account_id": 4242,
+  "steam_id64": 76561197960269970,
+  "synthetic": true
+}

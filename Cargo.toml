@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["crates/forgeline-core", "crates/forgeline-app", "tools/forgeline-check"]
+members = [
+    "crates/forgeline-core",
+    "crates/forgeline-app",
+    "tools/fixture-builder",
+    "tools/forgeline-check",
+]
 # Standalone docs tool with its own lockfile (and its own CI job).
 exclude = ["tools/plan-page"]
 

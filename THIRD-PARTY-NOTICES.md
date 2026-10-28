@@ -30,6 +30,20 @@ Licences read from each crate's `Cargo.toml` in the crates.io registry.
 
 Licences read from each crate's `Cargo.toml` (`cargo metadata`). No GPL crate is used.
 
+## tools/fixture-builder (test tool, not shipped in the app)
+
+| Crate | Version | Licence | Use |
+|---|---|---|---|
+| aes | 0.8.4 | MIT OR Apache-2.0 | AES-128 block cipher, used in OFB mode to write the synthetic fixture saves |
+| miniz_oxide | 0.8.9 | MIT OR Zlib OR Apache-2.0 | raw deflate compression for the fixture saves |
+| adler2 | 2.0.1 | 0BSD OR MIT OR Apache-2.0 | dependency of miniz_oxide |
+| cipher, crypto-common, inout | 0.4.4, 0.1.7, 0.1.4 | MIT OR Apache-2.0 | dependencies of aes |
+| generic-array | 0.14.7 | MIT | dependency of cipher |
+| typenum, version_check | 1.20.1, 0.9.5 | MIT OR Apache-2.0 | dependencies of generic-array |
+| cpufeatures, libc, cfg-if | 0.2.17, 0.2.191, 1.0.5 | MIT OR Apache-2.0 | dependencies of aes |
+
+Licences read from each crate's `Cargo.toml` (`cargo metadata`). No GPL crate is used. The container format the builder writes comes from our own notes in `docs/research.md`; no code from MHWeditor or any other unlicensed project is used.
+
 ## spikes-archive branch (reference only, not on `main`, not shipped)
 
 | Source | Licence | Use |

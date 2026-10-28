@@ -1,0 +1,60 @@
+{
+  "active_slot": 3,
+  "description": "Slots 1 and 3 hold data; slot 3 is the active one, so picking the first slot with data is wrong.",
+  "fixture": "two-slots",
+  "never_in_summary": [
+    "Fixture Alt",
+    "FIXT-0002-NOPE",
+    "Fixture Third",
+    "FIXT-0003-NOPE"
+  ],
+  "slot_count": 3,
+  "slots": [
+    {
+      "active": false,
+      "boss_entries": 1,
+      "bosses_with_kills": 1,
+      "box_item_types_in_use": 1,
+      "equipment_by_category": {
+        "1": 1,
+        "13": 1
+      },
+      "equipment_in_use": 2,
+      "found_flag_bits_set": 1,
+      "has_data": true,
+      "pouch_entries": 0,
+      "slot": 1
+    },
+    {
+      "active": false,
+      "boss_entries": 0,
+      "bosses_with_kills": 0,
+      "box_item_types_in_use": 0,
+      "equipment_by_category": {},
+      "equipment_in_use": 0,
+      "found_flag_bits_set": 0,
+      "has_data": false,
+      "pouch_entries": 0,
+      "slot": 2
+    },
+    {
+      "active": true,
+      "boss_entries": 2,
+      "bosses_with_kills": 1,
+      "box_item_types_in_use": 2,
+      "equipment_by_category": {
+        "13": 2,
+        "21": 1
+      },
+      "equipment_in_use": 3,
+      "found_flag_bits_set": 8,
+      "has_data": true,
+      "pouch_entries": 1,
+      "slot": 3
+    }
+  ],
+  "slots_with_data": 2,
+  "steam_account_id": 4242,
+  "steam_id64": 76561197960269970,
+  "synthetic": true
+}
