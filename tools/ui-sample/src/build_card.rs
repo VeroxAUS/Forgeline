@@ -35,6 +35,8 @@ const DOT_PITCH: f32 = 13.0;
 const SKILL_ROW: f32 = 38.0;
 /// Compact rows (used when the list is long): one line, dots in a fixed column at this offset.
 const COMPACT_ROW: f32 = 22.0;
+/// One tier line under a set or group skill's name.
+const TIER_ROW: f32 = 16.0;
 const COMPACT_DOTS_X: f32 = 120.0;
 /// Width of the side strip, and the gap between it and the equipment rows.
 const SKILLS_W: f32 = 232.0;
@@ -44,7 +46,6 @@ const EQUIP_MIN_W: f32 = 480.0;
 /// Each strip column is at least this wide (name, dots and level number).
 const SKILL_COL_MIN_W: f32 = 200.0;
 const ACCENT: Color32 = Color32::from_rgb(255, 138, 61);
-const ACCENT_INK: Color32 = Color32::from_rgb(26, 12, 2);
 const BG: Color32 = Color32::from_rgb(10, 10, 11);
 
 const FG: Color32 = Color32::from_rgb(236, 236, 238);
@@ -84,25 +85,26 @@ pub enum SkillKind {
     Group,
 }
 
-/// How set and group skills show their progress (two variants for the maintainer to compare).
+/// One tier of a set or group skill: the effect that starts at `pieces` worn.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum SetStyle {
-    /// A numbered circle per threshold (`2` and `4` pieces), filled once reached.
-    Pips,
-    /// Plain words: `3 of 4 pieces`.
-    Text,
+pub struct Tier {
+    pub pieces: u8,
+    /// Short, for the strip.
+    pub effect: &'static str,
+    /// The full effect text, for the tooltip and the Why screen.
+    pub full: &'static str,
 }
 
 /// One skill in the build. For a normal skill `level` is its total level and `max` the most it
-/// can reach. For a set or group skill `level` is the pieces worn, `max` the highest threshold and
-/// `steps` the piece counts where a bonus starts.
+/// can reach. For a set or group skill `level` is the pieces worn, `max` the highest tier and
+/// `tiers` the effects, lowest piece count first.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Skill {
     pub name: &'static str,
     pub level: u8,
     pub max: u8,
     pub kind: SkillKind,
-    pub steps: &'static [u8],
+    pub tiers: &'static [Tier],
     /// A must-have the user set. Never cut from the strip.
     pub must: bool,
     /// The optimizer's weight for this skill, when there is one (Phase 4). Without it the strip
@@ -117,20 +119,20 @@ impl Skill {
             level,
             max,
             kind: SkillKind::Normal,
-            steps: &[],
+            tiers: &[],
             must: false,
             weight: None,
         }
     }
 
-    /// A set or group skill: `pieces` worn, bonuses at each of `steps`.
-    pub fn bonus(kind: SkillKind, name: &'static str, pieces: u8, steps: &'static [u8]) -> Self {
+    /// A set or group skill: `pieces` worn, an effect at each of `tiers`.
+    pub fn bonus(kind: SkillKind, name: &'static str, pieces: u8, tiers: &'static [Tier]) -> Self {
         Skill {
             name,
             level: pieces,
-            max: steps.last().copied().unwrap_or(0),
+            max: tiers.last().map_or(0, |t| t.pieces),
             kind,
-            steps,
+            tiers,
             must: false,
             weight: None,
         }
@@ -234,8 +236,8 @@ impl BuildData {
             ],
             charm: None,
             skills: vec![
-                Skill::bonus(SkillKind::Set, "Set bonus Alpha", 3, &[2, 4]),
-                Skill::bonus(SkillKind::Group, "Group skill Gamma", 3, &[3]),
+                Skill::bonus(SkillKind::Set, "Set bonus Alpha", 3, TWO_FOUR),
+                Skill::bonus(SkillKind::Group, "Group skill Gamma", 3, THREE),
                 Skill {
                     must: true,
                     ..Skill::normal("Weakness exploit", 4, 5)
@@ -250,14 +252,34 @@ impl BuildData {
     }
 }
 
+/// Invented tier text. Whether the game files hold set and group skill tier effects is unverified,
+/// so the strip is shown with sample text.
+const TWO_FOUR: &[Tier] = &[
+    Tier {
+        pieces: 2,
+        effect: "Sample effect I",
+        full: "Sample text: the 2-piece effect of this set, in full.",
+    },
+    Tier {
+        pieces: 4,
+        effect: "Sample effect II",
+        full: "Sample text: the 4-piece effect of this set, in full.",
+    },
+];
+const THREE: &[Tier] = &[Tier {
+    pieces: 3,
+    effect: "Sample group effect",
+    full: "Sample text: the 3-piece effect of this group skill, in full.",
+}];
+
 /// A realistic full endgame build's skills (invented names): 22 skills, with set and group
 /// skills first and the rest most important first, each with a sample weight.
 pub fn sample_endgame_skills() -> Vec<Skill> {
     let mut v = vec![
-        Skill::bonus(SkillKind::Set, "Set bonus Alpha", 4, &[2, 4]),
-        Skill::bonus(SkillKind::Set, "Set bonus Beta", 2, &[2, 4]),
-        Skill::bonus(SkillKind::Group, "Group skill Gamma", 3, &[3]),
-        Skill::bonus(SkillKind::Group, "Group skill Delta", 2, &[3]),
+        Skill::bonus(SkillKind::Set, "Set bonus Alpha", 4, TWO_FOUR),
+        Skill::bonus(SkillKind::Set, "Set bonus Beta", 2, TWO_FOUR),
+        Skill::bonus(SkillKind::Group, "Group skill Gamma", 3, THREE),
+        Skill::bonus(SkillKind::Group, "Group skill Delta", 2, THREE),
     ];
     let normal = [
         ("Weakness exploit", 5, 5, true),
@@ -305,8 +327,6 @@ pub struct BuildCard {
     pub cache: IconCache,
     /// Slot circles drawn last frame, for the hover tooltip.
     hits: Vec<(Rect, Hit)>,
-    /// Which of the two set and group skill looks to draw.
-    pub set_style: SetStyle,
 }
 
 impl BuildCard {
@@ -316,7 +336,6 @@ impl BuildCard {
             data: BuildData::sample(),
             cache: IconCache::new(ctx, source),
             hits: Vec::new(),
-            set_style: SetStyle::Text,
         }
     }
 }
@@ -327,12 +346,11 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
     let data = &app.data;
     let cache = &mut app.cache;
     let hits = &mut app.hits;
-    let set_style = app.set_style;
     hits.clear();
     shell::show_with(ui, &mut app.shell, &mut |p, content, shell| {
         shell::show_content(p, content, shell);
         if shell.section == shell::Section::Build {
-            card(p, content, data, cache, hits, &shell.status, set_style);
+            card(p, content, data, cache, hits, &shell.status);
         } else {
             placeholder(p, content);
         }
@@ -367,13 +385,11 @@ fn skill_tip(k: &Skill) -> String {
     match k.kind {
         SkillKind::Normal => format!("{}, level {} of {}", k.name, k.level, k.max),
         SkillKind::Set | SkillKind::Group => {
-            let steps: Vec<String> = k.steps.iter().map(u8::to_string).collect();
-            format!(
-                "{}, {} pieces worn, bonus at {} pieces",
-                k.name,
-                k.level,
-                steps.join(" and ")
-            )
+            let mut tip = format!("{}, {} pieces worn", k.name, k.level);
+            for t in k.tiers {
+                tip += &format!("\n{} pieces: {}", t.pieces, t.full);
+            }
+            tip
         }
     }
 }
@@ -399,7 +415,6 @@ fn card(
     cache: &mut IconCache,
     hits: &mut Vec<(Rect, Hit)>,
     status: &Status,
-    set_style: SetStyle,
 ) {
     let left = content.min.x + MARGIN;
     let right = content.max.x - MARGIN;
@@ -445,7 +460,6 @@ fn card(
             top,
             content.max.y - 16.0,
             &data.skills,
-            set_style,
         );
     }
     let right = eq_right;
@@ -502,13 +516,12 @@ fn card(
             y + 14.0,
             content.max.y - 16.0,
             &data.skills,
-            set_style,
         );
     }
 }
 
 /// The skills strip: a section label with its hairline, then the set and group skills pinned at
-/// the top (two-line blocks with a small kind tag), then the normal skills. Each normal skill is a
+/// the top (a name with a small kind tag, then one line per tier), then the normal skills. Each normal skill is a
 /// name, a level number at the right and one round dot per possible level. Columns follow the
 /// width; dots and numbers sit on the same x in every block and are snapped to whole pixels.
 ///
@@ -526,7 +539,6 @@ fn skills(
     y: f32,
     bottom: f32,
     list: &[Skill],
-    set_style: SetStyle,
 ) {
     let mut y = section(p, left, right, y, "SKILLS");
     if list.is_empty() {
@@ -546,15 +558,18 @@ fn skills(
     let col_x = |i: usize| left + (i % cols) as f32 * (col_w + 24.0);
     y += 6.0;
 
-    // Set and group skills first, in two-line blocks.
+    // Set and group skills first: the name and kind tag, then one line per tier. The active tiers
+    // are green, the next one is muted with how many pieces it still needs, later ones fainter.
+    // Blocks are as tall as their tiers; columns follow the width like the normal skills.
     let pinned: Vec<&Skill> = list.iter().filter(|k| k.pinned()).collect();
+    let mut col_y = vec![y; cols];
     for (i, k) in pinned.iter().enumerate() {
         let x = col_x(i);
-        let ry = y + (i / cols) as f32 * SKILL_ROW;
+        let ry = col_y[i % cols];
         p.text(
             Pos2::new(x, ry + 9.0),
             Align2::LEFT_CENTER,
-            fit(p, k.name, col_w - 56.0, "inter-medium"),
+            fit(p, k.name, col_w - 56.0, "inter-medium", 12.5),
             font("inter-medium", 12.5),
             FG,
         );
@@ -578,47 +593,39 @@ fn skills(
         );
         p.galley(tag_rect.center() - g.size() / 2.0, g, DIM);
 
-        match set_style {
-            SetStyle::Pips => {
-                // One numbered circle per threshold, the slot-circle size and look, filled once
-                // reached. Pieces worn at the right.
-                for (j, step) in k.steps.iter().enumerate() {
-                    let c = Pos2::new(snap(x + SLOT_R + j as f32 * SLOT_PITCH), snap(ry + 26.0));
-                    let ink = if k.level >= *step {
-                        p.circle_filled(c, SLOT_R, ACCENT);
-                        ACCENT_INK
-                    } else {
-                        p.circle_stroke(c, SLOT_R - 1.0, Stroke::new(1.0, FAINT));
-                        DIM
-                    };
-                    p.text(c, Align2::CENTER_CENTER, step.to_string(), mono(9.0), ink);
-                }
-                p.text(
-                    Pos2::new(x + col_w, ry + 26.0),
-                    Align2::RIGHT_CENTER,
-                    format!("{} pieces", k.level),
-                    mono(11.0),
-                    DIM,
-                );
-            }
-            SetStyle::Text => {
-                let done = k.steps.iter().any(|s| k.level >= *s);
-                p.text(
-                    Pos2::new(x, ry + 26.0),
-                    Align2::LEFT_CENTER,
-                    format!("{} of {} pieces", k.level, k.max),
-                    font("inter", 11.5),
-                    if done { OK } else { DIM },
-                );
-            }
+        let mut next_seen = false;
+        for (j, t) in k.tiers.iter().enumerate() {
+            let (text, color) = if k.level >= t.pieces {
+                (format!("{} pcs: {}", t.pieces, t.effect), OK)
+            } else if !next_seen {
+                next_seen = true;
+                let n = t.pieces - k.level;
+                let more = if n == 1 {
+                    "1 more piece".to_string()
+                } else {
+                    format!("{n} more pieces")
+                };
+                (format!("{} pcs: {}, {more}", t.pieces, t.effect), DIM)
+            } else {
+                (format!("{} pcs: {}", t.pieces, t.effect), FAINT)
+            };
+            p.text(
+                Pos2::new(x, ry + 26.0 + j as f32 * TIER_ROW),
+                Align2::LEFT_CENTER,
+                fit(p, &text, col_w, "inter", 11.5),
+                font("inter", 11.5),
+                color,
+            );
         }
+        let h = 20.0 + k.tiers.len().max(1) as f32 * TIER_ROW + 6.0;
         hits.push((
-            Rect::from_min_size(Pos2::new(x, ry), Vec2::new(col_w, SKILL_ROW - 4.0)),
+            Rect::from_min_size(Pos2::new(x, ry), Vec2::new(col_w, h - 4.0)),
             Hit::Skill(**k),
         ));
+        col_y[i % cols] += h;
     }
     if !pinned.is_empty() {
-        y += pinned.len().div_ceil(cols) as f32 * SKILL_ROW;
+        y = col_y.iter().cloned().fold(y, f32::max);
     }
 
     let normal: Vec<&Skill> = list.iter().filter(|k| !k.pinned()).collect();
@@ -669,7 +676,7 @@ fn skills(
         p.text(
             Pos2::new(x, name_y),
             Align2::LEFT_CENTER,
-            fit(p, k.name, name_w, "inter"),
+            fit(p, k.name, name_w, "inter", 12.5),
             font("inter", 12.5),
             FG,
         );
@@ -714,10 +721,10 @@ fn hide_least_important(normal: &[&Skill], n_cut: usize) -> Vec<bool> {
     hidden
 }
 
-/// `text` shortened with an ellipsis until it fits `width` (12.5 pt, in the named face).
-fn fit(p: &Painter, text: &str, width: f32, face: &str) -> String {
+/// `text` shortened with an ellipsis until it fits `width` (in the named face and size).
+fn fit(p: &Painter, text: &str, width: f32, face: &str, size: f32) -> String {
     let fits = |t: &str| {
-        p.layout_no_wrap(t.to_string(), font(face, 12.5), FG)
+        p.layout_no_wrap(t.to_string(), font(face, size), FG)
             .size()
             .x
             <= width
