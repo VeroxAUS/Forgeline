@@ -514,3 +514,38 @@ Question: what do real Wilds crafting materials look like (length, repeats acros
 - **Longest real name found:** `Guardian Fulgur Certificate S` (29 characters). Items repeat across pieces (the same scale, fang and pelt for every piece of a set), so a per-monster list adds counts up.
 - **Used in `tools/ui-sample`:** these names, spread over pieces and monsters by hand, plus one invented 53 character stress-test name. Which monster drops which item in the sample is illustrative, not from a drop table.
 - **Not verified:** per-piece costs, drop sources, whether materials can come from more than one monster, whether the game files hold per-item farm places (open question 12). The Shopping farm column therefore shows only when data exists, and the sample has none.
+
+## Multi-agent workflow, step 4: Codex dry-run review of PR #38 (2026-10-29)
+
+Plan: [plans/multi-agent-workflow.md](plans/multi-agent-workflow.md). Codex (`gpt-6.1-terra`, read-only) reviewed the merged update flow (`9e94f39`, `crates/forgeline-update`). Claude checked each finding against the code at that commit.
+
+- **Result:** 6 findings, all real, none false. Codex marked three High with High confidence on all six; after checking, none is a data-loss bug in normal use (severity was overstated, confidence was not informative).
+- **Cost:** about 5 minutes, five source files, two integration tests and some callers. No tests run.
+- **Findings (Claude's rating):**
+  1. Medium: the protected-path rejection in `update_from_steam` calls `fail`, which creates `data/` and writes the status file inside the rejected folder (a Steam, install or save path the name check missed). `lib.rs:356`.
+  2. Low to medium: the "opens" check is only the first three bytes (`USR`), so a truncated file can pass validation. `lib.rs:258`, `validate.rs:60`.
+  3. Medium: an unreadable last-good manifest gives a warning only, so the comparison with last-good data is skipped. Needs a maintainer decision (warn or block). `lib.rs:301`.
+  4. Low to medium: the "unchanged" decision compares manifests only, not the current files, so damaged current data can survive. `lib.rs:312`.
+  5. Low: `swap::recover` runs only at the start of an update, so a crash between the two renames leaves no `current` until the next update. `lib.rs:220`, `swap.rs:42`.
+  6. Low: status-file write errors are discarded. `lib.rs:185`.
+- **Not checked:** whether the pak reader already errors on truncated entries (would defuse 2); whether the tests prove what they claim.
+- **Takeaway:** useful. It found issues (1, 5) from callers outside the diff and had no false alarms, but needs Claude to re-rate severity. Reviewing risky PRs only stays the plan.
+
+## Multi-agent workflow, steps 5 and 6: A/B result and retro (2026-10-29)
+
+Same task (three update-gate findings from the PR #38 review) done twice: **A**, Claude implementing with a Codex review and an OpenCode commit-message draft (PR #65); **B**, the old coordinator workflow (PR #66). Both CI green.
+
+| | A (#65) | B (#66) |
+|---|---|---|
+| Diff | 5 files, +157 −8 (about +39 −8 of code) | 4 files, +94 −3 (about +10 of code) |
+| New tests / workspace total | 5 / 155 passed | 3 / 153 passed |
+| Steam root checked before discovery | yes | no |
+| Other-schema manifest | warns | blocks (would lock updates out after a schema bump) |
+| Block message says how to recover | yes | no |
+
+- **Codex on B** found the same two gaps A had already closed (writes into a Steam folder when discovery fails first; block on any unreadable manifest) plus the engine-start recovery race that A had documented. The review, not the author, explains most of the gap.
+- **Decision (maintainer, 2026-10-29):** A is the standard going forward; no mixing of the two.
+- **Codex default:** `gpt-6.1-terra` on medium for risky PRs; high for the extractor, validation gate and optimizer maths; xhigh or max only after a high attempt failed. Each of three reviews took about 5 minutes and found real issues. Cost not measured (needs the T3 usage display).
+- **OpenCode:** commit-message draft was accurate and needed one added sentence. In an instruction-file check it wrongly said `CLAUDE.md` did not exist, so its output stays a draft that Claude reads first.
+- **Coordinator seat:** stays Sonnet 5.5 on medium. Opus 5.5 costs about twice per token (list prices $4/$20 against $2/$10 per million); a seat test was judged not worth the usage. Coordinator mistakes this session were checking errors (a commit with a personal email, a wrong test count, a malformed table row, a test file that was never written), so the fix is a checklist, not a bigger model: before every commit check the identity, take every count from the command output, confirm the files exist before running tests.
+- **Verdict so far:** the workflow feels the same as before; the real test is the next phase's work. Keep, with the split of `AGENTS.md` and `docs/workflow.md` next.
