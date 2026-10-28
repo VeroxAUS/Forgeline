@@ -1,0 +1,16 @@
+[package]
+name = "forgeline-app"
+description = "Forgeline application (grows into the egui window in step 9)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "forgeline"
+path = "src/main.rs"
+
+[dependencies]
+forgeline-core = { path = "../forgeline-core" }
