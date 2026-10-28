@@ -128,7 +128,8 @@ fn default_dir() -> Option<PathBuf> {
     }
 }
 
-fn is_protected(path: &Path, protected: &[PathBuf]) -> bool {
+/// True if `path` is inside one of `protected` or has a Steam, install or save folder name in it.
+pub fn is_protected(path: &Path, protected: &[PathBuf]) -> bool {
     if protected.iter().any(|p| path.starts_with(p)) {
         return true;
     }
