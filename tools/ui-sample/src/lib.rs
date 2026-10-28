@@ -9,6 +9,7 @@
 //! art. Nothing animates and nothing blurs: flat fills, hairlines and at most one static gradient.
 
 pub mod render;
+pub mod shell;
 
 use egui::epaint::{Mesh, Vertex, WHITE_UV};
 use egui::{
@@ -255,7 +256,7 @@ pub fn install_fonts(ctx: &egui::Context) {
     ctx.set_fonts(fonts);
 }
 
-fn font(name: &str, size: f32) -> FontId {
+pub(crate) fn font(name: &str, size: f32) -> FontId {
     FontId::new(size, FontFamily::Name(name.into()))
 }
 
@@ -317,7 +318,7 @@ impl Ctx<'_> {
 }
 
 #[derive(Clone, Copy)]
-enum Icon {
+pub(crate) enum Icon {
     Build,
     Cart,
     Why,
@@ -335,7 +336,7 @@ enum Icon {
 
 /// Placeholder glyphs made of plain shapes. Real icons come from the user's install later
 /// (element 3); these only stand in for them.
-fn icon(p: &Painter, r: Rect, ic: Icon, col: Color32) {
+pub(crate) fn icon(p: &Painter, r: Rect, ic: Icon, col: Color32) {
     let c = r.center();
     let u = r.width() / 16.0;
     let st = Stroke::new(1.4, col);
