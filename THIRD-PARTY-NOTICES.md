@@ -46,9 +46,7 @@ Licences read from each crate's `Cargo.toml` (`cargo metadata`). No GPL crate is
 
 ## spikes-archive branch (reference only, not on `main`, not shipped)
 
-| Source | Licence | Use |
-|---|---|---|
-| [eigeen/ree-pak-rs](https://github.com/eigeen/ree-pak-rs) | MIT | The 129-byte pak table modulus constant in `spikes/step5-extract/extract/src/pak.rs` on the `spikes-archive` branch, and the pak format facts behind our own reader. Credit retained. If this constant enters the product, copy the MIT notice here in full. |
+Throwaway Phase 1 spike code. Its use of eigeen/ree-pak-rs is the same as in the `forgeline-pak` section below.
 
 ## crates/forgeline-save (the save reader, linked into the app)
 
@@ -57,3 +55,42 @@ Licences read from each crate's `Cargo.toml` (`cargo metadata`). No GPL crate is
 | aes, miniz_oxide | MIT OR Apache-2.0, MIT OR Zlib OR Apache-2.0 | AES-128 (OFB mode) to decrypt the save container, raw deflate to inflate it |
 
 Their own dependencies are the ones listed for `tools/fixture-builder` above (same versions, same lockfile). The container and class-stream readers are written from our own notes in `docs/research.md`; no code from MHWeditor or any other unlicensed project is used.
+
+## crates/forgeline-pak (the pack reader, linked into the app and the update process)
+
+| Crate | Version | Licence | Use |
+|---|---|---|---|
+| num-bigint | 0.4.8 | MIT OR Apache-2.0 | the big-number power that turns the table key in a pack into the XOR key |
+| num-integer, num-traits, autocfg | 0.1.47, 0.2.19, 1.5.1 | MIT OR Apache-2.0 | dependencies of num-bigint |
+| zstd | 0.13.3 | MIT | unpacks zstd entries and chunks |
+| zstd-safe, zstd-sys | 7.3.0, 2.1.2 | BSD-3-Clause | dependencies of zstd; zstd-sys builds the bundled zstd C library, used under its BSD-3-Clause licence (it is dual-licensed with GPL-2.0; the GPL option is not used) |
+| cc, shlex, find-msvc-tools, jobserver, pkg-config, getrandom, r-efi | 1.10.0, 2.0.1, 0.1.15, 0.1.35, 0.3.34, 0.4.3, 6.0.0 | MIT OR Apache-2.0 (r-efi also lists LGPL-2.1-or-later as an option; the MIT/Apache option is used) | build-time dependencies of zstd-sys (compiling the C library) |
+| miniz_oxide | 0.8.9 | MIT OR Zlib OR Apache-2.0 | raw deflate for deflate entries (already listed above) |
+
+Licences read from each crate's `Cargo.toml` (`cargo metadata`). No GPL crate is used.
+
+### eigeen/ree-pak-rs (MIT)
+
+The pack format facts (header, encrypted entry table, chunk table) and the 129-byte table modulus constant in `crates/forgeline-pak/src/index.rs` come from [eigeen/ree-pak-rs](https://github.com/eigeen/ree-pak-rs). The reader code is our own, written from those facts. Licence, copied in full as the licence requires:
+
+> MIT License
+>
+> Copyright (c) 2024 Eigeen
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.
