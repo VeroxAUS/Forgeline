@@ -121,7 +121,10 @@ UI elements land in minor versions with the phase that supplies their data. Each
 ## 10. Review log
 
 - 2026-10-28: questionnaire answered; follow-up on six reopened items answered. Question and answer log kept by the coordinator in open-questions.md and closed-questions.md.
+- 2026-10-28: element 1 look check passed at 07:39 UTC. Style locked in: **D3**, which is A (Modern Dark: near-monochrome, hairline rows, mono labels and numbers, numbered rows) with C's orange accent, round skill dots, icon tiles, the static header gradient and the tinted selected rail item. Screenshot: `docs/ux/samples/d3-modern-ember-both.png`. `docs/ux/style-guide.md` is written from it in a fresh thread. `tools/ui-sample` is approved to keep.
 
 ## 11. Time log
 
-Written as elements are built.
+| Element | Thread | Result |
+|---|---|---|
+| 1. Sample screen | 2026-10-28, started 07:16 UTC, look check passed 07:39 UTC (about 25 min of thread time, against the 4 h estimate) | Built as `tools/ui-sample` (PR #47): variants A to C, then D and its three variants. The maintainer locked in **D3** (see the review log). Reviewed from screenshots in the cloud; not run on the PC. |
