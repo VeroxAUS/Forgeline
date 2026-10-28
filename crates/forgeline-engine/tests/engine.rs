@@ -40,7 +40,9 @@ impl Rig {
         rig
     }
     fn put(&self, fixture: &str) {
-        std::fs::copy(fixtures().join(fixture), &self.save).unwrap();
+        // A write, not a copy: on Windows a copy keeps the source's modified time, and the fixtures
+        // all share one checkout time, so the engine could not tell them apart.
+        std::fs::write(&self.save, std::fs::read(fixtures().join(fixture)).unwrap()).unwrap();
     }
     fn start(&self) -> (Engine, Receiver<()>) {
         let (tx, rx) = channel();
