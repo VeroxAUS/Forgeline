@@ -303,20 +303,13 @@ body[data-look^=modern] .card{padding:10px 0;min-height:60px;grid-template-colum
 
 <section class="screen" id="why">
 <h2>Why this build</h2>
-<div class="vt seg" id="wvt"><button class="on" data-w="w0">Overview</button><button data-w="w1">Compare two builds (option)</button><button data-w="w2">Skill value (option)</button><button data-w="w3">What changed (option)</button><button data-w="w4">Sensitivity grid (option)</button><button data-w="w5">Plain summary (option)</button></div>
+<div class="vt seg" id="wvt"><button class="on" data-w="w0">Overview</button><button data-w="w1">Compare two builds (option)</button><button data-w="w2">Skill value (option)</button><button data-w="w3">What changed (option)</button><button data-w="w4">Does it stay best (option)</button><button data-w="w5">Plain summary (option)</button></div>
 <div class="vw on" id="w0">
-<div class="banner warn"><span>&#9888; The best build changes if uptime drops below about 45% (then Safe leads by 6 points).</span><button class="btn sec">Show the switch point</button></div>
+<div class="banner warn"><span>&#9888; The best build changes if uptime drops below about 45% (then Safe does more damage).</span><button class="btn sec">Show the switch point</button></div>
 <div class="panel"><b>Where the 412 comes from (modelled)</b>
 <div class="stack"><span style="width:44%;background:#6fb3e0" title="Weapon raw"></span><span style="width:22%;background:#e0a63a" title="Attack Boost"></span><span style="width:18%;background:#58b97c" title="Affinity"></span><span style="width:10%;background:#b58be0" title="Sharpness/ammo"></span><span style="width:6%;background:#a3acb9" title="Other"></span></div>
 <div class="legend"><span><i style="background:#6fb3e0"></i>Weapon raw 180</span><span><i style="background:#e0a63a"></i>Attack Boost +90</span><span><i style="background:#58b97c"></i>Affinity +74</span><span><i style="background:#b58be0"></i>Ammo +42</span><span><i style="background:#a3acb9"></i>Other +26</span></div></div>
-<div class="panel" style="padding-bottom:4px"><b>The five builds</b><table style="margin-top:6px">
-<tr><th>Build</th><th class="n">Eff. raw</th><th class="n">Defence</th><th>Comfort</th><th>Missing parts</th><th>Good when</th></tr>
-<tr><td class="hi">Best (Solo)</td><td class="n hi">412</td><td class="n">388</td><td>Earplugs 2, Tremor 1</td><td>5</td><td>you want the most damage you can make now</td></tr>
-<tr><td>Safe</td><td class="n">386 <span class="warn">&minus;26</span></td><td class="n">448 <span class="ok">+60</span></td><td>+ Guard</td><td>3</td><td>learning a fight, or carrying a weak team</td></tr>
-<tr><td>Defensive</td><td class="n">349 <span class="warn">&minus;63</span></td><td class="n">476 <span class="ok">+88</span></td><td>+ Resistances</td><td>4</td><td>big damage, few openings</td></tr>
-<tr><td>Monster-specific (A)</td><td class="n">421 <span class="ok">+9</span></td><td class="n">380</td><td>Earplugs 2</td><td>7</td><td>only Sample Monster A</td></tr>
-<tr><td>General hunting</td><td class="n">398 <span class="warn">&minus;14</span></td><td class="n">402</td><td>Earplugs 2</td><td>2</td><td>mixed hunts, fewer new parts</td></tr>
-</table></div>
+<div class="panel" style="padding-bottom:4px"><b>The five builds</b> <small style="color:var(--dim)">damage compared with Best (modelled); hover a row for raw numbers</small><table style="margin-top:6px"><tr><th>Build</th><th>Damage</th><th>Toughness</th><th class="n">Missing</th><th>Good when</th></tr><tr title="412 effective raw, 388 defence (modelled)"><td class="hi">Best (Solo)</td><td><span class="n">100%</span><div class="bar" style="width:70px;display:inline-block;vertical-align:middle;margin-left:8px"><span style="width:100%"></span></div></td><td>Solid<div class="bar" style="width:70px;display:inline-block;vertical-align:middle;margin-left:8px"><span style="width:62%"></span></div></td><td class="n">5</td><td>you want the most damage you can make now</td></tr><tr title="386 effective raw, 448 defence (modelled)"><td class="">Safe</td><td><span class="n">~94%</span><div class="bar" style="width:70px;display:inline-block;vertical-align:middle;margin-left:8px"><span style="width:94%"></span></div></td><td>Tankier<div class="bar" style="width:70px;display:inline-block;vertical-align:middle;margin-left:8px"><span style="width:74%"></span></div></td><td class="n">3</td><td>learning a fight, or carrying a weak team</td></tr><tr title="349 effective raw, 476 defence (modelled)"><td class="">Defensive</td><td><span class="n">~85%</span><div class="bar" style="width:70px;display:inline-block;vertical-align:middle;margin-left:8px"><span style="width:85%"></span></div></td><td>Much tankier<div class="bar" style="width:70px;display:inline-block;vertical-align:middle;margin-left:8px"><span style="width:80%"></span></div></td><td class="n">4</td><td>big damage, few openings</td></tr><tr title="421 effective raw, 380 defence (modelled)"><td class="">Monster-specific (A)</td><td><span class="n">~102%</span><div class="bar" style="width:70px;display:inline-block;vertical-align:middle;margin-left:8px"><span style="width:100%"></span></div></td><td>Solid<div class="bar" style="width:70px;display:inline-block;vertical-align:middle;margin-left:8px"><span style="width:60%"></span></div></td><td class="n">7</td><td>only Sample Monster A</td></tr><tr title="398 effective raw, 402 defence (modelled)"><td class="">General hunting</td><td><span class="n">~97%</span><div class="bar" style="width:70px;display:inline-block;vertical-align:middle;margin-left:8px"><span style="width:97%"></span></div></td><td>Solid+<div class="bar" style="width:70px;display:inline-block;vertical-align:middle;margin-left:8px"><span style="width:66%"></span></div></td><td class="n">2</td><td>mixed hunts, fewer new parts</td></tr></table></div>
 <div class="cols">
 <div class="panel"><b>How sensitive is the answer?</b>
 <svg class="chart" viewBox="0 0 320 150" role="img" aria-label="Effective raw against uptime: Best leads above 45 percent"><line x1="30" y1="120" x2="310" y2="120" stroke="#2c333d"/><line x1="30" y1="10" x2="30" y2="120" stroke="#2c333d"/>
@@ -334,36 +327,33 @@ body[data-look^=modern] .card{padding:10px 0;min-height:60px;grid-template-colum
 </div>
 <div class="vw" id="w1"><div class="iconnote">Option: pick any two builds and see only the differences.</div>
 <div class="panel"><table><tr><th></th><th>Best</th><th>Safe</th></tr>
-<tr><td>Effective raw (modelled)</td><td class="n hi">412</td><td class="n">386</td></tr><tr><td>Defence</td><td class="n">388</td><td class="n hi">448</td></tr>
+<tr><td>Damage (modelled)</td><td class="n hi">100%</td><td class="n">~94%</td></tr><tr><td>Toughness</td><td>Solid</td><td class="hi">Tankier</td></tr>
 <tr><td>Attack Boost</td><td class="n hi">4</td><td class="n">2</td></tr><tr><td>Guard</td><td class="n">0</td><td class="n hi">2</td></tr>
 <tr><td>Missing parts</td><td class="n">5</td><td class="n hi">3</td></tr></table><small style="color:var(--dim)">Differences are highlighted; identical rows are folded away in the real view.</small></div></div>
 <div class="vw" id="w2"><div class="iconnote">Option: what each skill is worth in this build, found by removing it and re-scoring (modelled).</div>
-<div class="panel"><div class="skl" style="grid-template-columns:150px 1fr 90px">
-<span>Attack Boost 4</span><div class="bar"><span style="width:90%"></span></div><span class="n hi">&minus;62 if removed</span>
-<span>Critical Eye 3</span><div class="bar"><span style="width:55%"></span></div><span class="n hi">&minus;38</span>
+<div class="panel"><div class="skl" style="grid-template-columns:150px 1fr 150px">
+<span>Attack Boost 4</span><div class="bar"><span style="width:90%"></span></div><span class="n hi">about 15% less damage</span>
+<span>Critical Eye 3</span><div class="bar"><span style="width:55%"></span></div><span class="n hi">about 9% less</span>
 <span>Earplugs 2</span><div class="bar ok"><span style="width:0%"></span></div><span class="n">must-have</span>
 <span>Tremor Resistance 1</span><div class="bar ok"><span style="width:0%"></span></div><span class="n">must-have</span></div></div></div>
-<div class="vw" id="w4"><div class="iconnote">Option: answer "does this stay the best build?" in words first, with sliders and the table as support. Modelled.</div>
-<div class="panel"><p style="font-size:19px;line-height:1.4;margin:0 0 12px;font-weight:400">This build stays the best unless you spend <b class="hi" style="font-family:inherit;font-weight:600">less than about 45% of the fight attacking</b>, or hit weak spots <b class="hi" style="font-family:inherit;font-weight:600">less than about 25% of the time</b>. <span style="color:var(--dim)">If it does flip, Safe gives you 60 more defence for about 26 less effective raw.</span></p>
+<div class="vw" id="w4"><div class="iconnote">Option: does this stay the best build? Two short lines, then sliders. Modelled.</div>
+<div class="panel">
+<div style="margin-bottom:12px"><small style="color:var(--dim)">Stays the best while</small>
+<div style="font-size:22px;line-height:1.5;font-weight:400">Attacking <b style="font-weight:600">45%+</b> of the fight<br>Hitting weak spots <b style="font-weight:600">25%+</b> of the time</div></div>
 <span class="pill">modelled, not measured</span>
 <div class="cols" style="margin-top:16px">
-<div><b>Uptime</b><br><small style="color:var(--dim)">How much of the fight you are attacking, not dodging or repositioning.</small><div class="sr" style="grid-template-columns:1fr 48px"><input type="range" id="su" min="20" max="100" value="60"><span class="n" id="suv">60%</span></div></div>
-<div><b>Weak-spot rate</b><br><small style="color:var(--dim)">How often your hits land on a weak point.</small><div class="sr" style="grid-template-columns:1fr 48px"><input type="range" id="sw" min="10" max="90" value="50"><span class="n" id="swv">50%</span></div></div>
+<div><b>Uptime</b> <small style="color:var(--dim)">time spent attacking</small><div class="sr" style="grid-template-columns:1fr 48px"><input type="range" id="su" min="20" max="100" value="60"><span class="n" id="suv">60%</span></div></div>
+<div><b>Weak-spot rate</b> <small style="color:var(--dim)">hits on weak points</small><div class="sr" style="grid-template-columns:1fr 48px"><input type="range" id="sw" min="10" max="90" value="50"><span class="n" id="swv">50%</span></div></div>
 </div>
 <div class="tiles" style="margin-top:16px">
-<div class="tile"><small>Best build at these settings</small><b id="so" style="font-size:24px">Best</b><em id="sd"></em></div>
-<div class="tile"><small>Best, effective raw</small><b id="sb">412</b></div>
-<div class="tile"><small>Safe, effective raw</small><b id="ss">386</b><em>+60 defence</em></div></div>
-<details><summary style="cursor:pointer;color:var(--dim);font-size:13px">Show the table instead</summary>
-<p style="color:var(--dim);font-size:13px;margin:8px 0">Each cell names the build that comes out ahead for that uptime (rows) and weak-spot rate (columns).</p><table class="hm"><tr><th>uptime / weak-spot</th><th>30%</th><th>50%</th><th>70%</th></tr>
-<tr><th>30%</th><td>Safe</td><td>Safe</td><td>Safe</td></tr>
-<tr><th>45%</th><td>Safe</td><td>Safe</td><td class="w">Best</td></tr>
-<tr><th>60%</th><td class="w">Best</td><td class="w cur">Best</td><td class="w">Best</td></tr>
-<tr><th>80%</th><td class="w">Best</td><td class="w">Best</td><td class="w">Best</td></tr></table><div class="hmleg"><span><i class="w"></i>Best is ahead</span><span><i></i>Safe is ahead</span><span><i class="c"></i>your current assumptions</span></div></details></div></div>
+<div class="tile"><small>Best build now</small><b id="so" style="font-size:24px">Best</b><em id="sd"></em></div>
+<div class="tile"><small>Damage</small><div style="margin-top:8px"><div class="skl" style="grid-template-columns:44px 1fr 44px"><span>Best</span><div class="bar"><span id="bb" style="width:100%"></span></div><span class="n" id="bbv">100%</span><span>Safe</span><div class="bar"><span id="sb2" style="width:94%"></span></div><span class="n" id="sbv">94%</span></div></div></div>
+<div class="tile"><small>Toughness</small><div style="margin-top:8px"><div class="skl" style="grid-template-columns:44px 1fr"><span>Best</span><div class="bar"><span style="width:62%"></span></div><span>Safe</span><div class="bar"><span style="width:74%"></span></div></div></div><em>Safe is tankier</em></div></div>
+</div></div>
 <div class="vw" id="w5"><div class="iconnote">Option: a short plain-language summary on top of the numbers.</div>
-<div class="panel"><b>In short</b><p style="margin:8px 0">This build is chosen because it gives the most damage you can make now while keeping the two must-haves (Earplugs and Tremor Resistance). It gives up about 60 defence compared with the Safe build.</p><p style="margin:0;color:var(--dim)">It would change if the attack buff is up less than about 45% of the time. <span class="pill">modelled</span></p></div></div>
+<div class="panel"><b>In short</b><p style="margin:8px 0">This build is chosen because it gives the most damage you can make now while keeping the two must-haves (Earplugs and Tremor Resistance). It is less tough than the Safe build, which does about 6% less damage.</p><p style="margin:0;color:var(--dim)">It would change if the attack buff is up less than about 45% of the time. <span class="pill">modelled</span></p></div></div>
 <div class="vw" id="w3"><div class="iconnote">Option: why the build changed since the last save.</div>
-<div class="panel"><b>Since the save at 11:02</b><ul class="clean" style="margin-top:8px"><li>You gained 1x Iron Scale, so the waist piece is one part closer.</li><li>Best build changed: Ashen Coil replaced Ironwood Belt (+7 eff. raw, modelled).</li><li>Shopping list: 6 parts needed before, 5 now.</li></ul></div></div>
+<div class="panel"><b>Since the save at 11:02</b><ul class="clean" style="margin-top:8px"><li>You gained 1x Iron Scale, so the waist piece is one part closer.</li><li>Best build changed: Ashen Coil replaced Ironwood Belt (about 2% more damage, modelled).</li><li>Shopping list: 6 parts needed before, 5 now.</li></ul></div></div>
 </section>
 
 <section class="screen" id="shop">
@@ -389,9 +379,9 @@ body[data-look^=modern] .card{padding:10px 0;min-height:60px;grid-template-colum
 <div class="card" style="flex-direction:column"><b>Ashen Mail (chest)</b><small>2 parts missing &middot; closest to done</small><div class="bar" style="margin-top:6px"><span style="width:60%"></span></div><small>Ashen Plate &times;2</small></div>
 <div class="card" style="flex-direction:column"><b>Ashen Coil (waist)</b><small>3 parts missing</small><div class="bar" style="margin-top:6px"><span style="width:25%"></span></div><small>Ashen Claw, Iron Scale &times;2</small></div></div></div>
 <div class="vw" id="s3"><div class="iconnote">Option: an order to collect in, with the modelled gain of each step. Gains are modelled, not measured.</div>
-<div class="panel"><div class="step"><span class="no">1</span><span><b>Hunt Sample Monster A</b><br><small style="color:var(--dim)">Ashen Plate &times;2, Ashen Claw</small></span><span class="dl">+31 eff. raw <small>(modelled)</small></span></div>
-<div class="step"><span class="no">2</span><span><b>Wounds on Sample Monster B</b><br><small style="color:var(--dim)">Iron Scale</small></span><span class="dl">+9 eff. raw <small>(modelled)</small></span></div>
-<div class="step"><span class="no">3</span><span><b>Rare drop, Sample Monster C</b><br><small style="color:var(--dim)">Ember Gem (low odds)</small></span><span class="dl">+4 eff. raw <small>(modelled)</small></span></div></div></div>
+<div class="panel"><div class="step"><span class="no">1</span><span><b>Hunt Sample Monster A</b><br><small style="color:var(--dim)">Ashen Plate &times;2, Ashen Claw</small></span><span class="dl">about +8% damage <small>(modelled)</small></span></div>
+<div class="step"><span class="no">2</span><span><b>Wounds on Sample Monster B</b><br><small style="color:var(--dim)">Iron Scale</small></span><span class="dl">about +2% damage <small>(modelled)</small></span></div>
+<div class="step"><span class="no">3</span><span><b>Rare drop, Sample Monster C</b><br><small style="color:var(--dim)">Ember Gem (low odds)</small></span><span class="dl">about +1% damage <small>(modelled)</small></span></div></div></div>
 <p style="color:var(--dim);font-size:13px">Drop sources are shown only when the game files or a cited source give them; otherwise "source unknown".</p>
 </section>
 
@@ -462,8 +452,8 @@ document.querySelectorAll('#cards .card').forEach(function(c){c.classList.toggle
 document.querySelectorAll('#cards .card').forEach(function(c){c.onclick=function(){show(c.dataset.d)}});show('weapon');
 
 var A={best:{t:"Best build you can make now",raw:412,def:388,miss:5,note:"assumes 60% uptime",sum:"Raw damage build: Attack Boost and Critical Eye carry most of the number, with Earplugs and Tremor Resistance as the comfort floor.",tips:["Keep the attack buff up: this build leans on it for about 22% of its number. <span class='m'>modelled at 60% uptime</span>","Aim at weak spots: affinity is 35%, so crits are worth chasing. <span class='m'>modelled at 50% weak-spot rate</span>","Thunder and Dragon resistance are low. Expect those attacks to hurt more."]},
-safe:{t:"Safe build",raw:386,def:448,miss:3,note:"assumes 60% uptime",sum:"Trades 26 effective raw for 60 more defence and Guard. Fewer parts missing.",tips:["Guard lets you block more often. Use it when learning a fight.","Lower damage means longer fights, so patience beats greed. <span class='m'>modelled</span>","Still keeps the Earplugs and Tremor Resistance floor."]},
-def:{t:"Defensive build",raw:349,def:476,miss:4,note:"assumes 60% uptime",sum:"Resistance-heavy: lowest damage, highest defence.",tips:["Best against monsters with big elemental hits.","Damage is clearly lower: consider Safe if you just want comfort. <span class='m'>modelled</span>"]},
+safe:{t:"Safe build",raw:386,def:448,miss:3,note:"assumes 60% uptime",sum:"About 6% less damage for noticeably tougher armour and Guard. Fewer parts missing.",tips:["Guard lets you block more often. Use it when learning a fight.","Lower damage means longer fights, so patience beats greed. <span class='m'>modelled</span>","Still keeps the Earplugs and Tremor Resistance floor."]},
+def:{t:"Defensive build",raw:349,def:476,miss:4,note:"assumes 60% uptime",sum:"Resistance-heavy: about 15% less damage, much tankier.",tips:["Best against monsters with big elemental hits.","Damage is clearly lower: consider Safe if you just want comfort. <span class='m'>modelled</span>"]},
 mon:{t:"Build for Sample Monster A",raw:421,def:380,miss:7,note:"tuned to Sample Monster A",sum:"Weights Sample Monster A's weak element and its main attacks. Needs the most missing parts.",tips:["Only worth it if you hunt this monster repeatedly.","Uses the monster's weak spots in the model. <span class='m'>modelled</span>"]},
 gen:{t:"General hunting build",raw:398,def:402,miss:2,note:"assumes 60% uptime",sum:"A balanced pick for mixed hunts with few new parts to collect.",tips:["Good all-round choice when you do not know the next target.","Close to Best in damage with fewer missing parts. <span class='m'>modelled</span>"]},
 gogma:{t:"Gogma-specific build",raw:0,def:0,miss:0,note:"not available yet",sum:"Needs Gogma Artian data that is not decoded yet (open question 4). Shown as a placeholder.",tips:["Will appear when the game data supports it."]}};
@@ -513,9 +503,11 @@ document.getElementById('lknote').textContent=LN.current;
 function sens(){var u=+document.getElementById('su').value,w=+document.getElementById('sw').value;
 var best=412+2.2*(u-60)+1.0*(w-50),diff=26+1.73*(u-60)+1.0*(w-50),safe=best-diff;
 document.getElementById('suv').textContent=u+'%';document.getElementById('swv').textContent=w+'%';
-document.getElementById('sb').textContent=Math.round(best);document.getElementById('ss').textContent=Math.round(safe);
-var bw=diff>0;document.getElementById('so').textContent=bw?'Best':'Safe';
-document.getElementById('sd').textContent=bw?'ahead by '+Math.round(diff)+' raw':'ahead by '+Math.round(-diff)+' raw, and +60 defence';}
+var bw=diff>0,top=Math.max(best,safe),bp=Math.round(best/top*100),sp=Math.round(safe/top*100);
+document.getElementById('so').textContent=bw?'Best':'Safe';
+document.getElementById('bb').style.width=bp+'%';document.getElementById('bbv').textContent=bp+'%';
+document.getElementById('sb2').style.width=sp+'%';document.getElementById('sbv').textContent=sp+'%';
+document.getElementById('sd').textContent=bw?'about '+(bp-sp)+'% more damage than Safe':'Safe does about '+(sp-bp)+'% more damage, and is tankier';}
 document.getElementById('su').oninput=sens;document.getElementById('sw').oninput=sens;sens();
 </script>
 </body>

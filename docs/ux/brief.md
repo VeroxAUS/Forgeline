@@ -47,6 +47,12 @@ A Monster Hunter Wilds player who wants the best build they can make right now, 
 - **Own glyphs as fallback:** the mock-ups use our own simple glyphs (slot shapes, part, gem, coin). They stay in the app for any item whose icon cannot be read, so a missing icon never leaves a hole.
 - **Unverified:** whether item icons can be found and decoded from the game files, in which format, and what they cost in disk, RAM and start-up. To be checked in a spike before the equipment display (Phase 6). The performance budget applies: icons load lazily, only for visible rows, from a small cache, and never block the first frame.
 
+## Writing rules for comparisons (maintainer feedback, 2026-10-28)
+- Express trade-offs in player terms, not raw stat deltas. Damage is shown as a percentage of the best build ("about 6% less damage") with a simple comparison bar. Toughness is shown as a relative bar and a plain word (solid, tankier, much tankier).
+- The raw numbers (effective raw, defence) stay available in a hover or the detail view, never as the headline of a comparison.
+- Do not claim things like "survives 2 more hits": monster damage is unverified. Any comparison that comes from the model is labelled "modelled".
+- Headlines are short: a label and a value, or two short lines. No long sentences. The sensitivity table is removed; the "does it stay best" view is two short lines plus two sliders and a readout.
+
 ## Glance rules
 - The answer comes first: the build and its headline number sit top left, above everything else.
 - Modelled numbers are labelled "modelled" or "estimated". Measured numbers are never mixed with them.
