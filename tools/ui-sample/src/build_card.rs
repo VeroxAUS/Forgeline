@@ -53,6 +53,15 @@ const SKILL_COL_MIN_W: f32 = 200.0;
 const HEAD_W: f32 = SKILLS_W;
 const HEAD_TOP: f32 = 40.0;
 const HEAD_BAR_H: f32 = 6.0;
+/// Must-have chips: every chip is this size, on a fixed grid, one row (the rest go behind `+N more`).
+/// Chip width: four fit across the equipment column at base and at 16:9.
+pub const CHIP_W: f32 = 116.0;
+const CHIP_H: f32 = 24.0;
+const CHIP_GAP: f32 = 8.0;
+const CHIPS_TOP: f32 = 106.0;
+/// Width of the Add and Edit popups.
+const POPUP_W: f32 = 200.0;
+const CHIP_FILL: Color32 = Color32::from_rgb(20, 20, 23);
 const ACCENT: Color32 = Color32::from_rgb(255, 138, 61);
 const BG: Color32 = Color32::from_rgb(10, 10, 11);
 
@@ -180,6 +189,70 @@ impl Skill {
     }
 }
 
+/// A skill the user insists on: the optimizer treats it as a hard constraint. `reachable` is the
+/// highest level the unlocked gear allows (`None` when not known yet).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct MustHave {
+    pub name: &'static str,
+    pub level: u8,
+    pub max: u8,
+    pub reachable: Option<u8>,
+}
+
+impl MustHave {
+    pub fn new(name: &'static str, level: u8, max: u8) -> Self {
+        MustHave {
+            name,
+            level,
+            max,
+            reachable: None,
+        }
+    }
+
+    /// The unlocked gear cannot reach the wanted level.
+    pub fn out_of_reach(&self) -> bool {
+        self.reachable.is_some_and(|r| r < self.level)
+    }
+
+    fn tip(&self) -> String {
+        match self.reachable {
+            Some(r) if r < self.level => format!(
+                "{} {}: out of reach with your unlocked gear (best is {r}). Click to change.",
+                self.name, self.level
+            ),
+            _ => format!(
+                "{}, level {} or more, always kept. Click to change.",
+                self.name, self.level
+            ),
+        }
+    }
+}
+
+/// Skills the Add list offers in the sample (name, highest level). Invented numbers.
+pub const SAMPLE_CANDIDATES: &[(&str, u8)] = &[
+    ("Weakness exploit", 5),
+    ("Critical eye", 5),
+    ("Sharpshot", 3),
+    ("Marksman", 3),
+    ("Ammo saver", 3),
+    ("Stamina surge", 3),
+    ("Evade window", 5),
+    ("Rapid fire", 3),
+    ("Burst shot", 3),
+    ("Focus", 3),
+];
+
+/// What the open popup edits.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Popup {
+    /// One chip: its level and Remove.
+    Edit(usize),
+    /// The skills that can still be added.
+    Add,
+    /// The chips that did not fit in the row.
+    More,
+}
+
 /// Which of the two headline axes a block shows.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Axis {
@@ -277,9 +350,25 @@ pub struct BuildData {
     pub damage: Headline,
     pub toughness: Headline,
     pub headline_style: HeadlineStyle,
+    pub must_haves: Vec<MustHave>,
+    /// Chip width in points. `CHIP_W` unless the review is comparing widths.
+    pub chip_w: f32,
 }
 
 impl BuildData {
+    /// Marks the skills in the build that are must-haves (the strip never cuts those).
+    pub fn sync_must(&mut self) {
+        let names: Vec<&str> = self.must_haves.iter().map(|m| m.name).collect();
+        for k in &mut self.skills {
+            k.must = names.contains(&k.name);
+        }
+    }
+
+    /// The first must-have the unlocked gear cannot reach.
+    pub fn first_out_of_reach(&self) -> Option<&MustHave> {
+        self.must_haves.iter().find(|m| m.out_of_reach())
+    }
+
     /// How many pieces still need parts.
     pub fn pieces_missing(&self) -> usize {
         self.all().filter(|p| p.missing > 0).count()
@@ -295,7 +384,7 @@ impl BuildData {
     /// Invented pieces for the review screenshots. Never the user's real build.
     pub fn sample() -> Self {
         let s = |level, filled| DecoSlot { level, filled };
-        BuildData {
+        let mut d = BuildData {
             weapon: Some(Piece {
                 icon_id: 0,
                 glyph: Icon::Weapon,
@@ -379,7 +468,14 @@ impl BuildData {
                 unknown_why: "Needs armour",
             },
             headline_style: HeadlineStyle::default(),
-        }
+            must_haves: vec![
+                MustHave::new("Weakness exploit", 4, 5),
+                MustHave::new("Ammo saver", 2, 3),
+            ],
+            chip_w: CHIP_W,
+        };
+        d.sync_must();
+        d
     }
 }
 
@@ -482,6 +578,12 @@ enum Hit {
     Why,
     /// A headline block's modelled-value note.
     Tip(&'static str),
+    /// A must-have chip (index into `BuildData::must_haves`).
+    Chip(usize),
+    /// The "+ Add" button on the must-have label row.
+    Add,
+    /// The "+N more" chip.
+    More,
 }
 
 /// The build card screen: shell state, the card's data and the icon cache.
@@ -491,6 +593,11 @@ pub struct BuildCard {
     pub cache: IconCache,
     /// Slot circles drawn last frame, for the hover tooltip.
     hits: Vec<(Rect, Hit)>,
+    /// The open must-have popup, if any.
+    pub popup: Option<Popup>,
+    /// A recompute started by a chip change ends at this time. A real recompute would run on a
+    /// background thread and report back; the sample only waits.
+    recompute_until: Option<std::time::Instant>,
 }
 
 impl BuildCard {
@@ -508,13 +615,39 @@ impl BuildCard {
             data: BuildData::sample(),
             cache: IconCache::new(ctx, source),
             hits: Vec::new(),
+            popup: None,
+            recompute_until: None,
         }
     }
+
+    /// A must-have changed: the old build stays on screen and the status line says it is updating.
+    fn start_recompute(&mut self) {
+        self.data.sync_must();
+        if self.shell.status == Status::Synced {
+            self.shell.status = Status::Recomputing;
+        }
+        self.recompute_until = Some(std::time::Instant::now() + RECOMPUTE_SAMPLE);
+    }
 }
+
+/// How long the sample pretends a recompute takes.
+const RECOMPUTE_SAMPLE: std::time::Duration = std::time::Duration::from_millis(900);
 
 /// Draws the shell with the build card in its content area (Build section only).
 pub fn show(ui: &mut Ui, app: &mut BuildCard) {
     app.cache.poll();
+    // A repaint is asked for only while a recompute is pending, never at idle.
+    if let Some(t) = app.recompute_until {
+        let now = std::time::Instant::now();
+        if now >= t {
+            app.recompute_until = None;
+            if app.shell.status == Status::Recomputing {
+                app.shell.status = Status::Synced;
+            }
+        } else {
+            ui.ctx().request_repaint_after(t - now);
+        }
+    }
     let data = &app.data;
     let cache = &mut app.cache;
     let hits = &mut app.hits;
@@ -530,7 +663,7 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
     let hits = std::mem::take(&mut app.hits);
     for (i, (rect, hit)) in hits.iter().enumerate() {
         let sense = match hit {
-            Hit::Why => egui::Sense::click(),
+            Hit::Why | Hit::Chip(_) | Hit::Add | Hit::More => egui::Sense::click(),
             _ => egui::Sense::hover(),
         };
         let tip = ui.interact(*rect, ui.scope_id().with(("hit", i)), sense);
@@ -544,6 +677,28 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
             Hit::Tip(text) => {
                 tip.on_hover_text(*text);
             }
+            Hit::Chip(i) => {
+                if tip.clicked() {
+                    app.popup = Some(Popup::Edit(*i));
+                }
+                let text = app.data.must_haves.get(*i).map(MustHave::tip);
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text(text.unwrap_or_default());
+            }
+            Hit::Add => {
+                if tip.clicked() {
+                    app.popup = Some(Popup::Add);
+                }
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text("Add a skill you always want");
+            }
+            Hit::More => {
+                if tip.clicked() {
+                    app.popup = Some(Popup::More);
+                }
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text("Show the other must-haves");
+            }
             Hit::Why => {
                 if tip.clicked() {
                     app.shell.section = shell::Section::Why;
@@ -554,6 +709,249 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
         }
     }
     app.hits = hits;
+    popup(ui, app);
+}
+
+/// The must-have popup: a small panel under the chip (or the Add button) that opened it. Closed by
+/// Escape, a click anywhere else, or by finishing the choice.
+fn popup(ui: &mut Ui, app: &mut BuildCard) {
+    let Some(kind) = app.popup else { return };
+    let ctx = ui.ctx().clone();
+    let anchor = app.hits.iter().find_map(|(r, h)| match (kind, h) {
+        (Popup::Edit(i), Hit::Chip(j)) if i == *j => Some(*r),
+        (Popup::Add, Hit::Add) => Some(*r),
+        (Popup::More, Hit::More) => Some(*r),
+        _ => None,
+    });
+    let Some(anchor) = anchor else {
+        // The thing it hung from is gone (the chip was removed, the list changed).
+        app.popup = None;
+        return;
+    };
+    let mut change: Option<Change> = None;
+    let width = if kind == Popup::More { 280.0 } else { POPUP_W };
+    // Stays inside the window: pushed left when it would run past the right edge.
+    let pos_x = anchor
+        .left()
+        .min(ctx.content_rect().right() - width - 20.0 - 8.0);
+    let area = egui::Area::new(ui.scope_id().with("must-have-popup"))
+        .order(egui::Order::Foreground)
+        .fade_in(false)
+        .fixed_pos(Pos2::new(pos_x, anchor.bottom() + 6.0))
+        .show(&ctx, |ui| {
+            egui::Frame::new()
+                .fill(CHIP_FILL)
+                .stroke(Stroke::new(1.0, FAINT))
+                .corner_radius(6.0)
+                .inner_margin(10.0)
+                .show(ui, |ui| {
+                    ui.set_width(width);
+                    ui.spacing_mut().item_spacing = Vec2::new(4.0, 4.0);
+                    match kind {
+                        Popup::Edit(i) => {
+                            if let Some(m) = app.data.must_haves.get(i) {
+                                popup_edit(ui, i, m, &mut change);
+                            }
+                        }
+                        Popup::Add => {
+                            // A long list scrolls inside the popup; a short one is drawn whole.
+                            let left = SAMPLE_CANDIDATES
+                                .iter()
+                                .filter(|(n, _)| !app.data.must_haves.iter().any(|m| m.name == *n))
+                                .count();
+                            if left > 8 {
+                                egui::ScrollArea::vertical()
+                                    .max_height(8.0 * 24.0)
+                                    .show(ui, |ui| {
+                                        popup_add(ui, &app.data.must_haves, &mut change)
+                                    });
+                            } else {
+                                popup_add(ui, &app.data.must_haves, &mut change);
+                            }
+                        }
+                        Popup::More => {
+                            let shown = chip_cells(&app.hits).saturating_sub(1);
+                            for (i, m) in app.data.must_haves.iter().enumerate().skip(shown) {
+                                popup_row(ui, i, m, &mut change);
+                            }
+                        }
+                    }
+                });
+        });
+    let outside = ctx.input(|i| i.pointer.any_pressed())
+        && ctx
+            .pointer_interact_pos()
+            .is_some_and(|pos| !area.response.rect.contains(pos) && !anchor.contains(pos));
+    if outside || ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
+        app.popup = None;
+    }
+    if let Some(c) = change {
+        match c {
+            Change::Level(i, level) => {
+                if let Some(m) = app.data.must_haves.get_mut(i) {
+                    m.level = level;
+                }
+            }
+            Change::Remove(i) => {
+                if i < app.data.must_haves.len() {
+                    app.data.must_haves.remove(i);
+                }
+                app.popup = None;
+            }
+            Change::Add(name, max) => {
+                app.data.must_haves.push(MustHave::new(name, 1, max));
+                app.popup = None;
+            }
+        }
+        app.start_recompute();
+    }
+}
+
+enum Change {
+    Level(usize, u8),
+    Remove(usize),
+    Add(&'static str, u8),
+}
+
+/// Chip cells drawn last frame, the `+N more` cell included.
+fn chip_cells(hits: &[(Rect, Hit)]) -> usize {
+    hits.iter()
+        .filter(|(_, h)| matches!(h, Hit::Chip(_) | Hit::More))
+        .count()
+}
+
+/// Name, one numbered cell per level (all the same size) and Remove.
+fn popup_edit(ui: &mut Ui, i: usize, m: &MustHave, change: &mut Option<Change>) {
+    ui.label(
+        egui::RichText::new(m.name)
+            .font(font("inter", 12.5))
+            .color(FG),
+    );
+    ui.label(
+        egui::RichText::new("Keep at least level")
+            .font(font("inter", 11.0))
+            .color(DIM),
+    );
+    ui.horizontal(|ui| {
+        ui.spacing_mut().item_spacing.x = 4.0;
+        for level in 1..=m.max {
+            let (r, resp) = ui.allocate_exact_size(Vec2::splat(22.0), egui::Sense::click());
+            level_cell(ui.painter(), r, level, level == m.level, resp.hovered());
+            if resp.clicked() {
+                *change = Some(Change::Level(i, level));
+            }
+        }
+    });
+    let remove = ui.add(
+        egui::Label::new(
+            egui::RichText::new("Remove")
+                .font(font("inter", 11.5))
+                .color(DIM),
+        )
+        .sense(egui::Sense::click()),
+    );
+    if remove.clicked() {
+        *change = Some(Change::Remove(i));
+    }
+    remove.on_hover_cursor(egui::CursorIcon::PointingHand);
+}
+
+/// One compact line per must-have (the `+N more` popup): name, a cell per level, Remove.
+fn popup_row(ui: &mut Ui, i: usize, m: &MustHave, change: &mut Option<Change>) {
+    ui.horizontal(|ui| {
+        ui.spacing_mut().item_spacing.x = 4.0;
+        let name_w = 280.0 - 22.0 * 5.0 - 4.0 * 6.0 - 20.0;
+        let (r, _) = ui.allocate_exact_size(Vec2::new(name_w, 22.0), egui::Sense::hover());
+        ui.painter().text(
+            Pos2::new(r.left(), r.center().y),
+            Align2::LEFT_CENTER,
+            fit(ui.painter(), m.name, name_w - 4.0, "inter", 12.0),
+            font("inter", 12.0),
+            if m.out_of_reach() { WARN } else { FG },
+        );
+        // Five cells is the most any skill has; shorter skills leave the tail empty so every
+        // row's cells and Remove share the same columns.
+        for level in 1..=5u8 {
+            let (r, resp) = ui.allocate_exact_size(Vec2::splat(22.0), egui::Sense::click());
+            if level > m.max {
+                continue;
+            }
+            level_cell(ui.painter(), r, level, level == m.level, resp.hovered());
+            if resp.clicked() {
+                *change = Some(Change::Level(i, level));
+            }
+        }
+        let (r, resp) = ui.allocate_exact_size(Vec2::splat(22.0), egui::Sense::click());
+        ui.painter().text(
+            r.center(),
+            Align2::CENTER_CENTER,
+            "\u{d7}",
+            font("inter", 14.0),
+            if resp.hovered() { WARN } else { DIM },
+        );
+        if resp.clicked() {
+            *change = Some(Change::Remove(i));
+        }
+        resp.on_hover_text("Remove");
+    });
+}
+
+fn level_cell(p: &Painter, r: Rect, level: u8, on: bool, hot: bool) {
+    p.rect_filled(r, 4.0, if on { ACCENT } else { BG });
+    p.rect_stroke(
+        r,
+        4.0,
+        Stroke::new(1.0, if on || hot { ACCENT } else { LINE }),
+        egui::StrokeKind::Inside,
+    );
+    p.text(
+        r.center(),
+        Align2::CENTER_CENTER,
+        level.to_string(),
+        mono(11.0),
+        if on { BG } else { FG },
+    );
+}
+
+/// The skills not yet chosen, one row each, all the same height.
+fn popup_add(ui: &mut Ui, have: &[MustHave], change: &mut Option<Change>) {
+    let mut any = false;
+    for (name, max) in SAMPLE_CANDIDATES {
+        if have.iter().any(|m| m.name == *name) {
+            continue;
+        }
+        any = true;
+        let (r, resp) =
+            ui.allocate_exact_size(Vec2::new(ui.available_width(), 24.0), egui::Sense::click());
+        if resp.hovered() {
+            ui.painter().rect_filled(r, 4.0, LINE);
+        }
+        ui.painter().text(
+            Pos2::new(r.left() + 6.0, r.center().y),
+            Align2::LEFT_CENTER,
+            name,
+            font("inter", 12.0),
+            FG,
+        );
+        ui.painter().text(
+            Pos2::new(r.right() - 6.0, r.center().y),
+            Align2::RIGHT_CENTER,
+            format!("up to {max}"),
+            mono(10.5),
+            DIM,
+        );
+        if resp.clicked() {
+            *change = Some(Change::Add(name, *max));
+        }
+        resp.on_hover_cursor(egui::CursorIcon::PointingHand);
+    }
+    if !any {
+        ui.label(
+            egui::RichText::new("Every skill in the list is already a must-have.")
+                .font(font("inter", 11.5))
+                .color(DIM),
+        );
+    }
 }
 
 fn skill_tip(k: &Skill) -> String {
@@ -605,10 +1003,22 @@ fn card(
     // last build stays on screen, so this line is the only thing that notes it.
     let summary = match (status, data.pieces_missing()) {
         (Status::Recomputing, _) => "Showing the last build while it updates".to_string(),
+        (_, _) if data.first_out_of_reach().is_some() => {
+            let m = data.first_out_of_reach().unwrap();
+            format!("{} {} is out of reach for now", m.name, m.level)
+        }
         (_, 0) => "Everything here is owned".to_string(),
         (_, 1) => "1 piece needs parts".to_string(),
         (_, n) => format!("{n} pieces need parts"),
     };
+    // The line stops before the damage block, whatever it says.
+    let summary = fit(
+        p,
+        &summary,
+        right - 2.0 * HEAD_W - SKILL_GAP - 12.0 - left,
+        "inter",
+        12.5,
+    );
     p.text(
         Pos2::new(left, content.min.y + 86.0),
         Align2::LEFT_CENTER,
@@ -645,19 +1055,31 @@ fn card(
         data.headline_style,
     );
     headline(p, hits, tx, by, &data.toughness, data.headline_style);
-    let top = content.min.y + 120.0;
+    let strip_top = content.min.y + 120.0;
     let eq_right = if side {
         right - strip_w - SKILLS_GAP
     } else {
         right
     };
+    // Must-haves sit above the equipment, tucked under the title, so changing one is a single click
+    // away. The row starts above the skills label because the equipment needs the height.
+    let chips_end = chips(
+        p,
+        hits,
+        left,
+        eq_right,
+        content.min.y + CHIPS_TOP,
+        data,
+        *status == Status::Recomputing,
+    );
+    let top = chips_end + 14.0;
     if side {
         skills(
             p,
             hits,
             right - strip_w,
             right,
-            top,
+            strip_top,
             content.max.y - 16.0,
             &data.skills,
             data.pinned_style,
@@ -720,6 +1142,134 @@ fn card(
             data.pinned_style,
         );
     }
+}
+
+/// The must-have row: a label row (with the update note and `+ Add`) and one row of chips, all
+/// `data.chip_w` by `CHIP_H` on a fixed grid snapped to whole pixels. When the chips do not fit the
+/// last cell becomes `+N more`. Returns the y under the row.
+fn chips(
+    p: &Painter,
+    hits: &mut Vec<(Rect, Hit)>,
+    left: f32,
+    right: f32,
+    y: f32,
+    data: &BuildData,
+    updating: bool,
+) -> f32 {
+    let ppp = p.ctx().pixels_per_point();
+    let snap = |v: f32| (v * ppp).round() / ppp;
+    let hover = p.ctx().pointer_hover_pos();
+    let row_y = section(p, left, right, y, "MUST HAVE");
+    let add = Rect::from_min_max(Pos2::new(right - 48.0, y), Pos2::new(right, y + 20.0));
+    let add_hot = hover.is_some_and(|h| add.contains(h));
+    p.text(
+        Pos2::new(right, y + 8.0),
+        Align2::RIGHT_CENTER,
+        "+ Add",
+        mono(10.5),
+        if add_hot { ACCENT } else { DIM },
+    );
+    hits.push((add, Hit::Add));
+    if updating {
+        let text = "UPDATING";
+        let w = p
+            .layout_no_wrap(text.to_string(), mono(10.5), ACCENT)
+            .size()
+            .x;
+        let x = right - 48.0 - 14.0;
+        p.text(
+            Pos2::new(x, y + 8.0),
+            Align2::RIGHT_CENTER,
+            text,
+            mono(10.5),
+            ACCENT,
+        );
+        p.circle_filled(Pos2::new(x - w - 8.0, y + 8.0), 2.5, ACCENT);
+    }
+
+    let n = data.must_haves.len();
+    let chip_w = data.chip_w;
+    let pitch = chip_w + CHIP_GAP;
+    let cols = (((right - left + CHIP_GAP) / pitch).floor() as usize).max(1);
+    if n == 0 {
+        p.text(
+            Pos2::new(left, row_y + CHIP_H / 2.0),
+            Align2::LEFT_CENTER,
+            "Nothing locked in. Add a skill you always want.",
+            font("inter", 12.0),
+            FAINT,
+        );
+        return row_y + CHIP_H;
+    }
+    let shown = if n <= cols { n } else { cols - 1 };
+    for i in 0..shown {
+        let m = &data.must_haves[i];
+        let r = Rect::from_min_size(
+            Pos2::new(snap(left + i as f32 * pitch), snap(row_y)),
+            Vec2::new(chip_w, CHIP_H),
+        );
+        let hot = hover.is_some_and(|h| r.contains(h));
+        let bad = m.out_of_reach();
+        let stroke = if bad {
+            WARN
+        } else if hot {
+            DIM
+        } else {
+            LINE
+        };
+        p.rect_filled(r, 6.0, CHIP_FILL);
+        p.rect_stroke(r, 6.0, Stroke::new(1.0, stroke), egui::StrokeKind::Inside);
+        let level = m.level.to_string();
+        let level_w = 9.0;
+        p.text(
+            Pos2::new(r.right() - 7.0, r.center().y),
+            Align2::RIGHT_CENTER,
+            level,
+            mono(11.0),
+            if bad { WARN } else { ACCENT },
+        );
+        p.text(
+            Pos2::new(r.left() + 7.0, r.center().y),
+            Align2::LEFT_CENTER,
+            // Too long: cut with an ellipsis; the tooltip has the full name.
+            fit(p, m.name, chip_w - 14.0 - level_w - 3.0, "inter", 11.0),
+            font("inter", 11.0),
+            FG,
+        );
+        hits.push((r, Hit::Chip(i)));
+    }
+    if shown < n {
+        let r = Rect::from_min_size(
+            Pos2::new(snap(left + shown as f32 * pitch), snap(row_y)),
+            Vec2::new(chip_w, CHIP_H),
+        );
+        let hot = hover.is_some_and(|h| r.contains(h));
+        let warn = data.must_haves[shown..].iter().any(|m| m.out_of_reach());
+        p.rect_stroke(
+            r,
+            6.0,
+            Stroke::new(
+                1.0,
+                if warn {
+                    WARN
+                } else if hot {
+                    DIM
+                } else {
+                    LINE
+                },
+            ),
+            egui::StrokeKind::Inside,
+        );
+        p.text(
+            r.center(),
+            Align2::CENTER_CENTER,
+            format!("+{} more", n - shown),
+            font("inter", 12.0),
+            if hot { FG } else { DIM },
+        );
+        hits.push((r, Hit::More));
+    }
+    row_y + CHIP_H
 }
 
 /// One headline block, `HEAD_W` wide, four fixed rows so both blocks line up: label with the
@@ -1294,6 +1844,52 @@ mod tests {
             .filter(|(_, h)| **h)
             .map(|(k, _)| k.name)
             .collect()
+    }
+
+    #[test]
+    fn out_of_reach_only_when_best_is_known_and_lower() {
+        let mut m = MustHave::new("Sharpshot", 3, 3);
+        assert!(!m.out_of_reach(), "unknown is not a problem");
+        m.reachable = Some(3);
+        assert!(!m.out_of_reach());
+        m.reachable = Some(2);
+        assert!(m.out_of_reach());
+    }
+
+    #[test]
+    fn must_haves_mark_skills_so_the_strip_keeps_them() {
+        let mut d = BuildData::sample();
+        d.must_haves = vec![MustHave::new("Marksman", 2, 3)];
+        d.sync_must();
+        let marked: Vec<_> = d.skills.iter().filter(|k| k.must).map(|k| k.name).collect();
+        assert_eq!(marked, ["Marksman"]);
+    }
+
+    #[test]
+    fn chips_overflow_and_popups_change_the_picture() {
+        use std::time::Duration;
+        let mut h = Headless::new();
+        let mut app = BuildCard::new(
+            h.ctx(),
+            Arc::new(crate::icons::SampleSource {
+                delay: Duration::ZERO,
+            }),
+        );
+        let size = Vec2::new(1000.0, 700.0);
+        let base = h.frame(&mut app, size, 1.0).rgba;
+        for n in [0, 3, 8] {
+            app.data.must_haves = (0..n).map(|_| MustHave::new("Focus", 2, 3)).collect();
+            assert_ne!(h.frame(&mut app, size, 1.0).rgba, base, "{n} chips");
+        }
+        // 8 must-haves in a 4 column row: three chips and "+5 more".
+        h.frame(&mut app, size, 1.0);
+        assert_eq!(chip_cells(&app.hits), 4);
+        app.popup = Some(Popup::More);
+        h.frame(&mut app, size, 1.0);
+        let with_popup = h.frame(&mut app, size, 1.0).rgba;
+        app.popup = None;
+        h.frame(&mut app, size, 1.0);
+        assert_ne!(h.frame(&mut app, size, 1.0).rgba, with_popup);
     }
 
     #[test]
