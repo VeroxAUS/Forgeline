@@ -16,7 +16,6 @@ cargo run --release --manifest-path tools/plan-page/Cargo.toml -- docs/plans/pha
 ## What it does
 
 - Tables are wrapped in a scrolling box; task lists (`- [ ]`) show checkboxes.
-- The "How to read this plan" section is drawn as a boxed panel, up to the next `##` heading.
 - Raw HTML and `<...>` in the markdown are escaped and shown as text.
 - Headings get ids (`3.1 Architecture` becomes `#31-architecture`).
 
