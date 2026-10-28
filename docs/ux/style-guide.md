@@ -62,7 +62,7 @@ Minimum readable text is 12 px at the target size (design plan principle 8); the
 
 **Equipment row.** Row number (mono, `faint`), 34 px icon tile, name in Inter Medium with skills in `dim` underneath, then slot circles, then a status word on the right: `Owned` in `ok`, `Missing N` in `warn`.
 
-**Icon tile.** 34 by 34, tile fill, 2 px radius, glyph inset 7 px in the accent. Real icons come from the user's install later; the plain glyph is the fallback (design plan element 3).
+**Icon tile.** 34 by 34, tile fill, 2 px radius, glyph inset 7 px in the accent. A real icon is drawn inset 3 px, untinted. The plain glyph shows while an icon loads and when there is none, so the tile never changes size or shifts. Icons are cached at 64 px on the longest edge under a 1 MB cap (`tools/ui-sample/src/icons.rs`).
 
 **Slot circles.** 3.5 px outlined circles in `faint` (decoration slots).
 

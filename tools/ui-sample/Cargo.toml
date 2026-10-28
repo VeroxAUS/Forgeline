@@ -23,3 +23,7 @@ required-features = ["window"]
 [[bin]]
 name = "shell_window"
 required-features = ["window"]
+
+[[bin]]
+name = "icons_window"
+required-features = ["window"]
