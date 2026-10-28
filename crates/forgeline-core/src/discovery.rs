@@ -516,9 +516,13 @@ mod tests {
                 for e in fs::read_dir(d).unwrap().flatten() {
                     let m = e.metadata().unwrap();
                     if m.is_dir() {
+                        // Folder times are not compared: NTFS updates them lazily, even for a
+                        // plain listing. Files are what must stay untouched.
                         stack.push(e.path());
+                        v.push((e.path(), 0, None));
+                    } else {
+                        v.push((e.path(), m.len(), Some(m.modified().unwrap())));
                     }
-                    v.push((e.path(), m.len(), m.modified().unwrap()));
                 }
             }
             v.sort();
