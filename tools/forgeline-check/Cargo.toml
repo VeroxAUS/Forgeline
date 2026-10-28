@@ -1,0 +1,12 @@
+[package]
+name = "forgeline-check"
+description = "Developer report for PC test rounds: what Forgeline's foundation sees, as counts and names only"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+forgeline-core = { path = "../../crates/forgeline-core" }

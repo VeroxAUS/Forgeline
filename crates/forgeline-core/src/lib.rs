@@ -6,5 +6,7 @@
 //! machine-readable results files that every measurement writes.
 
 pub mod datadir;
+pub mod discovery;
 pub mod memory;
 pub mod results;
+pub mod vdf;
