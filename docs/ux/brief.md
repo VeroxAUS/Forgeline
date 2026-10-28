@@ -23,6 +23,17 @@ A Monster Hunter Wilds player who wants the best build they can make right now, 
 | Live-data warning | Shown once when live data is switched on; "Keep it off" is the default. |
 | Overlay | Small in-game panel, two modes (save-only, live data). |
 
+## Information and visuals (maintainer feedback, 2026-10-28)
+- A bare name is not enough. Every item (weapon, armour piece, talisman, part, decoration) opens a detail view: what it is, rarity, defence, skills, slots, what it is made from, what is missing and where to get it.
+- Every item has an icon, so the screen is not only text. Skills show level pips and a short effect on hover; resistances and decoration slots are drawn, not listed.
+- "Why this build" shows: a bar of where the number comes from, all five builds in one table with differences, a sensitivity chart (the uptime at which the best build changes), the assumptions, and what was considered and left out.
+- Shopping list is driven entirely by the save. No manual tick-off.
+
+## Icons and images
+- **Decision (maintainer, 2026-10-28):** icons and images are read at runtime from the user's own game install, like the other game data. They are never committed, never shipped and never in the Nexus package. Only the files needed are extracted (never whole packs), into the local cache.
+- **Own glyphs as fallback:** the mock-ups use our own simple glyphs (slot shapes, part, gem, coin). They stay in the app for any item whose icon cannot be read, so a missing icon never leaves a hole.
+- **Unverified:** whether item icons can be found and decoded from the game files, in which format, and what they cost in disk, RAM and start-up. To be checked in a spike before the equipment display (Phase 6). The performance budget applies: icons load lazily, only for visible rows, from a small cache, and never block the first frame.
+
 ## Glance rules
 - The answer comes first: the build and its headline number sit top left, above everything else.
 - Modelled numbers are labelled "modelled" or "estimated". Measured numbers are never mixed with them.

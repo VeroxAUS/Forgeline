@@ -56,10 +56,50 @@ ul.clean{margin:0;padding-left:18px}
 .dlg .row{display:flex;gap:12px;margin-top:16px;justify-content:flex-end}
 .dlg .btn.keep{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:640px){.app{flex-direction:column}nav{width:auto;display:flex;flex-wrap:wrap;gap:4px;border-right:0;border-bottom:1px solid var(--line)}nav h1{width:100%}nav button{width:auto}nav .sep{display:none}main{padding:0 16px 24px}}
+
+svg.ic{width:28px;height:28px;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ibox{width:44px;height:44px;border-radius:8px;background:var(--surface-2);border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;color:var(--accent);flex:none;position:relative}
+.ibox.r2{color:#6fb3e0}.ibox.r3{color:#b58be0}.ibox.r4{color:var(--accent)}
+.ibox i{position:absolute;right:-4px;bottom:-6px;font-style:normal;font-size:9px;background:var(--bg);color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 3px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;gap:12px;cursor:pointer;text-align:left;color:inherit;font:inherit}
+.card:hover,.card.sel{border-color:var(--accent)}
+.card b{display:block}.card small{color:var(--dim);font-size:12px;display:block}
+.bar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;min-width:80px}
+.bar>span{display:block;height:100%;background:var(--accent)}
+.bar.ok>span{background:var(--ok)}.bar.w>span{background:var(--warn)}
+.skl{display:grid;grid-template-columns:150px 1fr 60px;gap:4px 12px;align-items:center}
+.pips{letter-spacing:3px;color:var(--accent)}.pips s{text-decoration:none;color:var(--line)}
+.slots{display:inline-flex;gap:4px;vertical-align:middle}
+.slots u{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--dim);display:inline-block;text-decoration:none}
+.slots u.f{background:var(--accent);border-color:var(--accent)}
+.detail{background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:14px 16px;margin-bottom:16px;display:none}
+.detail.on{display:block}
+.detail h3{margin:0 0 4px;font-size:17px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--dim);font-size:12px;margin-bottom:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+.stack{display:flex;height:22px;border-radius:4px;overflow:hidden;margin:6px 0}
+.stack span{display:block;height:100%}
+svg.chart{width:100%;height:auto;max-width:520px}
+svg.chart text{fill:var(--dim);font-size:11px}
+.pill{display:inline-block;border-radius:4px;padding:0 6px;font-size:12px;background:var(--surface-2);color:var(--dim);margin-right:4px}
+.iconnote{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--dim);margin-bottom:16px}
 </style>
 </head>
 <body>
-<div class="note">Mock-up with invented sample data. No Capcom names, art or data. Looks and flow only, not performance. Click the screens on the left.</div>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="g-weapon" viewBox="0 0 28 28"><path d="M3 18h16l4-3h3v5h-3l-2 2h-6l-2 3h-4l1-3H3z"/></symbol>
+<symbol id="g-head" viewBox="0 0 28 28"><path d="M6 17a8 8 0 0116 0v5H6zM10 17h8"/></symbol>
+<symbol id="g-chest" viewBox="0 0 28 28"><path d="M7 5l7 3 7-3 3 5-4 3v11H8V13l-4-3z"/></symbol>
+<symbol id="g-arms" viewBox="0 0 28 28"><path d="M8 4h8l3 8-2 12H9l-1-8z"/></symbol>
+<symbol id="g-waist" viewBox="0 0 28 28"><path d="M4 11h20v7H4zM12 11v7M16 11v7"/></symbol>
+<symbol id="g-legs" viewBox="0 0 28 28"><path d="M8 4h12l-1 11 2 9h-5l-2-8-2 8H7l2-9z"/></symbol>
+<symbol id="g-charm" viewBox="0 0 28 28"><circle cx="14" cy="16" r="7"/><path d="M14 9V4M11 4h6"/></symbol>
+<symbol id="g-part" viewBox="0 0 28 28"><path d="M14 3l9 8-4 14H9L5 11z"/><path d="M5 11h18"/></symbol>
+<symbol id="g-gem" viewBox="0 0 28 28"><path d="M8 5h12l5 7-11 13L3 12z"/><path d="M3 12h22M10 5l4 20M18 5l-4 20"/></symbol>
+<symbol id="g-coin" viewBox="0 0 28 28"><circle cx="14" cy="14" r="10"/><path d="M10 14h8M14 10v8"/></symbol>
+</defs></svg><div class="note">Mock-up with invented sample data. No Capcom names, art or data. Looks and flow only, not performance. Click the screens on the left.</div>
 <div class="app">
 <nav>
 <h1>FORGELINE</h1>
@@ -76,52 +116,87 @@ ul.clean{margin:0;padding-left:18px}
 
 <section class="screen on" id="best">
 <h2>Best build you can make now</h2>
+<div class="iconnote">Icon boxes are <b>placeholder glyphs of our own</b>. With the maintainer's yes, the real item icons are read from the user's own game install at update time (see brief). Click a piece for details.</div>
 <div class="tiles">
 <div class="tile"><small>Effective raw (modelled)</small><b>412</b><em>assumes 60% uptime</em></div>
-<div class="tile"><small>Affinity</small><b>35%</b></div>
-<div class="tile"><small>Defence</small><b>388</b></div>
+<div class="tile"><small>Affinity</small><b>35%</b><em>+8 from skills</em></div>
+<div class="tile"><small>Defence</small><b>388</b><em>of 412 possible here</em></div>
 <div class="tile"><small>Missing parts</small><b>5</b><em>see shopping list</em></div>
+<div class="tile"><small>Makeable in</small><b>2 hunts</b><em>estimate, Sample Monster A</em></div>
 </div>
-<div class="panel"><table>
-<tr><th>Slot</th><th>Piece (sample)</th><th>Key skills</th><th class="n">Def</th><th>Status</th></tr>
-<tr><td>Weapon</td><td>Sample Bowgun III</td><td>Tuned</td><td class="n">&ndash;</td><td class="ok">&#10003; owned</td></tr>
-<tr><td>Head</td><td>Ironwood Helm</td><td><span class="tip" data-tip="Sample skill: raises attack. Level 3 of 5. Invented text.">Attack Boost 3</span></td><td class="n">74</td><td class="ok">&#10003; owned</td></tr>
-<tr><td>Chest</td><td>Ashen Mail</td><td>Earplugs 2</td><td class="n">80</td><td class="warn">&#9888; 2 parts missing</td></tr>
-<tr><td>Arms</td><td>Ironwood Guards</td><td>Critical Eye 2</td><td class="n">72</td><td class="ok">&#10003; owned</td></tr>
-<tr><td>Waist</td><td>Ashen Coil</td><td>Tremor Resistance 1</td><td class="n">78</td><td class="warn">&#9888; 3 parts missing</td></tr>
-<tr><td>Legs</td><td>Ironwood Greaves</td><td>Critical Eye 1</td><td class="n">84</td><td class="ok">&#10003; owned</td></tr>
-<tr><td>Talisman</td><td>Sample Charm II</td><td>Attack Boost 1</td><td class="n">&ndash;</td><td class="ok">&#10003; owned</td></tr>
-</table></div>
-<p style="color:var(--dim);font-size:13px">Must-haves met: Earplugs, Tremor Resistance. Numbers are modelled, not measured.</p>
+<div class="cards" id="cards">
+<button class="card sel" data-d="weapon"><span class="ibox r3"><svg class="ic"><use href="#g-weapon"/></svg><i>III</i></span><span><b>Sample Bowgun III</b><small>Light bowgun &middot; tuned &middot; raw 180</small><small class="ok">&#10003; owned</small></span></button>
+<button class="card" data-d="head"><span class="ibox r2"><svg class="ic"><use href="#g-head"/></svg><i>5</i></span><span><b>Ironwood Helm</b><small>Head &middot; def 74</small><small class="ok">&#10003; owned</small></span></button>
+<button class="card" data-d="chest"><span class="ibox r3"><svg class="ic"><use href="#g-chest"/></svg><i>6</i></span><span><b>Ashen Mail</b><small>Chest &middot; def 80</small><small class="warn">&#9888; 2 parts missing</small></span></button>
+<button class="card" data-d="arms"><span class="ibox r2"><svg class="ic"><use href="#g-arms"/></svg><i>5</i></span><span><b>Ironwood Guards</b><small>Arms &middot; def 72</small><small class="ok">&#10003; owned</small></span></button>
+<button class="card" data-d="waist"><span class="ibox r3"><svg class="ic"><use href="#g-waist"/></svg><i>6</i></span><span><b>Ashen Coil</b><small>Waist &middot; def 78</small><small class="warn">&#9888; 3 parts missing</small></span></button>
+<button class="card" data-d="legs"><span class="ibox r2"><svg class="ic"><use href="#g-legs"/></svg><i>5</i></span><span><b>Ironwood Greaves</b><small>Legs &middot; def 84</small><small class="ok">&#10003; owned</small></span></button>
+<button class="card" data-d="charm"><span class="ibox r2"><svg class="ic"><use href="#g-charm"/></svg><i>II</i></span><span><b>Sample Charm II</b><small>Talisman</small><small class="ok">&#10003; owned</small></span></button>
+</div>
+<div class="detail on" id="detail"></div>
+<div class="cols">
+<div class="panel"><b>Skills</b>
+<div class="skl" style="margin-top:8px">
+<span class="tip" data-tip="Sample: raises raw attack. Level 3: +9 attack, +5% at max level. Invented text.">Attack Boost</span><span class="pips">&#9679;&#9679;&#9679;&#9679;<s>&#9679;</s></span><span class="n hi">4 / 5</span>
+<span class="tip" data-tip="Sample: raises affinity per level.">Critical Eye</span><span class="pips">&#9679;&#9679;&#9679;<s>&#9679;&#9679;</s></span><span class="n hi">3 / 5</span>
+<span class="tip" data-tip="Sample: blocks roars of small and large size.">Earplugs</span><span class="pips">&#9679;&#9679;<s>&#9679;&#9679;&#9679;</s></span><span class="n hi">2 / 5</span>
+<span class="tip" data-tip="Sample: reduces stun from tremors.">Tremor Resistance</span><span class="pips">&#9679;<s>&#9679;&#9679;</s></span><span class="n hi">1 / 3</span>
+</div><p class="legend" style="margin:8px 0 0">Must-haves met: Earplugs, Tremor Resistance. Hover a skill for its effect.</p></div>
+<div class="panel"><b>Resistances</b>
+<div class="skl" style="grid-template-columns:70px 1fr 40px;margin-top:8px">
+<span>Fire</span><div class="bar"><span style="width:55%"></span></div><span class="n">+2</span>
+<span>Water</span><div class="bar"><span style="width:40%"></span></div><span class="n">+1</span>
+<span>Thunder</span><div class="bar w"><span style="width:20%"></span></div><span class="n">-2</span>
+<span>Ice</span><div class="bar"><span style="width:50%"></span></div><span class="n">+2</span>
+<span>Dragon</span><div class="bar w"><span style="width:15%"></span></div><span class="n">-3</span></div></div>
+<div class="panel"><b>Decoration slots</b>
+<p style="margin:8px 0">Head <span class="slots"><u class="f"></u><u class="f"></u><u></u></span> &nbsp; Chest <span class="slots"><u class="f"></u><u></u></span> &nbsp; Weapon <span class="slots"><u class="f"></u><u class="f"></u></span></p>
+<small style="color:var(--dim)">Filled slots hold Sample Jewel 1 (Attack) and Sample Jewel 2 (Crit). Empty slots could not be improved from owned decorations.</small></div>
+</div>
 </section>
 
 <section class="screen" id="why">
 <h2>Why this build</h2>
-<div class="banner warn"><span>&#9888; The best build changes if uptime drops below about 45%.</span><button class="btn sec">Show the switch point</button></div>
-<div class="cmp">
-<div class="panel best"><b class="hi">Best (Solo)</b><div class="tiles" style="margin:8px 0 0"><div class="tile"><small>Eff. raw</small><b>412</b></div></div><small style="color:var(--dim)">Ashen set + Ironwood</small></div>
-<div class="panel"><b>Safe</b><div class="tiles" style="margin:8px 0 0"><div class="tile"><small>Eff. raw</small><b>386</b></div></div><small style="color:var(--dim)">+ Guard, +60 defence</small></div>
-<div class="panel"><b>Defensive</b><div class="tiles" style="margin:8px 0 0"><div class="tile"><small>Eff. raw</small><b>349</b></div></div><small style="color:var(--dim)">+ Resistances</small></div>
-<div class="panel"><b>Monster-specific</b><div class="tiles" style="margin:8px 0 0"><div class="tile"><small>Eff. raw</small><b>421</b></div></div><small style="color:var(--dim)">Sample Monster A</small></div>
+<div class="banner warn"><span>&#9888; The best build changes if uptime drops below about 45% (then Safe leads by 6 points).</span><button class="btn sec">Show the switch point</button></div>
+<div class="panel"><b>Where the 412 comes from (modelled)</b>
+<div class="stack"><span style="width:44%;background:#6fb3e0" title="Weapon raw"></span><span style="width:22%;background:#e0a63a" title="Attack Boost"></span><span style="width:18%;background:#58b97c" title="Affinity"></span><span style="width:10%;background:#b58be0" title="Sharpness/ammo"></span><span style="width:6%;background:#a3acb9" title="Other"></span></div>
+<div class="legend"><span><i style="background:#6fb3e0"></i>Weapon raw 180</span><span><i style="background:#e0a63a"></i>Attack Boost +90</span><span><i style="background:#58b97c"></i>Affinity +74</span><span><i style="background:#b58be0"></i>Ammo +42</span><span><i style="background:#a3acb9"></i>Other +26</span></div></div>
+<div class="panel" style="padding-bottom:4px"><b>The five builds</b><table style="margin-top:6px">
+<tr><th>Build</th><th class="n">Eff. raw</th><th class="n">Defence</th><th>Comfort</th><th>Missing parts</th><th>Good when</th></tr>
+<tr><td class="hi">Best (Solo)</td><td class="n hi">412</td><td class="n">388</td><td>Earplugs 2, Tremor 1</td><td>5</td><td>you want the most damage you can make now</td></tr>
+<tr><td>Safe</td><td class="n">386 <span class="warn">&minus;26</span></td><td class="n">448 <span class="ok">+60</span></td><td>+ Guard</td><td>3</td><td>learning a fight, or carrying a weak team</td></tr>
+<tr><td>Defensive</td><td class="n">349 <span class="warn">&minus;63</span></td><td class="n">476 <span class="ok">+88</span></td><td>+ Resistances</td><td>4</td><td>big damage, few openings</td></tr>
+<tr><td>Monster-specific (A)</td><td class="n">421 <span class="ok">+9</span></td><td class="n">380</td><td>Earplugs 2</td><td>7</td><td>only Sample Monster A</td></tr>
+<tr><td>General hunting</td><td class="n">398 <span class="warn">&minus;14</span></td><td class="n">402</td><td>Earplugs 2</td><td>2</td><td>mixed hunts, fewer new parts</td></tr>
+</table></div>
+<div class="cols">
+<div class="panel"><b>How sensitive is the answer?</b>
+<svg class="chart" viewBox="0 0 320 150" role="img" aria-label="Effective raw against uptime: Best leads above 45 percent"><line x1="30" y1="120" x2="310" y2="120" stroke="#2c333d"/><line x1="30" y1="10" x2="30" y2="120" stroke="#2c333d"/>
+<polyline fill="none" stroke="#e0a63a" stroke-width="2.5" points="30,100 100,78 170,58 240,40 310,24"/><polyline fill="none" stroke="#6fb3e0" stroke-width="2.5" points="30,78 100,70 170,62 240,54 310,46"/>
+<circle cx="150" cy="63" r="4" fill="#e5873a"/><text x="116" y="82">switch ~45%</text><text x="30" y="136">20%</text><text x="290" y="136">100%</text><text x="168" y="148">uptime of the attack buff</text>
+<text x="240" y="34" style="fill:#e0a63a">Best</text><text x="262" y="68" style="fill:#6fb3e0">Safe</text></svg></div>
+<div class="panel"><b>Assumptions (editable)</b><table style="margin-top:6px">
+<tr><td>Uptime</td><td class="n">60%</td></tr><tr><td>Weak-spot rate</td><td class="n">50%</td></tr><tr><td>Earplugs weight</td><td class="n">high (researched baseline)</td></tr><tr><td>Preset</td><td class="n">Solo</td></tr></table>
+<small style="color:var(--dim)">All numbers are modelled, not measured.</small></div>
 </div>
-<div class="panel" style="margin-top:16px"><b>Assumptions (editable)</b>
-<table><tr><th>Input</th><th class="n">Value</th><th>Meaning</th></tr>
-<tr><td>Uptime</td><td class="n">60%</td><td>time the attack buff is active</td></tr>
-<tr><td>Weak-spot rate</td><td class="n">50%</td><td>hits landing on weak spots</td></tr>
-<tr><td>Earplugs weight</td><td class="n">high</td><td>comfort baseline (researched), your override: none</td></tr></table></div>
+<div class="panel"><b>What was considered and left out</b><ul class="clean" style="margin-top:6px">
+<li><span class="pill">+11 raw</span>Sample Helm Beta: needs a part from a monster you haven't unlocked.</li>
+<li><span class="pill">+4 raw</span>Dropping Tremor Resistance: a must-have, so rejected.</li>
+<li><span class="pill">&minus;18 raw</span>A different waist piece with Guard: Safe build uses it instead.</li></ul></div>
 </section>
 
 <section class="screen" id="shop">
 <h2>Shopping list</h2>
+<div class="iconnote">Driven entirely by the save: parts you gain leave the list on their own. No manual tick-off.</div>
 <div class="panel"><table>
-<tr><th>Part (sample)</th><th class="n">Need</th><th class="n">Have</th><th>Where to get it</th></tr>
-<tr><td>Ashen Plate</td><td class="n hi">2</td><td class="n">0</td><td>Sample Monster A, body carve</td></tr>
-<tr><td>Ashen Claw</td><td class="n hi">1</td><td class="n">0</td><td>Sample Monster A, tail break</td></tr>
-<tr><td>Iron Scale</td><td class="n hi">2</td><td class="n">1</td><td>Sample Monster B, wounds</td></tr>
-<tr><td>Ember Gem</td><td class="n hi">1</td><td class="n">0</td><td>Sample Monster C, rare drop</td></tr>
-<tr><td>Zenny</td><td class="n">3,200</td><td class="n">8,400</td><td class="ok">&#10003; enough</td></tr>
+<tr><th>Part (sample)</th><th class="n">Need</th><th class="n">Have</th><th>Progress</th><th>Where to get it</th></tr>
+<tr><td><span style="display:flex;align-items:center;gap:10px"><span class="ibox r3"><svg class="ic"><use href="#g-part"/></svg></span><b>Ashen Plate</b></span></td><td class="n hi">2</td><td class="n">0</td><td><div class="bar" style="width:90px"><span style="width:0%"></span></div></td><td>Sample Monster A &middot; body carve &middot; high rank</td></tr>
+<tr><td><span style="display:flex;align-items:center;gap:10px"><span class="ibox r3"><svg class="ic"><use href="#g-part"/></svg></span><b>Ashen Claw</b></span></td><td class="n hi">1</td><td class="n">0</td><td><div class="bar" style="width:90px"><span style="width:0%"></span></div></td><td>Sample Monster A &middot; tail break</td></tr>
+<tr><td><span style="display:flex;align-items:center;gap:10px"><span class="ibox r2"><svg class="ic"><use href="#g-part"/></svg></span><b>Iron Scale</b></span></td><td class="n hi">2</td><td class="n">1</td><td><div class="bar" style="width:90px"><span style="width:50%"></span></div></td><td>Sample Monster B &middot; wounds</td></tr>
+<tr><td><span style="display:flex;align-items:center;gap:10px"><span class="ibox r4"><svg class="ic"><use href="#g-gem"/></svg></span><b>Ember Gem</b></span></td><td class="n hi">1</td><td class="n">0</td><td><div class="bar" style="width:90px"><span style="width:0%"></span></div></td><td>Sample Monster C &middot; rare drop (about 5%)</td></tr>
+<tr><td><span style="display:flex;align-items:center;gap:10px"><span class="ibox "><svg class="ic"><use href="#g-coin"/></svg></span><b>Zenny</b></span></td><td class="n hi">3200</td><td class="n">3200</td><td><div class="bar" style="width:90px"><span style="width:100%"></span></div></td><td><span class="ok">&#10003; enough</span></td></tr>
 </table></div>
-<p style="color:var(--dim);font-size:13px">Grouped by monster once the data allows. Drop sources are shown only when the game files or a cited source give them.</p>
+<p style="color:var(--dim);font-size:13px">Drop sources are shown only when the game files or a cited source give them; otherwise "source unknown".</p>
 </section>
 
 <section class="screen" id="data">
@@ -142,10 +217,10 @@ ul.clean{margin:0;padding-left:18px}
 <div class="stage" id="stage"><div class="lab">game view (placeholder)</div>
 <div class="ov" id="ov">
 <h3><span>Ashen build &middot; still needed</span><span>F8</span></h3>
-<div class="r"><span>Ashen Plate</span><b>2x</b></div>
-<div class="r"><span>Ashen Claw</span><b>1x</b></div>
-<div class="r"><span>Iron Scale</span><b>1x</b></div>
-<div class="r"><span>Ember Gem</span><b>1x</b></div>
+<div class="r"><span style="display:flex;gap:8px;align-items:center"><svg class="ic" style="width:20px;height:20px;color:#b58be0"><use href="#g-part"/></svg>Ashen Plate</span><b>2x</b></div>
+<div class="r"><span style="display:flex;gap:8px;align-items:center"><svg class="ic" style="width:20px;height:20px;color:#b58be0"><use href="#g-part"/></svg>Ashen Claw</span><b>1x</b></div>
+<div class="r"><span style="display:flex;gap:8px;align-items:center"><svg class="ic" style="width:20px;height:20px;color:#6fb3e0"><use href="#g-part"/></svg>Iron Scale</span><b>1x</b></div>
+<div class="r"><span style="display:flex;gap:8px;align-items:center"><svg class="ic" style="width:20px;height:20px;color:#e0a63a"><use href="#g-gem"/></svg>Ember Gem</span><b>1x</b></div>
 <div class="r live" style="display:none"><span>Now: Sample Monster A</span><small>tail broken</small></div>
 <div class="r"><small>Where: Sample Monster A (plate, claw)</small></div>
 <div class="r"><small id="src">Source: save, 12:41</small></div>
@@ -178,6 +253,17 @@ document.querySelectorAll('.seg button').forEach(function(x){x.classList.remove(
 var live=b.dataset.m==='live';document.querySelector('.live').style.display=live?'flex':'none';
 document.getElementById('src').textContent=live?'Source: live data':'Source: save, 12:41';};});
 document.getElementById('hide').onclick=function(){var o=document.getElementById('ov');o.style.display=o.style.display==='none'?'':'none';};
+
+var D={weapon:["Sample Bowgun III","Light bowgun, rarity 6, raw 180, tuned for this tool.","Made from: 3 Ashen Plate, 1 Iron Scale (owned).","Slots: 2 (both filled). Special ammo: none in this sample."],
+head:["Ironwood Helm","Head armour, rarity 5, defence 74.","Skills: Attack Boost 1, Critical Eye 1.","Made from: Sample Monster B parts (owned). Slots: 3."],
+chest:["Ashen Mail","Chest armour, rarity 6, defence 80.","Skills: Earplugs 2, Attack Boost 1.","Missing: 2x Ashen Plate from Sample Monster A (body carve). Slots: 2."],
+arms:["Ironwood Guards","Arms armour, rarity 5, defence 72.","Skills: Critical Eye 2.","Owned. Slots: 1."],
+waist:["Ashen Coil","Waist armour, rarity 6, defence 78.","Skills: Tremor Resistance 1, Attack Boost 1.","Missing: 1x Ashen Claw, 2x Iron Scale. Slots: 1."],
+legs:["Ironwood Greaves","Legs armour, rarity 5, defence 84.","Skills: Critical Eye 1, Attack Boost 1.","Owned. Slots: 2."],
+charm:["Sample Charm II","Talisman, rarity 5.","Skills: Attack Boost 1.","Owned (from the save)."]};
+function show(k){var d=D[k],e=document.getElementById('detail');e.innerHTML='<h3>'+d[0]+'</h3><div>'+d[1]+'</div><div>'+d[2]+'</div><div style="color:var(--dim)">'+d[3]+'</div>';e.classList.add('on');
+document.querySelectorAll('#cards .card').forEach(function(c){c.classList.toggle('sel',c.dataset.d===k)});}
+document.querySelectorAll('#cards .card').forEach(function(c){c.onclick=function(){show(c.dataset.d)}});show('weapon');
 </script>
 </body>
 </html>

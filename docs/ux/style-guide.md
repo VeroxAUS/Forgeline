@@ -43,8 +43,17 @@ One sans-serif font for all text, one monospace for numbers in tables so columns
 - Tooltip on a hover over a skill name (skill level and effect text).
 - Comparison: two builds side by side with differences highlighted in `accent`.
 - Primary button (`accent`), secondary button (`surface-2`), the default choice in a dialog is the highlighted one.
+- Item card (icon box, name, one-line facts, status) and detail panel.
+- Meter: skill pips, resistance bar, decoration slots, stacked contribution bar.
+- Small line chart with direct labels (sensitivity).
 - Banner (warn or error) with a short sentence and one action.
 - Status chip (ok, warn, error) with icon and word.
+
+## Icons
+- 44 px icon box on cards and table rows, 20 px in the overlay. Rarity tints the glyph (low to high: `text-dim`, blue, purple, `accent`); a small rarity badge sits at the corner.
+- Game icons come from the user's install at runtime (never committed). Our own glyphs (1.6 px line, rounded) are the fallback and the placeholder in mock-ups.
+- Meters (pips, bars, slots, stacked bars) use `accent` for the main value, `ok` and `warn` for good and weak, never colour alone.
+- Charts are drawn with the same tokens, labelled directly, and carry an assumption caption when the number is modelled.
 
 ## Rules for the overlay
 - Background `overlay-bg`, text `text`, no border glow, corners 8 px.
