@@ -294,15 +294,24 @@ fn run(env: &UpdateEnv, data: &DataDir, rep: &mut Reporter) -> Result<UpdateOutc
     )?;
 
     rep.report("checking the new data", total - 1, total);
-    let last_good = std::fs::read_to_string(data.current().join("manifest.json"))
-        .ok()
-        .and_then(|t| Manifest::from_json(&t));
+    let last_text = std::fs::read_to_string(data.current().join("manifest.json")).ok();
+    let last_good = last_text.as_deref().and_then(Manifest::from_json);
     let mut findings = validate(&staged, last_good.as_ref());
     if data.current().exists() && last_good.is_none() {
-        findings.push(Finding {
-            severity: Severity::Warn,
-            message: "the last good data's manifest could not be read, so the new data was not compared with it"
-                .to_string(),
+        // A manifest from another app version cannot be compared but is not damaged: warn, so a
+        // schema change never locks updates out. Anything else unreadable blocks.
+        findings.push(if last_text.as_deref().is_some_and(Manifest::is_other_schema) {
+            Finding {
+                severity: Severity::Warn,
+                message: "the last good data was made by another version of the app, so the new data was not compared with it"
+                    .to_string(),
+            }
+        } else {
+            Finding {
+                severity: Severity::Block,
+                message: "the last good data's manifest is damaged, so the new data cannot be checked against it; delete the data folder's current/ folder to start fresh"
+                    .to_string(),
+            }
         });
     }
     if blocks(&findings) {
@@ -327,6 +336,8 @@ fn run(env: &UpdateEnv, data: &DataDir, rep: &mut Reporter) -> Result<UpdateOutc
     })
 }
 
+const PROTECTED_MSG: &str = "the data folder is inside Steam, the install or a save folder";
+
 /// Finds the game and the save through Steam, then runs the update. This is what the `--update`
 /// child process and `forgeline-check update` call. The save is only read (into memory) to learn
 /// which names matter; nothing from it is kept.
@@ -349,12 +360,18 @@ pub fn update_from_steam(
         outcome
     };
 
+    // Before discovery: if discovery fails, `fail` below writes into the data folder, so a data
+    // folder inside the Steam root must be refused first.
+    if is_protected(data.root(), std::slice::from_ref(&steam_root)) {
+        return UpdateOutcome::Failed(PROTECTED_MSG.to_string());
+    }
     let found = match discovery::discover(&DiscoveryEnv { steam_root }) {
         Ok(f) => f,
         Err(e) => return fail(format!("finding the game: {e}")),
     };
     if is_protected(data.root(), &found.protected_paths()) {
-        return fail("the data folder is inside Steam, the install or a save folder".to_string());
+        // Not `fail`: that would create the data folder and write the status file inside it.
+        return UpdateOutcome::Failed(PROTECTED_MSG.to_string());
     }
     let account = match found.save_account() {
         SaveAccount::One(a) => a,

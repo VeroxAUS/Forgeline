@@ -101,6 +101,11 @@ fn run(
     notify: impl Fn() + Send + Sync + 'static,
 ) {
     forgeline_core::priority::set_thread_lowest();
+    // An update cut short between its two renames leaves no `current`; put the old one back
+    // before reading. Known gap: an engine starting inside the update's two-rename window would
+    // make that update fail (old data stays); the app starts the update itself, so it is not hit.
+    // If this fails the data view shows no data, which is true.
+    let _ = forgeline_update::swap::recover(&config.data);
     let cache_path = config.data.view_cache();
     let mut watcher: Option<(PathBuf, watch::SaveWatcher)> = None;
     let mut force = false;

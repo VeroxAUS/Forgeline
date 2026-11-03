@@ -332,3 +332,89 @@ fn failures_before_the_extraction_are_reported_and_leave_data_alone() {
     );
     std::fs::remove_dir_all(root).ok();
 }
+
+#[test]
+fn a_damaged_last_good_manifest_blocks_the_update_and_leaves_current_alone() {
+    let root = temp_root("damaged");
+    let steam = make(&root, &TreeOptions::default());
+    let data = data_dir(&root);
+    assert!(matches!(
+        update(&steam, &data, &[]).0,
+        UpdateOutcome::Replaced { .. }
+    ));
+    std::fs::write(data.current().join("manifest.json"), "{ not json").unwrap();
+    let before = snapshot(&data.current());
+
+    let (outcome, _) = update(&steam, &data, &[]);
+    let UpdateOutcome::Rejected(findings) = outcome else {
+        panic!("{outcome:?}")
+    };
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.severity == Severity::Block && f.message.contains("damaged")),
+        "{findings:?}"
+    );
+    assert_eq!(snapshot(&data.current()), before);
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_manifest_from_another_schema_warns_but_does_not_lock_updates_out() {
+    let root = temp_root("otherschema");
+    let steam = make(&root, &TreeOptions::default());
+    let data = data_dir(&root);
+    assert!(matches!(
+        update(&steam, &data, &[]).0,
+        UpdateOutcome::Replaced { .. }
+    ));
+    std::fs::write(data.current().join("manifest.json"), "{\"schema\": 999}").unwrap();
+
+    let (outcome, _) = update(&steam, &data, &[]);
+    let UpdateOutcome::Replaced { findings, .. } = outcome else {
+        panic!("{outcome:?}")
+    };
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.severity == Severity::Warn && f.message.contains("another version")),
+        "{findings:?}"
+    );
+    assert_eq!(manifest(&data).schema, forgeline_update::manifest::SCHEMA);
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_data_folder_inside_steam_that_the_name_check_misses_is_refused_without_writing_there() {
+    let root = temp_root("protected");
+    let steam = make(&root, &TreeOptions::default());
+    // A Steam folder with an ordinary name: only discovery knows it is Steam.
+    let valve = root.join("valve");
+    std::fs::rename(&steam, &valve).unwrap();
+    let data = DataDir::open(Some(valve.join("forgeline-data"))).unwrap();
+
+    let (outcome, _) = update(&valve, &data, &[]);
+    assert!(matches!(outcome, UpdateOutcome::Failed(_)), "{outcome:?}");
+    assert!(
+        !data.root().exists(),
+        "the refusal created or wrote the data folder"
+    );
+    std::fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn a_data_folder_inside_the_steam_folder_is_refused_even_when_discovery_fails() {
+    let root = temp_root("protected-nogame");
+    // An ordinary-named folder that is the Steam root but holds no game.
+    let valve = root.join("valve");
+    std::fs::create_dir_all(&valve).unwrap();
+    let data = DataDir::open(Some(valve.join("forgeline-data"))).unwrap();
+
+    let (outcome, _) = update(&valve, &data, &[]);
+    assert!(matches!(outcome, UpdateOutcome::Failed(_)), "{outcome:?}");
+    assert!(
+        !data.root().exists(),
+        "the failure wrote into the Steam folder"
+    );
+    std::fs::remove_dir_all(root).ok();
+}
