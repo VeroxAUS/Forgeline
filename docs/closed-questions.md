@@ -304,4 +304,5 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Presets: Baseline plus up to five of the user's own?** Yes, keep (09:22 UTC).
 - **Two assumptions only (time attacking, weak-spot hits), range shaded?** Yes, keep (09:22 UTC).
 - **Weights as whole steps 0 to 10, no slider for damage?** Yes, keep (09:22 UTC).
-- **Look check?** Reviewed from screenshots in the cloud; not run on the PC. Merge go for PR #64 still to come.
+- **Look check?** Passed, reviewed from screenshots in the cloud; not run on the PC.
+- **Keep the update-gate fixes from #65 when main was merged into the #64 branch, and merge #64?** Yes ("Yeah you can do that", 2026-11-03 09:32 UTC). Merged at 09:32:38 UTC (cloud, CI green on Ubuntu and Windows).
