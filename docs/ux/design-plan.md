@@ -89,7 +89,7 @@ Estimates are thread hours (build plus one revision), not review time. They are 
 | 8 | **Solo or Multiplayer switch and alternatives row** | 3 | Safe is an alternative, not a preset |
 | 9 | **Monster selector** (manual) | 3 | Built (PR #62). Auto-switch later by forgeline-live, see section 3 |
 | 10 | **Shopping list**, three views | 6 | Farm place only if data confirmed. Also owns the `Missing N` word on the Build equipment rows: hover lists the missing parts (item, count missing, monster), click opens Shopping by piece filtered to that piece; the row itself stays as is |
-| 11 | **Customise drawer**: weight sliders with baseline and reset, assumption sliders, saved presets | 8 | |
+| 11 | **Customise drawer**: weight sliders with baseline and reset, assumption sliders, saved presets | 8 | Built, awaiting review. Opens from a button at the top right of Build; sample values until the Phase 4 research round |
 | 12 | **Why: reasoning and skill value** | 5 | |
 | 13 | **Why: compare two builds** | 4 | |
 | 14 | **Why: what changed** | 3 | |

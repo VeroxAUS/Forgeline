@@ -296,3 +296,12 @@ Asked as a 45-question questionnaire with recommended answers (06:39 to 06:57 UT
 - **Let the player change the order?** Yes: a toggle between `Most items` (default) and `Finishes pieces` (the monster whose items would complete the most pieces), hidden while a piece filter is set (13:08 UTC). Added before merge.
 - **Look check?** Passed, reviewed from screenshots in the cloud; not run on the PC.
 - **Merge PR #63?** Yes ("Looks good, free to merge.", 2026-10-28 13:13 UTC). Merged at 13:15:34 UTC (cloud, CI green on Ubuntu and Windows).
+
+### UX element 11: Customise drawer (2026-11-03)
+- **Open the drawer from a Customise button at the top right of Build?** Yes, keep (2026-11-03 09:22 UTC).
+- **Let it cover the right side of the build, keeping the headline words visible?** Yes, keep (09:22 UTC).
+- **Recompute when a slider is let go, not while dragging?** Yes, keep (09:22 UTC).
+- **Presets: Baseline plus up to five of the user's own?** Yes, keep (09:22 UTC).
+- **Two assumptions only (time attacking, weak-spot hits), range shaded?** Yes, keep (09:22 UTC).
+- **Weights as whole steps 0 to 10, no slider for damage?** Yes, keep (09:22 UTC).
+- **Look check?** Reviewed from screenshots in the cloud; not run on the PC. Merge go for PR #64 still to come.

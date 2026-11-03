@@ -450,3 +450,46 @@ fn shopping_views_filter_and_missing_click_through() {
     h.frame(&mut app, Vec2::new(3000.0, 2100.0), 1.0);
     h.frame(&mut app, size, 1.0);
 }
+
+#[test]
+fn customise_drawer_opens_scrolls_and_shows_edits() {
+    use egui::Vec2;
+    use std::sync::Arc;
+    use std::time::Duration;
+    use ui_sample::build_card::{BuildCard, Headless};
+    use ui_sample::icons::SampleSource;
+
+    let mut h = Headless::new();
+    let mut app = BuildCard::new(
+        h.ctx(),
+        Arc::new(SampleSource {
+            delay: Duration::from_millis(1),
+        }),
+    );
+    let size = Vec2::new(1000.0, 700.0);
+    h.frame(&mut app, size, 1.0);
+    assert!(app.cache.wait_idle(Duration::from_secs(5)));
+    let closed = h.frame(&mut app, size, 1.0).rgba;
+    app.customise.open = true;
+    h.frame(&mut app, size, 1.0);
+    let open = h.frame(&mut app, size, 1.0).rgba;
+    assert_ne!(closed, open, "the drawer draws");
+    // An edited value changes the picture (accent value, reset mark, dot on the button).
+    app.customise.weights[0].value = 9;
+    assert!(app.customise.changed() && app.customise.edited());
+    h.frame(&mut app, size, 1.0);
+    let edited = h.frame(&mut app, size, 1.0).rgba;
+    assert_ne!(open, edited);
+    // Naming a preset shows the field; scrolling and every size still render.
+    app.customise.start_naming();
+    h.frame(&mut app, size, 1.0);
+    app.customise.naming = None;
+    app.customise.demo_scroll = Some(380.0);
+    for s in [size, Vec2::new(1600.0, 900.0), Vec2::new(2800.0, 1575.0)] {
+        h.frame(&mut app, s, 1.0);
+    }
+    // Closed again: back to the plain screen (the changed dot stays on the button).
+    app.customise.open = false;
+    app.customise.demo_scroll = None;
+    h.frame(&mut app, size, 1.0);
+}
