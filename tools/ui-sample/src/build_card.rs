@@ -19,11 +19,13 @@ use std::sync::Arc;
 pub mod customise;
 mod monster;
 pub mod shopping;
+pub mod why;
 pub use customise::State as CustomiseState;
 pub use monster::{
     items as monster_items, remember, Element, Group, Monster, Pick, Selector, ROSTER,
 };
 pub use shopping::{Chain, Need, ShoppingState, Sort as ShopSort, View as ShopView};
+pub use why::Value;
 
 const MARGIN: f32 = 28.0;
 const ROW_H: f32 = 48.0;
@@ -162,6 +164,8 @@ pub struct Skill {
     /// The optimizer's weight for this skill, when there is one (Phase 4). Without it the strip
     /// falls back to level, lowest first, when it has to cut.
     pub weight: Option<u8>,
+    /// What the skill is worth in the model, for the Why screen (Phase 4). `None` is not scored.
+    pub value: Option<Value>,
 }
 
 impl Skill {
@@ -174,6 +178,15 @@ impl Skill {
             tiers: &[],
             must: false,
             weight: None,
+            value: None,
+        }
+    }
+
+    /// The same skill with a modelled value.
+    pub fn valued(self, value: Value) -> Self {
+        Skill {
+            value: Some(value),
+            ..self
         }
     }
 
@@ -187,6 +200,7 @@ impl Skill {
             tiers,
             must: false,
             weight: None,
+            value: None,
         }
     }
 
@@ -597,17 +611,47 @@ impl BuildData {
             ],
             charm: None,
             skills: vec![
-                Skill::bonus(SkillKind::Set, "Set bonus Alpha", 3, TWO_FOUR),
-                Skill::bonus(SkillKind::Group, "Group skill Gamma", 3, THREE),
+                Skill::bonus(SkillKind::Set, "Set bonus Alpha", 3, TWO_FOUR).valued(Value::Gain {
+                    axis: Axis::Damage,
+                    tenths: 60,
+                    next: None,
+                }),
+                Skill::bonus(SkillKind::Group, "Group skill Gamma", 3, THREE).valued(Value::Gain {
+                    axis: Axis::Toughness,
+                    tenths: 25,
+                    next: None,
+                }),
                 Skill {
                     must: true,
-                    ..Skill::normal("Weakness exploit", 4, 5)
+                    ..Skill::normal("Weakness exploit", 4, 5).valued(Value::Gain {
+                        axis: Axis::Damage,
+                        tenths: 112,
+                        next: Some(21),
+                    })
                 },
-                Skill::normal("Critical eye", 3, 5),
-                Skill::normal("Sharpshot", 2, 3),
-                Skill::normal("Marksman", 2, 3),
-                Skill::normal("Ammo saver", 3, 3),
-                Skill::normal("Stamina surge", 2, 3),
+                Skill::normal("Critical eye", 3, 5).valued(Value::Gain {
+                    axis: Axis::Damage,
+                    tenths: 74,
+                    next: Some(28),
+                }),
+                Skill::normal("Sharpshot", 2, 3).valued(Value::Gain {
+                    axis: Axis::Damage,
+                    tenths: 58,
+                    next: Some(20),
+                }),
+                Skill::normal("Marksman", 2, 3).valued(Value::Gain {
+                    axis: Axis::Damage,
+                    tenths: 31,
+                    next: Some(15),
+                }),
+                Skill {
+                    weight: Some(7),
+                    ..Skill::normal("Ammo saver", 3, 3).valued(Value::Comfort)
+                },
+                Skill {
+                    weight: Some(5),
+                    ..Skill::normal("Stamina surge", 2, 3).valued(Value::Comfort)
+                },
             ],
             pinned_style: PinnedStyle::default(),
             damage: Headline {
@@ -697,10 +741,26 @@ const THREE: &[Tier] = &[Tier {
 /// skills first and the rest most important first, each with a sample weight.
 pub fn sample_endgame_skills() -> Vec<Skill> {
     let mut v = vec![
-        Skill::bonus(SkillKind::Set, "Set bonus Alpha", 4, TWO_FOUR),
-        Skill::bonus(SkillKind::Set, "Set bonus Beta", 2, TWO_FOUR),
-        Skill::bonus(SkillKind::Group, "Group skill Gamma", 3, THREE),
-        Skill::bonus(SkillKind::Group, "Group skill Delta", 2, THREE),
+        Skill::bonus(SkillKind::Set, "Set bonus Alpha", 4, TWO_FOUR).valued(Value::Gain {
+            axis: Axis::Damage,
+            tenths: 90,
+            next: None,
+        }),
+        Skill::bonus(SkillKind::Set, "Set bonus Beta", 2, TWO_FOUR).valued(Value::Gain {
+            axis: Axis::Damage,
+            tenths: 35,
+            next: None,
+        }),
+        Skill::bonus(SkillKind::Group, "Group skill Gamma", 3, THREE).valued(Value::Gain {
+            axis: Axis::Toughness,
+            tenths: 30,
+            next: None,
+        }),
+        Skill::bonus(SkillKind::Group, "Group skill Delta", 2, THREE).valued(Value::Gain {
+            axis: Axis::Toughness,
+            tenths: 12,
+            next: None,
+        }),
     ];
     let normal = [
         ("Weakness exploit", 5, 5, true),
@@ -723,12 +783,27 @@ pub fn sample_endgame_skills() -> Vec<Skill> {
         ("Evade window", 5, 5, false),
     ];
     for (i, (name, level, max, must)) in normal.into_iter().enumerate() {
+        // Invented values: the first nine are damage, then one toughness skill, then comfort.
+        let value = match i {
+            0..=8 => Value::Gain {
+                axis: Axis::Damage,
+                tenths: 130 - 13 * i as u16,
+                next: (level < max).then_some(30 - 2 * i as u16),
+            },
+            10 => Value::Gain {
+                axis: Axis::Toughness,
+                tenths: 42,
+                next: None,
+            },
+            _ => Value::Comfort,
+        };
         v.push(Skill {
             must,
             weight: Some(100 - 5 * i as u8),
-            ..Skill::normal(name, level, max)
+            ..Skill::normal(name, level, max).valued(value)
         });
     }
+
     v
 }
 
@@ -794,6 +869,8 @@ enum Hit {
     ShopSort(ShopSort),
     /// The Shopping piece-filter chip (clears the filter).
     ShopFilter,
+    /// The Change weights button on Why: opens Build with the Customise drawer.
+    WhyCustomise,
 }
 
 /// The build card screen: shell state, the card's data and the icon cache.
@@ -813,6 +890,8 @@ pub struct BuildCard {
     pub customise: CustomiseState,
     /// Review only: draws the `Missing N` hover for this piece without a pointer.
     pub demo_missing_tip: Option<usize>,
+    /// Review only: scrolls the Why list to this offset (points).
+    pub demo_why_scroll: Option<f32>,
     /// A recompute started by a chip change ends at this time. A real recompute would run on a
     /// background thread and report back; the sample only waits.
     recompute_until: Option<std::time::Instant>,
@@ -838,6 +917,7 @@ impl BuildCard {
             shopping: ShoppingState::default(),
             customise: CustomiseState::new(),
             demo_missing_tip: None,
+            demo_why_scroll: None,
             recompute_until: None,
         }
     }
@@ -874,6 +954,7 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
     let cache = &mut app.cache;
     let hits = &mut app.hits;
     let shopping = &app.shopping;
+    let customise = &app.customise;
     let drawer_open = app.customise.open;
     let drawer_edited = app.customise.changed();
     hits.clear();
@@ -892,11 +973,15 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
                 (drawer_open, drawer_edited),
             ),
             shell::Section::Shopping => shopping::header(p, hits, content, data, shopping),
+            shell::Section::Why => why::header(p, hits, content, data, customise),
             _ => placeholder(p, content),
         }
     });
     if app.shell.section == shell::Section::Shopping {
         shopping::list(ui, content_rect, &app.data, &app.shopping, &mut app.cache);
+    }
+    if app.shell.section == shell::Section::Why {
+        why::list(ui, content_rect, &app.data, app.demo_why_scroll);
     }
     let hits = std::mem::take(&mut app.hits);
     for (i, (rect, hit)) in hits.iter().enumerate() {
@@ -911,7 +996,8 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
             | Hit::Customise
             | Hit::ShopView(_)
             | Hit::ShopSort(_)
-            | Hit::ShopFilter => egui::Sense::click(),
+            | Hit::ShopFilter
+            | Hit::WhyCustomise => egui::Sense::click(),
             _ => egui::Sense::hover(),
         };
         let tip = ui.interact(*rect, ui.scope_id().with(("hit", i)), sense);
@@ -967,6 +1053,15 @@ pub fn show(ui: &mut Ui, app: &mut BuildCard) {
                 let data = &app.data;
                 tip.on_hover_cursor(egui::CursorIcon::PointingHand)
                     .on_hover_ui(|ui| shopping::missing_tip(ui, data, *i));
+            }
+            Hit::WhyCustomise => {
+                if tip.clicked() {
+                    app.shell.section = shell::Section::Build;
+                    app.customise.open = true;
+                    app.popup = None;
+                }
+                tip.on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text("Open Customise on Build: weights and assumptions.");
             }
             Hit::Customise => {
                 if tip.clicked() {

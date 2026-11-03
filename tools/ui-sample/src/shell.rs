@@ -93,7 +93,7 @@ impl Section {
         match self {
             Section::Build => "Elements 4 to 9 fill this screen.",
             Section::Shopping => "Element 10 fills this screen.",
-            Section::Why => "Elements 12 to 14 fill this screen.",
+            Section::Why => "Elements 13 and 14 fill the rest of this screen.",
             Section::Settings => "Element 16 fills this screen.",
             Section::Data => "Element 15 fills this screen.",
             Section::About => "Element 16 fills this screen.",
