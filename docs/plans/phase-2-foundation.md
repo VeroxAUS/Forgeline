@@ -654,6 +654,7 @@ Steps 1, 3, 7, 12 and 13 are cloud-only and checked in the cloud.
 | Step 6 PR merged (#38) | 2026-10-28 05:51:19 UTC |
 | Step 7 replaced by UX restart (#43) | 2026-10-28 07:10:30 UTC |
 | Step 8 PR merged (#41) | 2026-10-28 06:24:18 UTC |
+| Fix PR merged (#65, update-gate hardening, outside the step list) | 2026-10-28 17:02:55 UTC |
 | Step 9 PR merged | |
 | Step 10 PR merged | |
 | Step 11 PR merged | |
